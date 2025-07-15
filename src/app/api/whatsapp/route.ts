@@ -26,8 +26,10 @@ export async function POST(req: NextRequest) {
   const userId = from.replace("whatsapp:+", "");
 
   try {
+    const lowerBody = body.toLowerCase();
+    
     // Seller: Add product command
-    if (body.toLowerCase().startsWith("/addproduct") && numMedia > 0) {
+    if (lowerBody.startsWith("/addproduct") && numMedia > 0) {
       const commandRegex = /^\/addproduct\s+(₵\s*\d+(\.\d{1,2})?)\s+(.+)/is;
       const match = body.match(commandRegex);
 
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
           description,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        const storeUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/${userId}`;
+        const storeUrl = `${process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin}/${userId}`;
         twiml.message(`✅ Product added! Your store is now live at: ${storeUrl}`);
       } else {
         twiml.message(
@@ -51,14 +53,13 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // Buyer: Handle queries
-      const lowerBody = body.toLowerCase();
       const interestRegex = /i'm interested in buying your product: "([^"]+)" for (₵\s*\d+(\.\d{1,2})?)/i;
       const interestMatch = body.match(interestRegex);
 
       if (interestMatch && lowerBody.includes("available")) {
           const price = interestMatch[2];
           twiml.message(`Yes, the item is available! Price: ${price}. To pay, please send money to MTN Mobile Money number: 055 123 4567. Send a screenshot of the payment confirmation to finalize your order.`);
-      } else if (lowerBody.includes("paid")) {
+      } else if (lowerBody.includes("paid") || lowerBody.includes("payment")) {
         twiml.message("Thank you! Your order is confirmed. 🚚 We will deliver it within 24 hours.");
       } else {
         // Complex query, use AI
