@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, ShoppingCart, Smartphone, Store } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -72,6 +73,9 @@ export default function Home() {
 
         <footer className="text-center py-12 mt-8 border-t">
           <p className="text-muted-foreground">&copy; {new Date().getFullYear()} MarketChat GH. All rights reserved.</p>
+          <Link href="/admin" className="text-sm text-primary hover:underline mt-2 inline-block">
+            Admin Dashboard
+          </Link>
         </footer>
 
       </div>
