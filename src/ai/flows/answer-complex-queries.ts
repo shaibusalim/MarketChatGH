@@ -8,8 +8,8 @@
  * - AnswerComplexQueryOutput - The return type for the answerComplexQuery function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const AnswerComplexQueryInputSchema = z.object({
   query: z.string().describe('The complex query about the product.'),
@@ -27,8 +27,8 @@ export async function answerComplexQuery(input: AnswerComplexQueryInput): Promis
 
 const prompt = ai.definePrompt({
   name: 'answerComplexQueryPrompt',
-  input: {schema: AnswerComplexQueryInputSchema},
-  output: {schema: AnswerComplexQueryOutputSchema},
+  input: { schema: AnswerComplexQueryInputSchema },
+  output: { schema: AnswerComplexQueryOutputSchema },
   prompt: `You are a helpful and friendly Ghanaian shop assistant for an online marketplace called MarketChat GH.
 Your goal is to answer customer questions politely, concisely, and accurately.
 The customer is asking for help or has a question.
@@ -40,7 +40,7 @@ Here are the rules you must follow:
 - Keep your answers short and to the point.
 
 Customer query: {{{query}}}`,
-  model: 'googleai/gemini-pro',
+  // ✅ Model field removed so it uses your default 'googleai/gemini-2.0-flash'
 });
 
 const answerComplexQueryFlow = ai.defineFlow(
@@ -50,7 +50,12 @@ const answerComplexQueryFlow = ai.defineFlow(
     outputSchema: AnswerComplexQueryOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const { output } = await prompt(input);
+      return output!;
+    } catch (error) {
+      console.error("Gemini prompt error:", error);
+      throw new Error("AI service failed. Please try again later.");
+    }
   }
 );

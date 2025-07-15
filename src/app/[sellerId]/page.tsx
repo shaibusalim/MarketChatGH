@@ -2,7 +2,6 @@ import { firestore } from "@/lib/firebase";
 import ProductCard from "@/components/ProductCard";
 import { Store, Frown } from "lucide-react";
 import admin from "firebase-admin";
-import Image from "next/image";
 
 interface Product {
   id: string;
@@ -14,94 +13,21 @@ interface Product {
 }
 
 const demoProducts: Product[] = [
-    {
-      id: 'demo-1',
-      description: 'Authentic Kente Cloth',
-      price: '₵150',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-    {
-      id: 'demo-2',
-      description: 'Hand-carved Wooden Mask',
-      price: '₵85',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-    {
-      id: 'demo-3',
-      description: 'Beaded Necklace',
-      price: '₵45',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-    {
-      id: 'demo-4',
-      description: 'Waist Beads (Set of 3)',
-      price: '₵60',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-    {
-      id: 'demo-5',
-      description: 'Fresh Sobolo',
-      price: '₵10',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-     {
-      id: 'demo-6',
-      description: 'Spicy Shito Sauce',
-      price: '₵25',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-    {
-      id: 'demo-7',
-      description: 'Gari Fortor Mix',
-      price: '₵15',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-    {
-      id: 'demo-8',
-      description: 'Ankara Fabric (6 yards)',
-      price: '₵120',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-     {
-      id: 'demo-9',
-      description: 'Alata Samina (Black Soap)',
-      price: '₵20',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-     {
-      id: 'demo-10',
-      description: 'Roasted Groundnuts',
-      price: '₵5',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-  ];
-
+  {
+    id: "demo-1",
+    description: "Authentic Kente Cloth",
+    price: "₵150",
+    imageUrl: "https://placehold.co/600x600.png",
+    sellerId: "demo",
+    createdAt: new Date(),
+  },
+];
 
 async function getSellerProducts(sellerId: string): Promise<Product[]> {
   if (sellerId === "demo") {
-      return demoProducts;
+    return demoProducts;
   }
-  
+
   if (!firestore) {
     console.error("Firestore is not initialized.");
     return [];
@@ -125,23 +51,20 @@ async function getSellerProducts(sellerId: string): Promise<Product[]> {
 }
 
 export async function generateMetadata({ params }: { params: { sellerId: string } }) {
-    if (params.sellerId === "demo") {
-        return {
-            title: "Demo Store",
-            description: "A demonstration store for MarketChat GH.",
-        }
-    }
+  if (params.sellerId === "demo") {
+    return {
+      title: "Demo Store",
+      description: "A demonstration store for MarketChat GH.",
+    };
+  }
+
   return {
     title: `Shop of ${params.sellerId}`,
     description: `Browse products from seller ${params.sellerId} on MarketChat GH.`,
-  }
+  };
 }
 
-export default async function SellerPage({
-  params,
-}: {
-  params: { sellerId: string };
-}) {
+export default async function SellerPage({ params }: { params: { sellerId: string } }) {
   const products = await getSellerProducts(params.sellerId);
   const isDemo = params.sellerId === "demo";
 
@@ -155,7 +78,7 @@ export default async function SellerPage({
           {isDemo ? "Welcome to the Demo Store" : "Welcome to this Shop"}
         </h1>
         <p className="text-muted-foreground mt-2">
-            {isDemo ? "This is a sample store to showcase MarketChat GH." : `Seller ID: +${params.sellerId}`}
+          {isDemo ? "This is a sample store to showcase MarketChat GH." : `Seller ID: +${params.sellerId}`}
         </p>
       </header>
 
@@ -167,7 +90,7 @@ export default async function SellerPage({
         </div>
       ) : (
         <div className="text-center py-20 bg-secondary rounded-lg">
-            <Frown className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <Frown className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-2xl font-bold font-headline">No Products Yet</h2>
           <p className="text-muted-foreground mt-2">
             This seller hasn't added any products. Check back later!

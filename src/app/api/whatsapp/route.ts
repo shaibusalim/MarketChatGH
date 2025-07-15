@@ -17,18 +17,16 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const formData = await req.formData();
-  const body = (formData.get("Body") as string) || "";
-  const from = (formData.get("From") as string) || ""; // e.g., 'whatsapp:+233123456789'
-  const numMedia = parseInt((formData.get("NumMedia") as string) || "0", 10);
-  const mediaUrl = (formData.get("MediaUrl0") as string) || "";
-
-  const userId = from.replace("whatsapp:+", "");
-
   try {
+    const formData = await req.formData();
+    const body = (formData.get("Body") as string) || "";
+    const from = (formData.get("From") as string) || "";
+    const numMedia = parseInt((formData.get("NumMedia") as string) || "0", 10);
+    const mediaUrl = (formData.get("MediaUrl0") as string) || "";
+
+    const userId = from.replace("whatsapp:+", "");
     const lowerBody = body.toLowerCase();
-    
-    // Seller: Add product command
+
     if (lowerBody.startsWith("/addproduct") && numMedia > 0) {
       const commandRegex = /^\/addproduct\s+(₵\s*\d+(\.\d{1,2})?)\s+(.+)/is;
       const match = body.match(commandRegex);
@@ -44,6 +42,7 @@ export async function POST(req: NextRequest) {
           description,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+
         const storeUrl = `${process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin}/${userId}`;
         twiml.message(`✅ Product added! Your store is now live at: ${storeUrl}`);
       } else {
@@ -52,17 +51,15 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      // Buyer: Handle queries
       const interestRegex = /i'm interested in buying your product: "([^"]+)" for (₵\s*\d+(\.\d{1,2})?)/i;
       const interestMatch = body.match(interestRegex);
 
       if (interestMatch && lowerBody.includes("available")) {
-          const price = interestMatch[2];
-          twiml.message(`Yes, the item is available! Price: ${price}. To pay, please send money to MTN Mobile Money number: 055 123 4567. Send a screenshot of the payment confirmation to finalize your order.`);
+        const price = interestMatch[2];
+        twiml.message(`Yes, the item is available! Price: ${price}. To pay, please send money to MTN Mobile Money number: 055 123 4567. Send a screenshot of the payment confirmation to finalize your order.`);
       } else if (lowerBody.includes("paid") || lowerBody.includes("payment")) {
         twiml.message("Thank you! Your order is confirmed. 🚚 We will deliver it within 24 hours.");
       } else {
-        // Complex query, use AI
         const aiResult = await answerComplexQuery({ query: body });
         twiml.message(aiResult.reply);
       }
