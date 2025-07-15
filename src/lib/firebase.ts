@@ -5,13 +5,17 @@ import type { ServiceAccount } from 'firebase-admin';
 
 if (!admin.apps.length) {
   try {
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set or empty.');
+    }
+
     const serviceAccountString = Buffer.from(
-      process.env.FIREBASE_SERVICE_ACCOUNT_BASE64!,
+      process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
       'base64'
     ).toString('utf8');
     
     if (!serviceAccountString) {
-      throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set.');
+      throw new Error('Firebase service account string is empty after base64 decoding.');
     }
     
     const serviceAccount: ServiceAccount = JSON.parse(serviceAccountString);
@@ -20,8 +24,9 @@ if (!admin.apps.length) {
       credential: admin.credential.cert(serviceAccount),
     });
   } catch (error: any) {
-    console.error('Firebase admin initialization error:', error.message);
+    // Re-throwing the error to make it visible during server-side rendering
+    throw new Error(`Firebase admin initialization error: ${error.message}`);
   }
 }
 
-export const firestore = admin.apps.length ? admin.firestore() : undefined;
+export const firestore = admin.firestore();
