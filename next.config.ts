@@ -10,6 +10,14 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+       {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**', // optionally allow all external images
+      },
       {
         protocol: 'https',
         hostname: 'placehold.co',

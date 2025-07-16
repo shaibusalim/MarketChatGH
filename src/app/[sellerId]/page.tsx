@@ -9,27 +9,12 @@ interface Product {
   price: string;
   description: string;
   sellerId: string;
-  createdAt: admin.firestore.Timestamp | Date;
+  createdAt: string; // now string (ISO)
 }
 
-const demoProducts: Product[] = [
-  {
-    id: "demo-1",
-    description: "Authentic Kente Cloth",
-    price: "₵150",
-    imageUrl: "https://placehold.co/600x600.png",
-    sellerId: "demo",
-    createdAt: new Date(),
-  },
-];
-
 async function getSellerProducts(sellerId: string): Promise<Product[]> {
-  if (sellerId === "demo") {
-    return demoProducts;
-  }
-
   if (!firestore) {
-    console.error("Firestore is not initialized.");
+    console.error("Firestore not initialized");
     return [];
   }
 
@@ -43,30 +28,32 @@ async function getSellerProducts(sellerId: string): Promise<Product[]> {
     return [];
   }
 
-  return productsSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Omit<Product, "id" | "createdAt">),
-    createdAt: doc.data().createdAt as admin.firestore.Timestamp,
-  }));
+  return productsSnapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      imageUrl: data.imageUrl,
+      price: data.price,
+      description: data.description,
+      sellerId: data.sellerId,
+      createdAt: data.createdAt.toDate().toISOString(),
+    } as Product;
+  });
 }
 
 export async function generateMetadata({ params }: { params: { sellerId: string } }) {
-  if (params.sellerId === "demo") {
-    return {
-      title: "Demo Store",
-      description: "A demonstration store for MarketChat GH.",
-    };
-  }
+  const { sellerId } = await Promise.resolve(params);
 
   return {
-    title: `Shop of ${params.sellerId}`,
-    description: `Browse products from seller ${params.sellerId} on MarketChat GH.`,
+    title: `Shop of ${sellerId}`,
+    description: `Browse products from seller ${sellerId} on MarketChat GH.`,
   };
 }
 
 export default async function SellerPage({ params }: { params: { sellerId: string } }) {
-  const products = await getSellerProducts(params.sellerId);
-  const isDemo = params.sellerId === "demo";
+  const { sellerId } = await Promise.resolve(params);
+
+  const products = await getSellerProducts(sellerId);
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -75,10 +62,10 @@ export default async function SellerPage({ params }: { params: { sellerId: strin
           <Store className="h-10 w-10 text-primary" />
         </div>
         <h1 className="text-3xl md:text-4xl font-bold font-headline">
-          {isDemo ? "Welcome to the Demo Store" : "Welcome to this Shop"}
+          Welcome to this Shop
         </h1>
         <p className="text-muted-foreground mt-2">
-          {isDemo ? "This is a sample store to showcase MarketChat GH." : `Seller ID: +${params.sellerId}`}
+          Seller ID: +{sellerId}
         </p>
       </header>
 
@@ -93,7 +80,7 @@ export default async function SellerPage({ params }: { params: { sellerId: strin
           <Frown className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-2xl font-bold font-headline">No Products Yet</h2>
           <p className="text-muted-foreground mt-2">
-            This seller hasn't added any products. Check back later!
+            This seller hasn’t added any products. Check back later!
           </p>
         </div>
       )}
