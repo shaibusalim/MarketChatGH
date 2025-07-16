@@ -1,30 +1,28 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Lock, User } from 'lucide-react';
-import { motion } from 'framer-motion';
-
-const DEFAULT_CREDENTIALS = {
-  username: 'admin',
-  password: 'marketgh123' // You can change this
-};
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Lock, User } from "lucide-react";
+import { motion } from "framer-motion";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebaseClient";
 
 export function AdminLogin({ onClose }: { onClose: () => void }) {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      credentials.username === DEFAULT_CREDENTIALS.username &&
-      credentials.password === DEFAULT_CREDENTIALS.password
-    ) {
-      localStorage.setItem('isAuthenticated', 'true');
-      router.push('/admin');
-    } else {
-      setError('Invalid credentials');
+    setError("");
+
+    try {
+      await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+      localStorage.setItem("isAuthenticated", "true");
+      router.push("/admin");
+    } catch (err: any) {
+      console.error(err);
+      setError("Invalid email or password");
     }
   };
 
@@ -47,18 +45,18 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Username
+              Email
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <User className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                type="text"
-                value={credentials.username}
-                onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                type="email"
+                value={credentials.email}
+                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
                 className="pl-10 w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Enter username"
+                placeholder="Enter email"
               />
             </div>
           </div>

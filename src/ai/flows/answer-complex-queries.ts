@@ -40,7 +40,6 @@ Here are the rules you must follow:
 - Keep your answers short and to the point.
 
 Customer query: {{{query}}}`,
-  // ✅ Model field removed so it uses your default 'googleai/gemini-2.0-flash'
 });
 
 const answerComplexQueryFlow = ai.defineFlow(
@@ -55,7 +54,10 @@ const answerComplexQueryFlow = ai.defineFlow(
       return output!;
     } catch (error) {
       console.error("Gemini prompt error:", error);
-      throw new Error("AI service failed. Please try again later.");
+      // ✅ Instead of throwing, return a fallback message
+      return {
+        reply: "Our AI assistant is currently overloaded. Please try again later or contact us directly. 🙏🏾",
+      };
     }
   }
 );

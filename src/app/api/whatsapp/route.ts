@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
     const mediaUrl = (formData.get("MediaUrl0") as string) || "";
 
     const userId = from.replace("whatsapp:+", "");
-    const lowerBody = body.toLowerCase();
 
     // Add seller doc if not exists
     const sellerRef = firestore.collection("sellers").doc(userId);
@@ -24,34 +23,38 @@ export async function POST(req: NextRequest) {
       await sellerRef.set({ active: true });
     }
 
-    if (lowerBody.startsWith("/addproduct") && numMedia > 0) {
-      const commandRegex = /^\/addproduct\s+(₵\s*\d+(\.\d{1,2})?)\s+(.+)/is;
-      const match = body.match(commandRegex);
+    if (numMedia > 0 && body.trim().length > 0) {
+      const lines = body.split("\n").map(line => line.trim()).filter(Boolean);
 
-      if (match) {
-        const price = match[1].trim();
-        const description = match[3].trim();
+      // Find price line
+      const priceLine = lines.find(line =>
+        line.toLowerCase().includes("price") ||
+        line.includes("₵") ||
+        line.toLowerCase().includes("ghc")
+      );
 
-        await firestore.collection("products").add({
-          sellerId: userId,
-          imageUrl: mediaUrl,
-          price,
-          description,
-          status: "available",
-          stockStatus: "in stock",
-          isAvailable: true,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+      // Remove price line from description lines
+      const descriptionLines = lines.filter(line => line !== priceLine);
 
-        const storeUrl = `${process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin}/${userId}`;
-        twiml.message(`✅ Product added successfully!\nView your store: ${storeUrl}`);
-      } else {
-        twiml.message(
-          '❌ Invalid format. Use: /addproduct [image] ₵PRICE DESCRIPTION\n\nExample:\n/addproduct ₵50 Nice black T-shirt'
-        );
-      }
+      const description = descriptionLines.join("\n");
+      const price = priceLine ? priceLine : "Price not specified";
+
+      // Save to Firestore
+      await firestore.collection("products").add({
+        sellerId: userId,
+        imageUrl: mediaUrl,
+        price,
+        description,
+        status: "available",
+        stockStatus: "in stock",
+        isAvailable: true,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      const storeUrl = `${process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin}/${userId}`;
+      twiml.message(`✅ Product added successfully!\nView your store: ${storeUrl}`);
     } else {
-      // Default AI fallback
+      // Default fallback to AI if no media or no caption
       const aiResult = await answerComplexQuery({ query: body });
       twiml.message(aiResult.reply);
     }
