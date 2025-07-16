@@ -15,9 +15,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Shield, User, Package } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
+// --- Types ---
 interface Product {
   id: string;
   imageUrl: string;
@@ -25,82 +28,51 @@ interface Product {
   description: string;
   sellerId: string;
   createdAt: admin.firestore.Timestamp | Date;
+  status: string;
+  stockStatus: string;
+  isAvailable: boolean;
 }
 
 interface Seller {
   id: string;
   products: Product[];
+  active: boolean;
 }
 
+// --- Fetch sellers and products ---
 async function getSellersAndProducts(): Promise<Seller[]> {
-  if (!firestore) {
-    console.error("Firestore is not initialized.");
-    return [];
-  }
+  if (!firestore) return [];
 
-  const productsSnapshot = await firestore
-    .collection("products")
-    .orderBy("sellerId")
-    .orderBy("createdAt", "desc")
-    .get();
+  const sellersSnapshot = await firestore.collection("sellers").get();
+  const productsSnapshot = await firestore.collection("products").get();
 
-  if (productsSnapshot.empty) {
-    return [];
-  }
+  const sellers: Seller[] = [];
 
-  const productsBySeller = productsSnapshot.docs.reduce((acc, doc) => {
-    const productData = doc.data() as Omit<Product, "id">;
-    const sellerId = productData.sellerId;
+  sellersSnapshot.forEach((sellerDoc) => {
+    const sellerId = sellerDoc.id;
+    const active = sellerDoc.data().active ?? true;
+    const products = productsSnapshot.docs
+      .filter((p) => p.data().sellerId === sellerId)
+      .map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: (data.createdAt as admin.firestore.Timestamp).toDate(),
+        } as Product;
+      });
 
-    if (!acc[sellerId]) {
-      acc[sellerId] = [];
-    }
-
-    acc[sellerId].push({
-      id: doc.id,
-      ...productData,
-      createdAt: (productData.createdAt as admin.firestore.Timestamp).toDate(),
+    sellers.push({
+      id: sellerId,
+      active,
+      products,
     });
+  });
 
-    return acc;
-  }, {} as Record<string, Product[]>);
-  
-  const demoProducts: Product[] = [
-    {
-      id: 'demo-1',
-      description: 'Authentic Kente Cloth',
-      price: '₵150',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-    {
-      id: 'demo-2',
-      description: 'Hand-carved Wooden Mask',
-      price: '₵85',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    },
-    {
-      id: 'demo-3',
-      description: 'Beaded Necklace',
-      price: '₵45',
-      imageUrl: 'https://placehold.co/600x600.png',
-      sellerId: 'demo',
-      createdAt: new Date(),
-    }
-  ];
-
-  productsBySeller["demo"] = demoProducts;
-
-
-  return Object.entries(productsBySeller).map(([sellerId, products]) => ({
-    id: sellerId,
-    products,
-  }));
+  return sellers;
 }
 
+// --- Admin page component ---
 export default async function AdminPage() {
   const sellers = await getSellersAndProducts();
 
@@ -114,7 +86,7 @@ export default async function AdminPage() {
           Admin Dashboard
         </h1>
         <p className="text-muted-foreground mt-2">
-          Monitor all sellers and products on MarketChat GH.
+          Manage sellers and products on MarketChat GH.
         </p>
       </header>
 
@@ -130,16 +102,33 @@ export default async function AdminPage() {
               {sellers.map((seller) => (
                 <AccordionItem value={seller.id} key={seller.id}>
                   <AccordionTrigger className="font-bold">
-                    Seller ID: {seller.id} ({seller.products.length} products)
+                    Seller ID: {seller.id} ({seller.products.length} products){" "}
+                    {seller.active ? "(Active)" : "(Inactive)"}
                   </AccordionTrigger>
                   <AccordionContent>
+                    <div className="mb-4">
+                      <form
+                        action={`/admin/toggle-seller?sellerId=${seller.id}&active=${!seller.active}`}
+                        method="post"
+                      >
+                        <Button
+                          type="submit"
+                          variant={seller.active ? "destructive" : "default"}
+                        >
+                          {seller.active ? "Deactivate Seller" : "Reactivate Seller"}
+                        </Button>
+                      </form>
+                    </div>
+
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[80px]">Image</TableHead>
+                          <TableHead>Image</TableHead>
                           <TableHead>Description</TableHead>
                           <TableHead>Price</TableHead>
-                          <TableHead>Date Added</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Stock</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -154,10 +143,45 @@ export default async function AdminPage() {
                                 className="rounded-md object-cover"
                               />
                             </TableCell>
-                            <TableCell className="font-medium">{product.description}</TableCell>
+                            <TableCell>{product.description}</TableCell>
                             <TableCell>{product.price}</TableCell>
+                            <TableCell>{product.status}</TableCell>
+                            <TableCell>{product.stockStatus}</TableCell>
                             <TableCell>
-                              {new Date(product.createdAt.seconds * 1000).toLocaleDateString()}
+                              <form
+                                action={`/admin/update-product`}
+                                method="post"
+                                className="flex flex-col gap-1"
+                              >
+                                <input type="hidden" name="productId" value={product.id} />
+
+                                <Button
+                                  type="submit"
+                                  name="action"
+                                  value="markAvailable"
+                                  size="sm"
+                                >
+                                  In Stock
+                                </Button>
+                                <Button
+                                  type="submit"
+                                  name="action"
+                                  value="markOutOfStock"
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  Out of Stock
+                                </Button>
+                                <Button
+                                  type="submit"
+                                  name="action"
+                                  value="delete"
+                                  variant="destructive"
+                                  size="sm"
+                                >
+                                  Delete
+                                </Button>
+                              </form>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -170,9 +194,9 @@ export default async function AdminPage() {
           ) : (
             <div className="text-center py-10 bg-secondary rounded-lg">
               <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-xl font-bold font-headline">No Products Found</h2>
+              <h2 className="text-xl font-bold font-headline">No Sellers Found</h2>
               <p className="text-muted-foreground mt-1">
-                When sellers add products, they will appear here.
+                Once sellers start adding products, they will appear here.
               </p>
             </div>
           )}

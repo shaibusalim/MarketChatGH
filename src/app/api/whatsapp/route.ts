@@ -1,19 +1,11 @@
 import { NextRequest } from "next/server";
 import { TwilioMessagingResponse } from "@/lib/twilio";
 import { firestore } from "@/lib/firebase";
-import { answerComplexQuery } from "@/ai/flows/answer-complex-queries";
 import admin from "firebase-admin";
+import { answerComplexQuery } from "@/ai/flows/answer-complex-queries";
 
 export async function POST(req: NextRequest) {
   const twiml = new TwilioMessagingResponse();
-
-  if (!firestore) {
-    console.error("Firestore not initialized");
-    twiml.message("❌ Store config issue. Please try again later.");
-    return new Response(twiml.toString(), {
-      headers: { "Content-Type": "text/xml" },
-    });
-  }
 
   try {
     const formData = await req.formData();
@@ -25,9 +17,12 @@ export async function POST(req: NextRequest) {
     const userId = from.replace("whatsapp:+", "");
     const lowerBody = body.toLowerCase();
 
-    console.log("👉 Incoming from:", userId);
-    console.log("👉 Body:", body);
-    console.log("👉 Media URL:", mediaUrl);
+    // Add seller doc if not exists
+    const sellerRef = firestore.collection("sellers").doc(userId);
+    const sellerDoc = await sellerRef.get();
+    if (!sellerDoc.exists) {
+      await sellerRef.set({ active: true });
+    }
 
     if (lowerBody.startsWith("/addproduct") && numMedia > 0) {
       const commandRegex = /^\/addproduct\s+(₵\s*\d+(\.\d{1,2})?)\s+(.+)/is;
@@ -37,36 +32,32 @@ export async function POST(req: NextRequest) {
         const price = match[1].trim();
         const description = match[3].trim();
 
-        try {
-          const docRef = await firestore.collection("products").add({
-            sellerId: userId,
-            imageUrl: mediaUrl,
-            price,
-            description,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
+        await firestore.collection("products").add({
+          sellerId: userId,
+          imageUrl: mediaUrl,
+          price,
+          description,
+          status: "available",
+          stockStatus: "in stock",
+          isAvailable: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
 
-          console.log("✅ Firestore write success, doc ID:", docRef.id);
-
-          const storeUrl = `${process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin}/${userId}`;
-          twiml.message(`✅ Product added! Your store is now live at: ${storeUrl}`);
-        } catch (firestoreError) {
-          console.error("🔥 Firestore add failed:", firestoreError);
-          twiml.message("❌ Failed to add product. Please try again later.");
-        }
+        const storeUrl = `${process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin}/${userId}`;
+        twiml.message(`✅ Product added successfully!\nView your store: ${storeUrl}`);
       } else {
         twiml.message(
-          '❌ Invalid format. Use: /addproduct ₵PRICE DESCRIPTION and attach an image. Example: /addproduct ₵50 Nice Shirt'
+          '❌ Invalid format. Use: /addproduct [image] ₵PRICE DESCRIPTION\n\nExample:\n/addproduct ₵50 Nice black T-shirt'
         );
       }
     } else {
-      // AI fallback logic
+      // Default AI fallback
       const aiResult = await answerComplexQuery({ query: body });
       twiml.message(aiResult.reply);
     }
   } catch (error) {
     console.error("Error processing WhatsApp message:", error);
-    twiml.message("❌ Oops! Something went wrong. Please try again.");
+    twiml.message("Oops! Something went wrong. Please try again later.");
   }
 
   return new Response(twiml.toString(), {
