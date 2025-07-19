@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Lock, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebaseClient";
+import { auth } from "@/lib/firebase-client";
 
 export function AdminLogin({ onClose }: { onClose: () => void }) {
   const [credentials, setCredentials] = useState({ email: "", password: "" });

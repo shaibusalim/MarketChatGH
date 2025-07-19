@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { TwilioMessagingResponse } from "@/lib/twilio";
-import { firestore } from "@/lib/firebase";
+import { adminFirestore } from "@/lib/firebase-admin";
 import admin from "firebase-admin";
 import { answerComplexQuery } from "@/ai/flows/answer-complex-queries";
 
@@ -9,57 +9,128 @@ export async function POST(req: NextRequest) {
 
   try {
     const formData = await req.formData();
-    const body = (formData.get("Body") as string) || "";
+    const body = (formData.get("Body") as string)?.trim() || "";
     const from = (formData.get("From") as string) || "";
+    const messageSid = (formData.get("MessageSid") as string) || "";
     const numMedia = parseInt((formData.get("NumMedia") as string) || "0", 10);
     const mediaUrl = (formData.get("MediaUrl0") as string) || "";
 
-    const userId = from.replace("whatsapp:+", "");
-
-    // Add seller doc if not exists
-    const sellerRef = firestore.collection("sellers").doc(userId);
-    const sellerDoc = await sellerRef.get();
-    if (!sellerDoc.exists) {
-      await sellerRef.set({ active: true });
+    const sellerId = from.replace("whatsapp:+", "");
+    if (!sellerId || sellerId.trim() === "") {
+      console.error("Invalid sellerId", { from });
+      twiml.message("⚠️ Invalid phone number format. Please contact support.");
+      return new Response(twiml.toString(), {
+        headers: { "Content-Type": "text/xml" },
+      });
     }
 
-    if (numMedia > 0 && body.trim().length > 0) {
-      const lines = body.split("\n").map(line => line.trim()).filter(Boolean);
+    console.log("Processing message", { sellerId, body, numMedia, mediaUrl, messageSid });
 
-      // Find price line
-      const priceLine = lines.find(line =>
-        line.toLowerCase().includes("price") ||
-        line.includes("₵") ||
-        line.toLowerCase().includes("ghc")
+    const sellerRef = adminFirestore.collection("sellers").doc(sellerId);
+    const sellerDoc = await sellerRef.get();
+
+    if (!sellerDoc.exists || !sellerDoc.data()?.name || !sellerDoc.data()?.location) {
+      console.warn("Seller not registered", { sellerId });
+      twiml.message(
+        "⚠️ You are not a registered seller. Please contact the admin to be onboarded."
       );
-
-      // Remove price line from description lines
-      const descriptionLines = lines.filter(line => line !== priceLine);
-
-      const description = descriptionLines.join("\n");
-      const price = priceLine ? priceLine : "Price not specified";
-
-      // Save to Firestore
-      await firestore.collection("products").add({
-        sellerId: userId,
-        imageUrl: mediaUrl,
-        price,
-        description,
-        status: "available",
-        stockStatus: "in stock",
-        isAvailable: true,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      return new Response(twiml.toString(), {
+        headers: { "Content-Type": "text/xml" },
       });
+    }
 
-      const storeUrl = `${process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin}/${userId}`;
-      twiml.message(`✅ Product added successfully!\nView your store: ${storeUrl}`);
+    if (numMedia > 0) {
+      if (!body) {
+        console.warn("Media received without caption", { sellerId, messageSid });
+        twiml.message(
+          "⚠️ Please include a description and price with your product image."
+        );
+        return new Response(twiml.toString(), {
+          headers: { "Content-Type": "text/xml" },
+        });
+      }
+
+      const lines = body.split("\n").map((line) => line.trim()).filter(Boolean);
+      const priceLine = lines.find(
+        (line) =>
+          line.toLowerCase().includes("price") ||
+          line.includes("₵") ||
+          line.toLowerCase().includes("ghc")
+      );
+      const descriptionLines = lines.filter((line) => line !== priceLine);
+      const description = descriptionLines.join("\n") || "No description provided";
+      const price = priceLine || "Price not specified";
+
+      let mediaSid = "";
+      if (mediaUrl.includes("/Media/")) {
+        mediaSid = mediaUrl.split("/Media/")[1]?.split("/")[0] || "";
+      } else {
+        console.error("Invalid media URL format", { mediaUrl });
+        twiml.message("⚠️ Invalid media URL format. Please try again.");
+        return new Response(twiml.toString(), {
+          headers: { "Content-Type": "text/xml" },
+        });
+      }
+
+      const mediaReference = {
+        messageSid,
+        mediaSid,
+        originalUrl: mediaUrl,
+      };
+
+      const proxyMediaUrl = `/api/twilio-media?sid=${mediaSid}&msgSid=${messageSid}`;
+
+      const existingProducts = await adminFirestore
+        .collection("products")
+        .where("sellerId", "==", sellerId)
+        .limit(1)
+        .get();
+
+      try {
+        await adminFirestore.collection("products").add({
+          sellerId,
+          imageUrl: proxyMediaUrl,
+          mediaReference,
+          price,
+          description,
+          status: "available",
+          stockStatus: "in stock",
+          isAvailable: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (error) {
+        console.error("Failed to save product to adminFirestore", { error, sellerId, mediaSid });
+        twiml.message("⚠️ Failed to add product. Please try again or contact support.");
+        return new Response(twiml.toString(), {
+          headers: { "Content-Type": "text/xml" },
+        });
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin;
+      if (existingProducts.empty) {
+        const storeUrl = `${baseUrl}/${sellerId}`;
+        twiml.message(
+          `✅ Product added successfully!\n\n🛍️ View your store: ${storeUrl}`
+        );
+      } else {
+        twiml.message("✅ Product added successfully!");
+      }
+    } else if (body) {
+      try {
+        const aiResult = await answerComplexQuery({ query: body });
+        twiml.message(aiResult.reply);
+      } catch (error) {
+        console.error("AI processing failed", { error, query: body });
+        twiml.message(
+          "⚠️ Unable to process your request. Please try again or contact support."
+        );
+      }
     } else {
-      // Default fallback to AI if no media or no caption
-      const aiResult = await answerComplexQuery({ query: body });
-      twiml.message(aiResult.reply);
+      console.warn("Empty message received", { sellerId, messageSid });
+      twiml.message("⚠️ Please provide a message or product details.");
     }
   } catch (error) {
-    console.error("Error processing WhatsApp message:", error);
+    console.error("Error processing WhatsApp message", { error });
     twiml.message("Oops! Something went wrong. Please try again later.");
   }
 

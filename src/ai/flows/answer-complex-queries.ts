@@ -1,18 +1,10 @@
 'use server';
 
-/**
- * @fileOverview A Genkit flow that answers complex questions about a product using Gemini.
- *
- * - answerComplexQuery - A function that handles the complex query answering process.
- * - AnswerComplexQueryInput - The input type for the answerComplexQuery function.
- * - AnswerComplexQueryOutput - The return type for the answerComplexQuery function.
- */
-
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const AnswerComplexQueryInputSchema = z.object({
-  query: z.string().describe('The complex query about the product.'),
+  query: z.string().min(1, "Query cannot be empty").describe('The complex query about the product.'),
 });
 export type AnswerComplexQueryInput = z.infer<typeof AnswerComplexQueryInputSchema>;
 
@@ -22,7 +14,16 @@ const AnswerComplexQueryOutputSchema = z.object({
 export type AnswerComplexQueryOutput = z.infer<typeof AnswerComplexQueryOutputSchema>;
 
 export async function answerComplexQuery(input: AnswerComplexQueryInput): Promise<AnswerComplexQueryOutput> {
-  return answerComplexQueryFlow(input);
+  try {
+    // Validate input
+    const validatedInput = AnswerComplexQueryInputSchema.parse(input);
+    return await answerComplexQueryFlow(validatedInput);
+  } catch (error) {
+    console.error("Input validation or flow error:", error);
+    return {
+      reply: "⚠️ Invalid or empty query. Please provide a valid question or contact support.",
+    };
+  }
 }
 
 const prompt = ai.definePrompt({
@@ -38,6 +39,7 @@ Here are the rules you must follow:
 - If the question is about how to pay, you should instruct them to pay via MTN Mobile Money to the number 055 123 4567 and to send a screenshot of the payment confirmation to finalize the order.
 - For any other question, provide a helpful response. Be friendly and use Ghanaian colloquialisms where appropriate.
 - Keep your answers short and to the point.
+- If the query is empty or invalid, respond with a generic helpful message.
 
 Customer query: {{{query}}}`,
 });
@@ -48,13 +50,15 @@ const answerComplexQueryFlow = ai.defineFlow(
     inputSchema: AnswerComplexQueryInputSchema,
     outputSchema: AnswerComplexQueryOutputSchema,
   },
-  async input => {
+  async (input) => {
     try {
       const { output } = await prompt(input);
-      return output!;
+      if (!output?.reply) {
+        throw new Error("Empty response from AI");
+      }
+      return output;
     } catch (error) {
       console.error("Gemini prompt error:", error);
-      // ✅ Instead of throwing, return a fallback message
       return {
         reply: "Our AI assistant is currently overloaded. Please try again later or contact us directly. 🙏🏾",
       };

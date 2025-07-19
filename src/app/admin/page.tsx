@@ -1,4 +1,4 @@
-import { firestore } from "@/lib/firebase-admin";
+import { adminFirestore } from "@/lib/firebase-admin";
 import {
   Accordion,
   AccordionContent,
@@ -35,37 +35,43 @@ interface Product {
 
 interface Seller {
   id: string;
-  products: Product[];
+  name: string;
+  location: string;
   active: boolean;
+  products: Product[];
 }
 
 // --- Fetch sellers and products ---
 async function getSellersAndProducts(): Promise<Seller[]> {
-  const sellersSnapshot = await firestore.collection("sellers").get();
-  const productsSnapshot = await firestore.collection("products").get();
+  const sellersSnapshot = await adminFirestore.collection("sellers").get();
+const productsSnapshot = await adminFirestore.collection("products").get();
 
-  const sellers: Seller[] = [];
+const sellers: Seller[] = [];
 
-  sellersSnapshot.forEach((sellerDoc) => {
-    const sellerId = sellerDoc.id;
-    const active = sellerDoc.data().active ?? true;
-    const products = productsSnapshot.docs
-      .filter((p) => p.data().sellerId === sellerId)
-      .map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt?.toDate?.() ?? new Date(),
-        } as Product;
-      });
+sellersSnapshot.forEach((sellerDoc) => {
+  const sellerId = sellerDoc.id;
+  const data = sellerDoc.data();
+  const active = data.active ?? true;
 
-    sellers.push({
-      id: sellerId,
-      active,
-      products,
+  const products = productsSnapshot.docs
+    .filter((p) => p.data().sellerId === sellerId)
+    .map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.() ?? new Date(),
+      } as Product;
     });
+
+  sellers.push({
+    id: sellerId,
+    name: data.name ?? "Unnamed Seller",
+    location: data.location ?? "Unknown",
+    active,
+    products,
   });
+});
 
   return sellers;
 }
@@ -73,6 +79,8 @@ async function getSellersAndProducts(): Promise<Seller[]> {
 // --- Admin page component ---
 export default async function AdminPage() {
   const sellers = await getSellersAndProducts();
+
+  
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -83,6 +91,34 @@ export default async function AdminPage() {
         </div>
         <LogoutButton />
       </header>
+
+      <Card className="mb-6 shadow-md p-4">
+  <h2 className="text-xl font-semibold mb-4">Onboard New Seller</h2>
+  <form action="/admin/onboard-seller" method="POST" className="grid md:grid-cols-3 gap-4">
+    <input
+      name="sellerId"
+      required
+      placeholder="Phone Number (e.g. +233501234567)"
+      className="border rounded px-3 py-2 w-full"
+    />
+    <input
+      name="name"
+      required
+      placeholder="Seller Name"
+      className="border rounded px-3 py-2 w-full"
+    />
+    <input
+      name="location"
+      required
+      placeholder="Location"
+      className="border rounded px-3 py-2 w-full"
+    />
+    <Button type="submit" className="col-span-full md:col-span-1 mt-2">
+      Register Seller
+    </Button>
+  </form>
+</Card>
+
 
       <section className="grid grid-cols-1 gap-6">
         <Card className="border-primary shadow-md hover:shadow-lg transition-all duration-300">
@@ -97,13 +133,21 @@ export default async function AdminPage() {
                 {sellers.map((seller) => (
                   <AccordionItem value={seller.id} key={seller.id} className="border-b">
                     <AccordionTrigger className="font-semibold hover:text-primary transition-colors">
-                      Seller ID: {seller.id} ({seller.products.length} products){" "}
-                      {seller.active ? (
-                        <span className="ml-2 text-green-600">(Active)</span>
-                      ) : (
-                        <span className="ml-2 text-red-600">(Inactive)</span>
-                      )}
-                    </AccordionTrigger>
+  <div>
+    <div>
+      <strong>{seller.name}</strong> ({seller.location})
+    </div>
+    <div className="text-sm text-muted-foreground">
+      ID: {seller.id} • {seller.products.length} products
+      {seller.active ? (
+        <span className="ml-2 text-green-600">(Active)</span>
+      ) : (
+        <span className="ml-2 text-red-600">(Inactive)</span>
+      )}
+    </div>
+  </div>
+</AccordionTrigger>
+
                     <AccordionContent>
                       <div className="flex items-center gap-4 mb-4">
                         <form
@@ -134,13 +178,7 @@ export default async function AdminPage() {
                           {seller.products.map((product) => (
                             <TableRow key={product.id}>
                               <TableCell>
-                                <Image
-                                  src={product.imageUrl}
-                                  alt={product.description}
-                                  width={60}
-                                  height={60}
-                                  className="rounded-lg object-cover border"
-                                />
+                                
                               </TableCell>
                               <TableCell>{product.description}</TableCell>
                               <TableCell>₵{product.price}</TableCell>
