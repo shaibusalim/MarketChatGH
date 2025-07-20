@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import { useRef, Suspense } from 'react';
 import { Mesh } from 'three';
+import { TextureLoader } from 'three';
 
 interface GlobeProps {
   className?: string;
@@ -11,30 +12,41 @@ interface GlobeProps {
 
 export function Globe({ className }: GlobeProps) {
   const meshRef = useRef<Mesh>(null);
-  
+  const texture = new TextureLoader().load('/earth-texture.jpg', undefined, undefined, (error) => {
+    console.error('Globe texture load error:', error);
+  });
+
   return (
     <div className={className}>
       <Canvas>
         <Suspense fallback={null}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} />
+          <ambientLight intensity={0.6} />
+          <pointLight position={[10, 10, 10]} intensity={1.2} />
           <mesh ref={meshRef}>
-            <sphereGeometry args={[1.5, 32, 32]} />
-            <meshStandardMaterial color="#3b82f6" />
+            <sphereGeometry args={[1.5, 24, 24]} /> {/* Lower resolution for mobile */}
+            <meshStandardMaterial
+              map={texture}
+              roughness={0.7}
+              metalness={0.1}
+              fallback={null}
+            />
           </mesh>
-          <OrbitControls 
+          <OrbitControls
             enableZoom={false}
+            enablePan={false}
             autoRotate
-            autoRotateSpeed={2}
+            autoRotateSpeed={4}
+            minDistance={3}
+            maxDistance={3}
           />
           <Stars
-            radius={100}
-            depth={50}
-            count={5000}
-            factor={4}
+            radius={60}
+            depth={30}
+            count={500} // Reduced for mobile
+            factor={3}
             saturation={0}
             fade
-            speed={1}
+            speed={0.3}
           />
         </Suspense>
       </Canvas>
