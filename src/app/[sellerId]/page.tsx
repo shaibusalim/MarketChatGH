@@ -47,7 +47,7 @@ export default function SellerPage({ params }: SellerPageProps) {
       try {
         const resolvedParams = await params;
         setSellerId(resolvedParams.sellerId);
-        const response = await fetch(`/api/seller/${resolvedParams.sellerId}`, {
+        const response = await fetch(`/api/sellers/${resolvedParams.sellerId}`, {
           cache: 'no-store', // Ensure fresh data
         });
         if (!response.ok) {
