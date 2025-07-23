@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, User, Package, Menu, X } from 'lucide-react';
 import { TwilioMediaDisplay } from '@/components/TwilioMediaDisplay';
+import { toast } from 'react-hot-toast';
 import LogoutButton from '@/components/LogoutButton';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -112,6 +113,26 @@ export default function AdminPage() {
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     router.push(`/admin?q=${encodeURIComponent(searchQuery)}&page=${newPage}`);
+  };
+
+  const handleOnboardSeller = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    try {
+      const response = await fetch('/api/admin/onboard-seller', {
+        method: 'POST',
+        body: formData,
+      });
+      if (response.ok) {
+        toast.success('Seller onboarded successfully!', { duration: 3000 });
+        router.push('/admin');
+      } else {
+        const errorText = response.statusText || 'Failed to onboard seller';
+        toast.error(errorText, { duration: 3000 });
+      }
+    } catch (error) {
+      toast.error('Failed to onboard seller: ' + (error as Error).message, { duration: 3000 });
+    }
   };
 
   return (
@@ -359,7 +380,7 @@ export default function AdminPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form action="/admin/onboard-seller" method="POST" className="grid grid-cols-1 gap-4">
+              <form onSubmit={handleOnboardSeller} className="grid grid-cols-1 gap-4">
                 <input
                   name="sellerId"
                   required
