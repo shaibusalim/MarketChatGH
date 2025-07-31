@@ -1,13 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from '@/components/ui/accordion';
 import {
   Table,
   TableBody,
@@ -15,14 +16,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Shield, User, Package, Menu, X } from "lucide-react";
-import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay";
-import LogoutButton from "@/components/LogoutButton";
-import ThemeToggle from "@/components/ThemeToggle";
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Shield, User, Package, Menu, X, ArrowLeft, Trash2 } from 'lucide-react';
+import { TwilioMediaDisplay } from '@/components/TwilioMediaDisplay';
+import LogoutButton from '@/components/LogoutButton';
+import ThemeToggle from '@/components/ThemeToggle';
+import { toast } from 'react-hot-toast';
 
 // --- Types ---
 interface Product {
@@ -56,7 +58,7 @@ export default function SellerPage() {
     const fetchSeller = async () => {
       try {
         const response = await fetch(`/api/sellers/${sellerId}`);
-        if (!response.ok) throw new Error("Failed to fetch seller");
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         const data = await response.json();
         if (data.seller) {
           setSeller({
@@ -70,12 +72,34 @@ export default function SellerPage() {
           setSeller(null);
         }
       } catch (error) {
-        console.error("Error fetching seller:", error);
+        console.error('[Client] Error fetching seller:', error);
+        toast.error(`Failed to load seller: ${(error as Error).message}`, { duration: 3000 });
       }
     };
 
     if (sellerId) fetchSeller();
   }, [sellerId]);
+
+  const handleDeleteSeller = async () => {
+    if (!confirm(`Are you sure you want to delete seller ${seller?.name} (ID: ${sellerId})? This will also delete all their products.`)) {
+      return;
+    }
+    try {
+      const response = await fetch('/api/admin/delete-seller', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sellerId }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const data = await response.json();
+      if (data.error) throw new Error(data.details || 'Failed to delete seller');
+      toast.success('Seller deleted successfully', { duration: 3000 });
+      router.push('/admin');
+    } catch (error) {
+      console.error('[Client] Error deleting seller:', error);
+      toast.error(`Failed to delete seller: ${(error as Error).message}`, { duration: 3000 });
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-900 transition-colors duration-300">
@@ -92,7 +116,7 @@ export default function SellerPage() {
               variant="ghost"
               size="icon"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+              aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
             >
               {isSidebarOpen ? <X className="h-6 w-6 text-gray-600 dark:text-gray-300" /> : <Menu className="h-6 w-6 text-gray-600 dark:text-gray-300" />}
             </Button>
@@ -102,7 +126,7 @@ export default function SellerPage() {
         {/* Mobile Sidebar (Drawer) */}
         <div
           className={`fixed top-0 left-0 h-full w-full max-w-[16rem] bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-2xl z-50 transform transition-transform duration-300 md:hidden ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           <div className="p-4 sm:p-6">
@@ -179,9 +203,22 @@ export default function SellerPage() {
           {seller ? (
             <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg rounded-xl border border-gray-100 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-blue-600 dark:text-blue-400">
-                  <User className="h-4 w-4 sm:h-5 sm:w-5" /> Seller: {seller.name}
-                </CardTitle>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-blue-600 dark:text-blue-400">
+                    <User className="h-4 w-4 sm:h-5 sm:w-5" /> Seller: {seller.name}
+                  </CardTitle>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push('/admin')}
+                      className="text-xs sm:text-sm border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/50"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to Dashboard
+                    </Button>
+                  </motion.div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="mb-6">
@@ -191,11 +228,11 @@ export default function SellerPage() {
                     variant="outline"
                     className={`${
                       seller.active
-                        ? "bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-600"
-                        : "bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-600"
+                        ? 'bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-600'
+                        : 'bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-600'
                     } text-xs sm:text-sm mt-2`}
                   >
-                    {seller.active ? "Active" : "Inactive"}
+                    {seller.active ? 'Active' : 'Inactive'}
                   </Badge>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -203,14 +240,27 @@ export default function SellerPage() {
                     action={`/admin/toggle-seller?sellerId=${seller.id}&active=${!seller.active}`}
                     method="post"
                   >
-                    <Button
-                      type="submit"
-                      variant={seller.active ? "destructive" : "default"}
-                      className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-md hover:shadow-lg text-xs sm:text-sm py-2"
-                    >
-                      {seller.active ? "Deactivate Seller" : "Reactivate Seller"}
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        type="submit"
+                        variant={seller.active ? 'destructive' : 'default'}
+                        className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-md hover:shadow-lg text-xs sm:text-sm py-2"
+                      >
+                        {seller.active ? 'Deactivate Seller' : 'Reactivate Seller'}
+                      </Button>
+                    </motion.div>
                   </form>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleDeleteSeller}
+                      className="w-full sm:w-auto bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white shadow-md hover:shadow-lg text-xs sm:text-sm py-2"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Seller
+                    </Button>
+                  </motion.div>
                 </div>
                 <div className="overflow-x-auto">
                   <Table>
@@ -261,8 +311,8 @@ export default function SellerPage() {
                               variant="outline"
                               className={`text-xs sm:text-sm ${
                                 product.isAvailable
-                                  ? "bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-600"
-                                  : "bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-600"
+                                  ? 'bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-600'
+                                  : 'bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-600'
                               }`}
                             >
                               {product.stockStatus}

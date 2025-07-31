@@ -161,7 +161,7 @@ export function InteractiveElements() {
             animate={{ opacity: 0.7, scale: 1 }}
             transition={{ duration: 1, delay: 0.5 }}
           >
-            <Globe />
+            
           </motion.div>
         </ErrorBoundary>
 
