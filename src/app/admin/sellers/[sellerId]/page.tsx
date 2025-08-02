@@ -25,6 +25,7 @@ import { TwilioMediaDisplay } from '@/components/TwilioMediaDisplay';
 import LogoutButton from '@/components/LogoutButton';
 import ThemeToggle from '@/components/ThemeToggle';
 import { toast } from 'react-hot-toast';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 
 // --- Types ---
 interface Product {
@@ -53,6 +54,8 @@ export default function SellerPage() {
   const sellerId = params.sellerId as string;
   const [seller, setSeller] = useState<Seller | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchSeller = async () => {
@@ -81,23 +84,29 @@ export default function SellerPage() {
   }, [sellerId]);
 
   const handleDeleteSeller = async () => {
-    if (!confirm(`Are you sure you want to delete seller ${seller?.name} (ID: ${sellerId})? This will also delete all their products.`)) {
-      return;
-    }
+    setIsDeleting(true);
     try {
       const response = await fetch('/api/admin/delete-seller', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sellerId }),
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      const data = await response.json();
-      if (data.error) throw new Error(data.details || 'Failed to delete seller');
-      toast.success('Seller deleted successfully', { duration: 3000 });
+
+      if (!response.ok) throw new Error('Failed to delete seller');
+
+      toast.success('Seller deleted successfully', {
+        position: 'top-center',
+        duration: 3000,
+      });
       router.push('/admin');
     } catch (error) {
-      console.error('[Client] Error deleting seller:', error);
-      toast.error(`Failed to delete seller: ${(error as Error).message}`, { duration: 3000 });
+      toast.error(`Failed to delete seller: ${(error as Error).message}`, {
+        position: 'top-center',
+        duration: 4000,
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -251,15 +260,23 @@ export default function SellerPage() {
                     </motion.div>
                   </form>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleDeleteSeller}
-                      className="w-full sm:w-auto bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white shadow-md hover:shadow-lg text-xs sm:text-sm py-2"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Seller
-                    </Button>
+                   <Button
+        variant="destructive"
+        onClick={() => setIsDeleteDialogOpen(true)}
+        disabled={isDeleting}
+      >
+        <Trash2 className="h-4 w-4 mr-2" />
+        {isDeleting ? 'Deleting...' : 'Delete Seller'}
+      </Button>
+
+      <DeleteConfirmationDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDeleteSeller}
+        title="Confirm Deletion"
+        description={`Are you sure you want to delete seller ${seller?.name} (ID: ${sellerId})? This will also delete all their products.`}
+        confirmText={isDeleting ? 'Deleting...' : 'Delete'}
+      />
                   </motion.div>
                 </div>
                 <div className="overflow-x-auto">
