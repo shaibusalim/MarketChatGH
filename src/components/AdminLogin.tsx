@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User } from "lucide-react";
 import { motion } from "framer-motion";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase-client";
+import { signIn } from "next-auth/react";
 
 export function AdminLogin({ onClose }: { onClose: () => void }) {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -13,18 +12,21 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    try {
-      await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-      localStorage.setItem("isAuthenticated", "true");
-      router.push("/admin");
-    } catch (err: any) {
-      console.error(err);
-      setError("Invalid email or password");
-    }
-  };
+  const result = await signIn("credentials", {
+    email: credentials.email,
+    password: credentials.password,
+    redirect: false,
+  });
+
+  if (result?.error) {
+    setError(result.error);
+  } else {
+    router.push("/admin");
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
