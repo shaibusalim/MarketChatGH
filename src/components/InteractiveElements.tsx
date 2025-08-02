@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import { Bot, ShoppingCart, Smartphone, Store, ArrowRight, MessageCircle, Users, Star } from "lucide-react";
 import Link from "next/link";
 import { ErrorBoundary } from './ErrorBoundary';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 // Removed import for non-existent 'next/video'
 
 const Globe = dynamic(() => import('@/components/ui/globe').then(mod => mod.Globe), { 
@@ -65,9 +67,8 @@ const FeatureCard = ({ icon, title, description, delay }: {
         }
       }}
       whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.1)" }}
-      className="h-full"
     >
-      <div className="shadow-lg hover:shadow-red-500/20 dark:hover:shadow-green-500/20 transition-all duration-500 border border-gray-100 dark:border-gray-800 bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/50 rounded-xl p-5 backdrop-blur-sm">
+      <div className="h-full shadow-lg hover:shadow-red-500/20 dark:hover:shadow-green-500/20 transition-all duration-500 border border-gray-100 dark:border-gray-800 bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/50 rounded-xl p-5 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-3">
           <div className="bg-gradient-to-br from-red-500 to-green-500 p-2 rounded-lg shadow-md">
             {icon}
@@ -134,21 +135,44 @@ export function InteractiveElements() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative w-full min-h-[60vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
-        {/* Background Video */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover z-0 opacity-68"
-          poster="/background-fallback.jpg"
+      <section className="relative w-full min-h-[60vh] sm:min-h-screen xl:h-[800px] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+        {/* Background Carousel */}
+        <Carousel
+          className="absolute inset-0 w-full h-full"
+          plugins={[
+            Autoplay({
+              delay: 5000,
+            }),
+          ]}
+          opts={{
+            loop: true,
+          }}
         >
-          <source src="/background-video.mp4" type="video/mp4" />
-          {/* Fallback text for browsers that do not support the video tag */}
-          Your browser does not support the video tag.
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-0" />
+          <CarouselContent>
+            <CarouselItem>
+              <img
+                src="/hero1.jpg"
+                alt="Background 1"
+                className="w-full h-full object-cover opacity-68"
+              />
+            </CarouselItem>
+            <CarouselItem>
+              <img
+                src="/hero2.jpg"
+                alt="Background 2"
+                className="w-full h-full object-cover opacity-68"
+              />
+            </CarouselItem>
+            <CarouselItem>
+              <img
+                src="/hero3.jpg"
+                alt="Background 3"
+                className="w-full h-full object-cover opacity-68"
+              />
+            </CarouselItem>
+          </CarouselContent>
+        </Carousel>
+        <div className="absolute inset-0 bg-black/60 z-0" />
 
         <ErrorBoundary fallback={
           <div className="hidden sm:block absolute top-4 right-4 w-40 h-40 sm:w-64 sm:h-64 bg-gray-100 rounded-full items-center justify-center opacity-50">
@@ -195,7 +219,7 @@ export function InteractiveElements() {
             <motion.button
               whileHover={{ scale: 1.1, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-br from-red-500 via-yellow-400 to-green-500 text-white rounded-xl font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300"
+              className="px-6 py-3 sm:px-8 sm:py-4 bg-green-500 text-white rounded-xl font-medium shadow-lg hover:bg-green-600 transition-all duration-300"
             >
               Start Shopping
               <ArrowRight className="inline ml-2 h-4 w-4 sm:h-5 sm:w-5" />
@@ -204,7 +228,7 @@ export function InteractiveElements() {
             <motion.button
               whileHover={{ scale: 1.1, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 sm:px-8 sm:py-4 bg-transparent border-2 border-green-500 text-green-500 rounded-xl font-medium shadow-lg hover:bg-green-500/10 transition-all duration-300"
+              className="px-6 py-3 sm:px-8 sm:py-4 bg-transparent border-2 border-white text-white rounded-xl font-medium shadow-lg hover:bg-white/10 transition-all duration-300"
             >
               Learn More
             </motion.button>
@@ -281,19 +305,63 @@ export function InteractiveElements() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FeatureCard
-            icon={<Store className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
-            title="For Sellers"
-            description="Transform your WhatsApp into a powerful e-commerce platform with just a few messages."
-            delay={0.2}
-          />
-          <FeatureCard
-            icon={<ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
-            title="For Buyers"
-            description="Discover and shop from local businesses with the convenience of WhatsApp."
-            delay={0.4}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div>
+            <FeatureCard
+              icon={<Store className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
+              title="For Sellers"
+              description="Transform your WhatsApp into a powerful e-commerce platform with just a few messages."
+              delay={0.2}
+            />
+            <Carousel 
+              className="rounded-xl overflow-hidden mt-6"
+              opts={{
+                loop: true,
+              }}
+            >
+              <CarouselContent>
+                <CarouselItem>
+                  <img src="/img1.jpg" alt="Feature 1" className="w-full h-auto object-cover" />
+                </CarouselItem>
+                <CarouselItem>
+                  <img src="/img2.jpg" alt="Feature 2" className="w-full h-auto object-cover" />
+                </CarouselItem>
+                <CarouselItem>
+                  <img src="/img3.jpg" alt="Feature 3" className="w-full h-auto object-cover" />
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+          <div>
+            <FeatureCard
+              icon={<ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
+              title="For Buyers"
+              description="Discover and shop from local businesses with the convenience of WhatsApp."
+              delay={0.4}
+            />
+            <Carousel
+              className="rounded-xl overflow-hidden mt-6"
+              opts={{
+                loop: true,
+              }}
+            >
+              <CarouselContent>
+                <CarouselItem>
+                  <img src="/img4.jpg" alt="Feature 4" className="w-full h-auto object-cover" />
+                </CarouselItem>
+                <CarouselItem>
+                  <img src="/img5.jpg" alt="Feature 5" className="w-full h-auto object-cover" />
+                </CarouselItem>
+                <CarouselItem>
+                  <img src="/img6.jpg" alt="Feature 6" className="w-full h-auto object-cover" />
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
         </div>
       </section>
 

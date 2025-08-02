@@ -361,7 +361,7 @@ export default function SellerPage({ params }: SellerPageProps) {
             <p className="text-gray-600 mb-6">Connecting buyers and sellers across Ghana</p>
             <div className="flex items-center justify-center gap-6">
               <a
-                href="https://wa.me/+233551234567"
+                href="https://wa.me/+233209832978"
                 className="text-gray-400 hover:text-blue-600 transition-colors"
               >
                 <MessageCircle className="w-5 h-5" />
