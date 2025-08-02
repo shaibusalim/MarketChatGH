@@ -49,11 +49,11 @@ export default function Home() {
                   className="object-contain"
                 />
               </div>
-              <span className="font-headline text-lg font-bold text-gray-900 dark:text-white">MarketChat GH</span>
+              <span className="font-headline text-lg font-bold text-gray-900 dark:text-white">MarketChat</span>
             </motion.div>
             <div className="flex flex-col md:flex-row gap-3 items-center">
               <p className="text-muted-foreground text-xs">
-                © {new Date().getFullYear()} MarketChat GH. All rights reserved.
+                © {new Date().getFullYear()} MarketChat. All rights reserved.
               </p>
               <div className="flex gap-3">
                 <motion.a

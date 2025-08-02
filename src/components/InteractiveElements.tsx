@@ -208,7 +208,7 @@ export function InteractiveElements() {
           </motion.div>
 
           <h1 className="font-headline text-3xl sm:text-5xl md:text-6xl font-bold tracking-tighter mb-4">
-            <AnimatedGradientText>MarketChat GH</AnimatedGradientText>
+            <AnimatedGradientText>MarketChat</AnimatedGradientText>
           </h1>
 
           <p className="mt-2 text-base sm:text-lg md:text-xl max-w-xl mx-auto text-gray-100 dark:text-gray-200 bg-black/30 dark:bg-black/50 backdrop-blur-sm py-2 px-4 rounded-lg">
@@ -313,12 +313,17 @@ export function InteractiveElements() {
               description="Transform your WhatsApp into a powerful e-commerce platform with just a few messages."
               delay={0.2}
             />
-            <Carousel 
-              className="rounded-xl overflow-hidden mt-6"
-              opts={{
-                loop: true,
-              }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
             >
+              <Carousel
+                className="rounded-xl overflow-hidden mt-6"
+                opts={{
+                  loop: true,
+                }}
+              >
               <CarouselContent>
                 <CarouselItem>
                   <img src="/img1.jpg" alt="Feature 1" className="w-full h-auto object-cover" />
@@ -333,6 +338,7 @@ export function InteractiveElements() {
               <CarouselPrevious />
               <CarouselNext />
             </Carousel>
+            </motion.div>
           </div>
           <div>
             <FeatureCard
@@ -341,6 +347,11 @@ export function InteractiveElements() {
               description="Discover and shop from local businesses with the convenience of WhatsApp."
               delay={0.4}
             />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
             <Carousel
               className="rounded-xl overflow-hidden mt-6"
               opts={{
@@ -361,6 +372,7 @@ export function InteractiveElements() {
               <CarouselPrevious />
               <CarouselNext />
             </Carousel>
+            </motion.div>
           </div>
         </div>
       </section>
