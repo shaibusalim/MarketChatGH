@@ -216,14 +216,16 @@ export function InteractiveElements() {
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <motion.button
-              whileHover={{ scale: 1.1, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 sm:px-8 sm:py-4 bg-green-500 text-white rounded-xl font-medium shadow-lg hover:bg-green-600 transition-all duration-300"
-            >
-              Start Shopping
-              <ArrowRight className="inline ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-            </motion.button>
+            <Link href="/sellers">
+              <motion.button
+                whileHover={{ scale: 1.1, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-3 sm:px-8 sm:py-4 bg-green-500 text-white rounded-xl font-medium shadow-lg hover:bg-green-600 transition-all duration-300"
+              >
+                Start Shopping
+                <ArrowRight className="inline ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+              </motion.button>
+            </Link>
 
             <motion.button
               whileHover={{ scale: 1.1, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
