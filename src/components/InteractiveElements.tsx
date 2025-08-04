@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { motion, useAnimation, useInView } from "framer-motion";
-import dynamic from 'next/dynamic';
 import { Bot, ShoppingCart, Smartphone, Store, ArrowRight, MessageCircle, Users, Star } from "lucide-react";
 import Link from "next/link";
 import { ErrorBoundary } from './ErrorBoundary';
@@ -10,14 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 // Removed import for non-existent 'next/video'
 
-const Globe = dynamic(() => import('@/components/ui/globe').then(mod => mod.Globe), { 
-  ssr: false,
-  loading: () => (
-    <div className="w-40 h-40 sm:w-64 sm:h-64 bg-gray-100 rounded-full flex items-center justify-center">
-      <div className="animate-pulse text-gray-500 text-sm">Loading globe...</div>
-    </div>
-  )
-});
+
 
 const AnimatedGradientText = ({ children }: { children: React.ReactNode }) => (
   <motion.span
@@ -135,7 +127,7 @@ export function InteractiveElements() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative w-full min-h-[60vh] sm:min-h-screen xl:h-[800px] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+      <section className="relative w-full min-h-[60vh] sm:min-h-[80vh] xl:h-[800px] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 overflow-hidden">
         {/* Background Carousel */}
         <Carousel
           className="absolute inset-0 w-full h-full"
