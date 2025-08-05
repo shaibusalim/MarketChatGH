@@ -420,7 +420,7 @@ export function FloatingWhatsAppButton() {
       className="fixed bottom-16 sm:bottom-8 right-4 sm:right-8 z-50 animate-pulse"
     >
       <Link
-        href="https://wa.me/+233501234567"
+        href="https://wa.me/+233209832978"
         target="_blank"
         rel="noopener noreferrer"
         className="bg-green-500 text-white p-3 sm:p-4 rounded-full shadow-xl hover:bg-green-600 transition-colors flex items-center justify-center"

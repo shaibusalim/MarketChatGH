@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+export const revalidate = 0;
+
 // --- Types ---
 interface Product {
   id: string;

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { adminFirestore } from "@/lib/firebase-admin";
-import { cache } from "react";
 
 // --- Types ---
 interface Product {
@@ -27,8 +26,8 @@ interface SellerResponse {
   products: Product[];
 }
 
-// --- Cached Firestore query ---
-const getSellerAndProducts = cache(async (sellerId: string): Promise<SellerResponse> => {
+// --- Firestore query ---
+const getSellerAndProducts = async (sellerId: string): Promise<SellerResponse> => {
   console.log(`[API] Fetching seller with ID: ${sellerId}`);
   try {
     // Fetch seller info
@@ -73,7 +72,7 @@ const getSellerAndProducts = cache(async (sellerId: string): Promise<SellerRespo
     console.error(`[API] Error fetching seller data for sellerId ${sellerId}:`, error);
     throw new Error("Failed to fetch seller data");
   }
-});
+};
 
 export async function GET(request: Request, { params }: { params: Promise<{ sellerId: string }> }) {
   console.log("[API] GET /api/sellers/[sellerId] route accessed");
