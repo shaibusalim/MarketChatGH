@@ -390,17 +390,17 @@ export function InteractiveElements() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           <TestimonialCard
             quote="MarketChat has transformed how I sell my products. It's so easy to manage everything through WhatsApp!"
-            author="Kofi Mensah"
+            author="Mohammed Alhassan"
             role="Local Artisan"
           />
           <TestimonialCard
             quote="Shopping on MarketChat is a breeze. I found exactly what I needed in minutes."
-            author="Akosua Owusu"
+            author="Ahmed Salam"
             role="Customer"
           />
           <TestimonialCard
             quote="The AI recommendations helped me discover new local businesses. Highly recommend!"
-            author="Yaw Amponsah"
+            author="Fatima Mensah"
             role="Entrepreneur"
           />
         </div>
