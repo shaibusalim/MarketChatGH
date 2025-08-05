@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -46,7 +47,7 @@ interface Seller {
   products: Product[];
 }
 
-export default function AdminPage() {
+function AdminDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sellers, setSellers] = useState<Seller[]>([]);
@@ -631,5 +632,13 @@ export default function AdminPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminDashboard />
+    </Suspense>
   );
 }

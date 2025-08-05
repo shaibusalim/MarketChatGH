@@ -20,7 +20,8 @@ if (!admin.apps.length) {
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://${serviceAccount.projectId}.firebaseio.com`
+      databaseURL: `https://${serviceAccount.projectId}.firebaseio.com`,
+      storageBucket: `${serviceAccount.projectId}.appspot.com`
     });
   } catch (error: any) {
     console.error('Firebase admin initialization error:', error.message);
@@ -30,3 +31,4 @@ if (!admin.apps.length) {
 
 export const adminFirestore = admin.firestore();
 export const adminAuth = admin.auth();
+export const adminStorage = admin.storage();
