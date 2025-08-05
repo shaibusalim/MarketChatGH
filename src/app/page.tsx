@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from 'next/navigation';
 import { InteractiveElements, FloatingWhatsAppButton } from "@/components/InteractiveElements";
 import { AdminLogin } from "@/components/AdminLogin";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
-export default function Home() {
+function HomeComponent() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const searchParams = useSearchParams();
+  const showAdminButton = searchParams.get('admin') === 'true';
 
   return (
     <main className="relative flex flex-col items-center min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
@@ -17,14 +20,16 @@ export default function Home() {
         <FloatingWhatsAppButton />
 
         {/* Admin Login Link */}
-        <motion.button
-          whileHover={{ scale: 1.1, color: "#3b82f6" }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowAdminLogin(true)}
-          className="fixed bottom-3 right-3 text-xs text-gray-300 hover:text-primary underline z-20 sm:bottom-4 sm:right-4"
-        >
-          Admin Login
-        </motion.button>
+        {showAdminButton && (
+          <motion.button
+            whileHover={{ scale: 1.1, color: "#3b82f6" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAdminLogin(true)}
+            className="fixed bottom-3 right-3 text-xs text-gray-300 hover:text-primary underline z-20 sm:bottom-4 sm:right-4"
+          >
+            Admin Login
+          </motion.button>
+        )}
 
         {/* Admin Login Modal */}
         {showAdminLogin && (
@@ -83,5 +88,13 @@ export default function Home() {
         </footer>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeComponent />
+    </Suspense>
   );
 }
