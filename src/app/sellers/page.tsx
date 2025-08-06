@@ -57,7 +57,7 @@ export default async function SellersPage() {
   const sellers = await getSellersWithProducts();
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-900 transition-colors duration-300">
+    <main className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <h1 className="text-4xl font-bold text-center mb-8 text-gray-900 dark:text-white">
           Our Sellers

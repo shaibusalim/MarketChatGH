@@ -99,7 +99,7 @@ export default function SellerPage({ params }: SellerPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
       <style jsx>{`
         @keyframes fadeInUp {
           from {
