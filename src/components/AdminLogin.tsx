@@ -1,96 +1,110 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Lock, User } from "lucide-react";
-import { motion } from "framer-motion";
-import { signIn } from "next-auth/react";
+import type React from "react"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Lock, User, Loader2 } from "lucide-react"
+import { AnimatePresence } from "framer-motion" // Import AnimatePresence
+import { signIn } from "next-auth/react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 export function AdminLogin({ onClose }: { onClose: () => void }) {
-  const [credentials, setCredentials] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const router = useRouter();
+  const [credentials, setCredentials] = useState({ email: "", password: "" })
+  const [error, setError] = useState("")
+  const [isSigningIn, setIsSigningIn] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault()
+    setError("")
+    setIsSigningIn(true)
 
-  const result = await signIn("credentials", {
-    email: credentials.email,
-    password: credentials.password,
-    redirect: false,
-  });
+    const result = await signIn("credentials", {
+      email: credentials.email,
+      password: credentials.password,
+      redirect: false,
+    })
 
-  if (result?.error) {
-    setError(result.error);
-  } else {
-    router.push("/admin");
+    setIsSigningIn(false)
+
+    if (result?.error) {
+      setError(result.error)
+    } else {
+      router.push("/admin")
+      onClose() // Close the dialog on successful login
+    }
   }
-};
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-xl w-full max-w-md relative"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-        >
-          ✖
-        </button>
-        <h3 className="text-2xl font-bold mb-4">Admin Login</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Email
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-5 w-5 text-gray-400" />
+    <AnimatePresence>
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">Admin Login</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Enter your credentials to access the admin panel.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+            <div className="space-y-1">
+              <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  value={credentials.email}
+                  onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                  className="pl-10 w-full"
+                  placeholder="Enter email"
+                  required
+                />
               </div>
-              <input
-                type="email"
-                value={credentials.email}
-                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-                className="pl-10 w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Enter email"
-              />
             </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Password
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
+            <div className="space-y-1">
+              <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={credentials.password}
+                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                  className="pl-10 w-full"
+                  placeholder="Enter password"
+                  required
+                />
               </div>
-              <input
-                type="password"
-                value={credentials.password}
-                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                className="pl-10 w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Enter password"
-              />
             </div>
-          </div>
-
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-
-          <button
-            type="submit"
-            className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Login
-          </button>
-        </form>
-      </motion.div>
-    </div>
-  );
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+            <Button
+              type="submit"
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md"
+              disabled={isSigningIn}
+            >
+              {isSigningIn ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </AnimatePresence>
+  )
 }

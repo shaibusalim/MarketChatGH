@@ -1,24 +1,25 @@
-"use client";
+"use client"
 
-import { useState, Suspense } from "react";
-import { useSearchParams } from 'next/navigation';
-import { InteractiveElements, FloatingWhatsAppButton } from "@/components/InteractiveElements";
-import { AdminLogin } from "@/components/AdminLogin";
-import { motion } from "framer-motion";
-import Image from "next/image";
+import { useState, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
+import { InteractiveElements, FloatingWhatsAppButton } from "@/components/InteractiveElements"
+import { AdminLogin } from "@/components/AdminLogin"
+import { Header } from "@/components/header"
+import { motion } from "framer-motion"
+import Image from "next/image"
 
 function HomeComponent() {
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const searchParams = useSearchParams();
-  const showAdminButton = searchParams.get('admin') === 'true';
+  const [showAdminLogin, setShowAdminLogin] = useState(false)
+  const searchParams = useSearchParams()
+  const showAdminButton = searchParams.get("admin") === "true"
 
   return (
     <main className="relative flex flex-col items-center min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <Header />
       {/* Content */}
       <div className="relative z-10 w-full max-w-[1440px] mx-auto">
         <InteractiveElements />
         <FloatingWhatsAppButton />
-
         {/* Admin Login Link */}
         {showAdminButton && (
           <motion.button
@@ -30,12 +31,8 @@ function HomeComponent() {
             Admin Login
           </motion.button>
         )}
-
         {/* Admin Login Modal */}
-        {showAdminLogin && (
-          <AdminLogin onClose={() => setShowAdminLogin(false)} />
-        )}
-
+        {showAdminLogin && <AdminLogin onClose={() => setShowAdminLogin(false)} />}
         {/* Footer */}
         <footer className="w-full py-8 px-4 sm:px-6 md:px-8 border-t border-gray-100 dark:border-gray-800 mt-auto bg-gradient-to-t from-gray-100/50 to-transparent dark:from-gray-800/50">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -46,13 +43,7 @@ function HomeComponent() {
               className="flex items-center gap-3"
             >
               <div className="bg-gradient-to-br from-red-500 via-yellow-400 to-green-500 p-2 rounded-lg">
-                <Image
-                  src="/logo.png"
-                  alt="MarketChat GH Logo"
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
+                <Image src="/logo.png" alt="MarketChat GH Logo" width={24} height={24} className="object-contain" />
               </div>
               <span className="font-headline text-lg font-bold text-gray-900 dark:text-white">MarketChat</span>
             </motion.div>
@@ -88,7 +79,7 @@ function HomeComponent() {
         </footer>
       </div>
     </main>
-  );
+  )
 }
 
 export default function Home() {
@@ -96,5 +87,5 @@ export default function Home() {
     <Suspense fallback={<div>Loading...</div>}>
       <HomeComponent />
     </Suspense>
-  );
+  )
 }

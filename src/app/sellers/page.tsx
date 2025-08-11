@@ -1,97 +1,83 @@
-import { adminFirestore } from "@/lib/firebase-admin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { adminFirestore } from "@/lib/firebase-admin" // Assuming this path is correct and setup
+import { SellerCard } from "@/components/seller-card" // Import the new SellerCard component
 
-export const revalidate = 0;
+export const revalidate = 0 // Ensure data is always fresh
 
 // --- Types ---
 interface Product {
-  id: string;
-  imageUrl: string;
-  price: string;
-  description: string;
+  id: string
+  imageUrl: string
+  price: string
+  description: string
 }
 
 interface Seller {
-  id: string;
-  name: string;
-  products: Product[];
+  id: string
+  name: string
+  products: Product[]
 }
 
 // --- Firestore query ---
 async function getSellersWithProducts(): Promise<Seller[]> {
-  const sellersSnapshot = await adminFirestore.collection("sellers").get();
-  const sellers: Seller[] = [];
+  try {
+    const sellersSnapshot = await adminFirestore.collection("sellers").get()
+    const sellers: Seller[] = []
 
-  for (const sellerDoc of sellersSnapshot.docs) {
-    const sellerData = sellerDoc.data();
-    const productsSnapshot = await adminFirestore
-      .collection("products")
-      .where("sellerId", "==", sellerDoc.id)
-      .limit(3)
-      .get();
+    for (const sellerDoc of sellersSnapshot.docs) {
+      const sellerData = sellerDoc.data()
+      // Fetch up to 6 products for preview
+      const productsSnapshot = await adminFirestore
+        .collection("products")
+        .where("sellerId", "==", sellerDoc.id)
+        .limit(6) // Increased limit for more product previews
+        .get()
 
-    const products = productsSnapshot.docs.map((productDoc) => {
-      const productData = productDoc.data();
-      return {
-        id: productDoc.id,
-        imageUrl: productData.imageUrl ?? "/placeholder-product.jpg",
-        price: productData.price ?? "N/A",
-        description: productData.description ?? "No description",
-      };
-    });
+      const products = productsSnapshot.docs.map((productDoc) => {
+        const productData = productDoc.data()
+        return {
+          id: productDoc.id,
+          imageUrl: productData.imageUrl ?? "/placeholder-product.png", // Use the generated placeholder
+          price: productData.price ?? "N/A",
+          description: productData.description ?? "No description",
+        }
+      })
 
-    sellers.push({
-      id: sellerDoc.id,
-      name: sellerData.name ?? "Unnamed Seller",
-      products,
-    });
+      sellers.push({
+        id: sellerDoc.id,
+        name: sellerData.name ?? "Unnamed Seller",
+        products,
+      })
+    }
+    return sellers
+  } catch (error) {
+    console.error("Error fetching sellers with products:", error)
+    // In a real app, you might want to log this error to an error tracking service
+    throw new Error("Failed to fetch seller data. Please try again later.")
   }
-
-  return sellers;
 }
 
 // --- Sellers page component ---
 export default async function SellersPage() {
-  const sellers = await getSellersWithProducts();
+  const sellers = await getSellersWithProducts()
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 transition-colors duration-300">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 transition-colors duration-300 py-16">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <h1 className="text-4xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-          Our Sellers
+        <h1 className="text-4xl font-bold text-center mb-12 text-gray-900 dark:text-white">
+          Discover Our Amazing Sellers
         </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {sellers.map((seller) => (
-            <Card key={seller.id} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg rounded-2xl border border-gray-100 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {seller.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  {seller.products.map((product) => (
-                    <div key={product.id} className="relative aspect-square rounded-lg overflow-hidden">
-                      <img
-                        src={product.imageUrl}
-                        alt={product.description}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  <Link href={`/${seller.id}`}>
-                    Shop from {seller.name}
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {sellers.length === 0 ? (
+          <div className="text-center text-muted-foreground text-lg py-10">
+            No sellers found at the moment. Please check back later!
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {sellers.map((seller, index) => (
+              <SellerCard key={seller.id} seller={seller} index={index} />
+            ))}
+          </div>
+        )}
       </div>
     </main>
-  );
+  )
 }
