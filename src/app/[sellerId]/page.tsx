@@ -201,7 +201,7 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
               asChild
               className="mt-8 bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
             >
-              <a href="https://wa.me/+233551234567" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/+233209832978" target="_blank" rel="noopener noreferrer">
                 Contact Support
               </a>
             </Button>
@@ -410,7 +410,7 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
                         className="flex-1 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 bg-transparent"
                       >
                         <Link
-                          href={`/sellers/${sellerId}/product/${product.id}`}
+                          href={`/${sellerId}/product/${product.id}`}
                           className="flex items-center justify-center"
                         >
                           <Eye className="w-4 h-4 mr-2" />
