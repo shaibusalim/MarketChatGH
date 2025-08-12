@@ -37,7 +37,7 @@ const getSellerAndProducts = async (
   productQ = "",
   productStatus = "all",
 ): Promise<SellerResponse> => {
-  console.log(`[API] Fetching seller with ID: ${sellerId}`)
+ 
   try {
     // Fetch seller info
     const sellerDoc = await adminFirestore.collection("sellers").doc(sellerId).get()
@@ -54,7 +54,7 @@ const getSellerAndProducts = async (
         reviewCount: data?.reviewCount ?? 0, // Retrieve review count
       }
     } else {
-      console.log(`[API] No seller found for ID: ${sellerId}`)
+     
     }
 
     // Fetch products with filters
@@ -72,7 +72,7 @@ const getSellerAndProducts = async (
     }
 
     const productsSnapshot = await productsQuery.get()
-    console.log(`[API] Fetched ${productsSnapshot.size} products for seller ${sellerId} with filters.`)
+   
 
     const products: Product[] = productsSnapshot.docs.map((doc) => {
       const data = doc.data()
@@ -91,22 +91,20 @@ const getSellerAndProducts = async (
 
     return { seller, products }
   } catch (error) {
-    console.error(`[API] Error fetching seller data for sellerId ${sellerId}:`, error)
+  
     throw new Error("Failed to fetch seller data")
   }
 }
 
 export async function GET(request: Request, { params }: { params: { sellerId: string } }) {
-  console.log("[API] GET /api/sellers/[sellerId] route accessed")
+
   try {
     const { sellerId } = params
     const { searchParams } = new URL(request.url)
     const productQ = searchParams.get("productQ") || ""
     const productStatus = searchParams.get("productStatus") || "all"
 
-    console.log(
-      `[API] GET /api/sellers/[sellerId] called with params: sellerId=${sellerId}, productQ=${productQ}, productStatus=${productStatus}`,
-    )
+   
 
     const response = await getSellerAndProducts(sellerId, productQ, productStatus)
     return NextResponse.json(response, { status: 200 })

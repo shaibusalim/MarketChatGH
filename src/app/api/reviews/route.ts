@@ -13,7 +13,7 @@ interface ReviewData {
 }
 
 export async function POST(request: Request) {
-  console.log("[API] POST /api/reviews route accessed")
+  
   try {
     const { sellerId, rating, comment, userId } = (await request.json()) as {
       sellerId: string
@@ -66,16 +66,16 @@ export async function POST(request: Request) {
     revalidatePath(`/sellers/${sellerId}`)
     revalidatePath(`/sellers`) // Also revalidate the main sellers page if average rating is displayed there
 
-    console.log(`[API] Review submitted and seller ${sellerId} updated successfully.`)
+    
     return NextResponse.json({ success: true, message: "Review submitted successfully!" }, { status: 200 })
   } catch (error) {
-    console.error("[API] Error in POST /api/reviews:", error)
+    
     return NextResponse.json({ error: "Failed to submit review", details: (error as Error).message }, { status: 500 })
   }
 }
 
 export async function GET(request: Request) {
-  console.log("[API] GET /api/reviews route accessed")
+
   try {
     const { searchParams } = new URL(request.url)
     const sellerId = searchParams.get("sellerId")
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ reviews }, { status: 200 })
   } catch (error) {
-    console.error("[API] Error in GET /api/reviews:", error)
+   
     return NextResponse.json({ error: "Failed to fetch reviews", details: (error as Error).message }, { status: 500 })
   }
 }

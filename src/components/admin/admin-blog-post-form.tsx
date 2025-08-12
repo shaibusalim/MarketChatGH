@@ -7,6 +7,8 @@ import { useFormStatus } from "react-dom"
 import { toast } from "react-hot-toast"
 import { Loader2 } from "lucide-react"
 import { createBlogPost, updateBlogPost } from "@/app/admin/blog/actions"
+import { useState, useEffect } from "react"
+import { ImageUpload } from "./image-upload"
 
 interface BlogPost {
   id?: string
@@ -47,8 +49,17 @@ function SubmitButton({ isEditing }: { isEditing: boolean }) {
 
 export function AdminBlogPostForm({ initialData, onSuccess, onCancel }: AdminBlogPostFormProps) {
   const isEditing = !!initialData?.id
+  const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "")
+
+  useEffect(() => {
+    if (initialData?.imageUrl) {
+      setImageUrl(initialData.imageUrl)
+    }
+  }, [initialData])
 
   const handleSubmit = async (formData: FormData) => {
+    formData.append("imageUrl", imageUrl) // Add image URL from state
+
     let result
     if (isEditing) {
       formData.append("id", initialData.id!) // Add ID for update action
@@ -88,12 +99,11 @@ export function AdminBlogPostForm({ initialData, onSuccess, onCancel }: AdminBlo
             defaultValue={initialData?.excerpt || ""}
             className="w-full"
           />
-          <Input
-            name="imageUrl"
-            required
-            placeholder="Image URL (e.g., /placeholder.svg)"
-            defaultValue={initialData?.imageUrl || ""}
-            className="w-full"
+          <ImageUpload
+            value={imageUrl}
+            onChange={setImageUrl}
+            label="Blog Post Image"
+            placeholder="Enter image URL or upload an image file"
           />
           <Textarea
             name="content"

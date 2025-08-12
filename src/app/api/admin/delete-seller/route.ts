@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     );
 
   } catch (error) {
-    console.error('Delete seller error:', error);
+    
     return NextResponse.json(
       { 
         error: 'Internal server error',

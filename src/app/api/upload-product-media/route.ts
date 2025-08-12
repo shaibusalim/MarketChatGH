@@ -3,7 +3,7 @@ import { adminFirestore, adminStorage } from '@/lib/firebase-admin';
 import { getServerSession } from 'next-auth';
 
 export async function POST(req: NextRequest) {
-  console.log('[API] POST /api/upload-product-media route accessed');
+  
   try {
     const session = await getServerSession();
     if (!session?.user?.phoneNumber) {
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const image = formData.get('image') as File | null;
     const video = formData.get('video') as File | null;
 
-    console.log(`[API] Form data: productId=${productId}, image=${!!image}, video=${!!video}`);
+    
 
     if (!productId || (!image && !video)) {
       console.warn('[API] Missing required fields');
@@ -74,13 +74,13 @@ export async function POST(req: NextRequest) {
 
     await adminFirestore.collection('products').doc(productId).set(updates, { merge: true });
 
-    console.log(`[API] Media uploaded for product ${productId}`);
+   
     return new NextResponse(null, {
       status: 200,
       headers: { Location: '/seller' },
     });
   } catch (error) {
-    console.error('[API] Error in POST /api/upload-product-media:', error);
+    
     return new NextResponse(null, {
       status: 500,
       statusText: (error as Error).message,

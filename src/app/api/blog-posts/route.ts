@@ -28,7 +28,7 @@ export async function GET() {
     })
     return NextResponse.json({ blogPosts }, { status: 200 })
   } catch (error) {
-    console.error("API Error fetching blog posts:", error)
+    
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }

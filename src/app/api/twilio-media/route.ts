@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const messageSid = searchParams.get('msgSid'); // Use msgSid for constructing the correct URL
 
   if (!mediaSid || !messageSid) {
-    console.error('Missing mediaSid or messageSid', { mediaSid, messageSid });
+    
     return NextResponse.json({ error: 'Media SID and Message SID required' }, { status: 400 });
   }
 
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     // Construct the correct Twilio media URL
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages/${messageSid}/Media/${mediaSid}`;
     
-    console.log('Fetching Twilio media:', { twilioUrl, mediaSid, messageSid });
+    
 
     const mediaResponse = await fetch(twilioUrl, {
       headers: {
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     });
 
     if (!mediaResponse.ok) {
-      console.error(`Twilio API error: ${mediaResponse.status} ${mediaResponse.statusText}`, { twilioUrl });
+     
       throw new Error(`Twilio API responded with ${mediaResponse.status}`);
     }
 

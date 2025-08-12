@@ -39,11 +39,11 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
     }
   }, [isInView, controls])
 
-  // Removed the .slice(0, 10) here. The chart will now display all sellers passed to it.
-  // The pagination logic should be handled by the API and the parent component.
   const chartData = sellers
   const maxProducts = Math.max(...chartData.map((s) => s.products.length), 1)
-  const chartWidth = chartData.length * 60 + 40 // Adjusted for better spacing
+  const barWidth = 40
+  const spacing = 20
+  const chartWidth = chartData.length * (barWidth + spacing) + 60 // Adjusted for better spacing and padding
 
   return (
     <motion.div
@@ -62,14 +62,17 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
         <CardContent>
           <div className="h-48 overflow-x-auto">
             {chartData.length > 0 ? (
-              <svg className="min-w-full h-full" viewBox={`0 0 ${chartWidth} 200`} preserveAspectRatio="xMinYMid meet">
+              <svg
+                width={chartWidth} // Explicitly set width
+                height="200" // Explicitly set height to match viewBox
+                viewBox={`0 0 ${chartWidth} 200`}
+                preserveAspectRatio="xMinYMid meet"
+              >
                 {chartData.map((seller, index) => {
-                  const barWidth = 40
-                  const spacing = 20
-                  const x = index * (barWidth + spacing) + 30
                   const maxHeight = 150
                   const productCount = seller.products.length
                   const barHeight = productCount > 0 ? (productCount / maxProducts) * maxHeight : 0
+                  const x = index * (barWidth + spacing) + 30
 
                   // Define variants inside the map to capture the correct barHeight for each instance
                   const barVariants: any = {
@@ -79,12 +82,11 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
                       y: 200 - barHeight,
                       transition: {
                         duration: 0.5,
-                        ease: [0.6, 0.05, -0.01, 0.9],
+                        ease: "easeOut",
                         delay: index * 0.05, // Stagger animation
                       },
                     },
                   }
-
                   return (
                     <g key={seller.id}>
                       <motion.rect
