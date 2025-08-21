@@ -13,26 +13,7 @@ import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay"
 import { useFormStatus } from "react-dom"
 import { toast } from "react-hot-toast"
 import { updateProductStatus, toggleSellerActiveStatus } from "@/app/admin/actions" // Import Server Actions
-
-interface Product {
-  id: string
-  imageUrl: string
-  price: string
-  description: string
-  sellerId: string
-  createdAt: string
-  status: string
-  stockStatus: string
-  isAvailable: boolean
-}
-
-interface Seller {
-  id: string
-  name: string
-  location: string
-  active: boolean
-  products: Product[]
-}
+import { Product, Seller } from "@/lib/types"
 
 interface AdminSellersTableProps {
   sellers: Seller[]

@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminFirestore } from "@/lib/firebase-admin";
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/auth.config'
+
+export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
  
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const data = await req.formData();
     const sellerId = (data.get("sellerId") as string)?.trim();
     const name = (data.get("name") as string)?.trim();

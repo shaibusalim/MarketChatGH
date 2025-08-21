@@ -1,15 +1,24 @@
-// src/app/api/admin/toggle-seller/route.ts
-import { firestore } from "@/lib/firebase";
-import { NextRequest } from "next/server";
+// src/app/admin/toggle-seller/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { adminFirestore } from "@/lib/firebase-admin";
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/auth.config'
+
+export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const sellerId = searchParams.get("sellerId");
-  const active = searchParams.get("active") === "true";
+	const session = await getServerSession(authOptions)
+	if (!session?.user?.isAdmin) {
+		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	}
 
-  if (sellerId) {
-    await firestore.collection("sellers").doc(sellerId).update({ active });
-  }
+	const { searchParams } = new URL(req.url);
+	const sellerId = searchParams.get("sellerId");
+	const active = searchParams.get("active") === "true";
 
-  return new Response(null, { status: 302, headers: { Location: "/admin" } });
+	if (sellerId) {
+		await adminFirestore.collection("sellers").doc(sellerId).update({ active });
+	}
+
+	return new NextResponse(null, { status: 302, headers: { Location: "/admin" } });
 }

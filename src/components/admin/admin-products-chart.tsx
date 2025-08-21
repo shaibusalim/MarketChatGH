@@ -1,28 +1,9 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { motion, useAnimation, useInView } from "framer-motion"
+import { motion, useAnimation, useInView, cubicBezier } from "framer-motion"
 import { useEffect, useRef } from "react"
-
-interface Product {
-  id: string
-  imageUrl: string
-  price: string
-  description: string
-  sellerId: string
-  createdAt: string
-  status: string
-  stockStatus: string
-  isAvailable: boolean
-}
-
-interface Seller {
-  id: string
-  name: string
-  location: string
-  active: boolean
-  products: Product[]
-}
+import { Product, Seller } from "@/lib/types"
 
 interface AdminProductsChartProps {
   sellers: Seller[]
@@ -34,6 +15,7 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
   const controls = useAnimation()
 
   useEffect(() => {
+    console.log('[AdminProductsChart] Sellers:', sellers);
     if (isInView) {
       controls.start("visible")
     }
@@ -43,7 +25,7 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
   const maxProducts = Math.max(...chartData.map((s) => s.products.length), 1)
   const barWidth = 40
   const spacing = 20
-  const chartWidth = chartData.length * (barWidth + spacing) + 60 // Adjusted for better spacing and padding
+  const chartWidth = chartData.length * (barWidth + spacing) + 60
 
   return (
     <motion.div
@@ -63,8 +45,8 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
           <div className="h-48 overflow-x-auto">
             {chartData.length > 0 ? (
               <svg
-                width={chartWidth} // Explicitly set width
-                height="200" // Explicitly set height to match viewBox
+                width={chartWidth}
+                height="200"
                 viewBox={`0 0 ${chartWidth} 200`}
                 preserveAspectRatio="xMinYMid meet"
               >
@@ -73,17 +55,17 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
                   const productCount = seller.products.length
                   const barHeight = productCount > 0 ? (productCount / maxProducts) * maxHeight : 0
                   const x = index * (barWidth + spacing) + 30
+                  const displayName = seller.name && seller.name.length > 10 ? `${seller.name.slice(0, 7)}...` : seller.name || 'Unknown'
 
-                  // Define variants inside the map to capture the correct barHeight for each instance
-                  const barVariants: any = {
+                  const barVariants = {
                     hidden: { height: 0, y: 200 },
                     visible: {
                       height: barHeight,
                       y: 200 - barHeight,
                       transition: {
                         duration: 0.5,
-                        ease: "easeOut",
-                        delay: index * 0.05, // Stagger animation
+                        ease: cubicBezier(0.42, 0, 0.58, 1.0),
+                        delay: index * 0.05,
                       },
                     },
                   }
@@ -120,7 +102,7 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
                         className="text-[10px] dark:fill-gray-300 pointer-events-none"
                         transform={`rotate(-45, ${x + barWidth / 2}, 198)`}
                       >
-                        {seller.name.length > 10 ? `${seller.name.slice(0, 7)}...` : seller.name}
+                        {displayName}
                       </text>
                     </g>
                   )

@@ -1,394 +1,503 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import type React from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useRouter, useSearchParams, useParams } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Shield, User, Package, Menu, X, ArrowLeft, Trash2 } from 'lucide-react';
-import { TwilioMediaDisplay } from '@/components/TwilioMediaDisplay';
-import LogoutButton from '@/components/LogoutButton';
-import ThemeToggle from '@/components/ThemeToggle';
-import { toast } from 'react-hot-toast';
-import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+  Star,
+  Store,
+  MapPin,
+  Package,
+  ShoppingBag,
+  Eye,
+  MessageCircle,
+  Search,
+  Loader2,
+  AlertCircle,
+} from "lucide-react"
+import Link from "next/link"
+import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay"
+import { SellerReviewsDisplay } from "@/components/seller-review-display"
+import { toast } from "react-hot-toast"
 
-// --- Types ---
 interface Product {
-  id: string;
-  imageUrl: string;
-  price: string;
-  description: string;
-  sellerId: string;
-  createdAt: string;
-  status: string;
-  stockStatus: string;
-  isAvailable: boolean;
+  id: string
+  imageUrl: string
+  price: string
+  description: string
+  sellerId: string
+  status: string
+  stockStatus: string
+  isAvailable: boolean
 }
 
-interface Seller {
-  id: string;
-  name: string;
-  location: string;
-  active: boolean;
-  products: Product[];
+interface SellerInfo {
+  id: string
+  name: string
+  location: string
+  active: boolean
+  rating?: number
+  reviewCount?: number
+}
+
+interface SellerData {
+  seller: SellerInfo | null
+  products: Product[]
 }
 
 export default function SellerPage() {
-  const router = useRouter();
-  const params = useParams();
-  const sellerId = params.sellerId as string;
-  const [seller, setSeller] = useState<Seller | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { sellerId } = useParams() as { sellerId: string }
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [seller, setSeller] = useState<SellerInfo | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [currentProductSearchQuery, setCurrentProductSearchQuery] = useState(searchParams.get("productQ") || "")
+  const [currentProductFilterStatus, setCurrentProductFilterStatus] = useState(
+    searchParams.get("productStatus") || "all",
+  )
+  const [fetchedProductSearchQuery, setFetchedProductSearchQuery] = useState(searchParams.get("productQ") || "")
+  const [fetchedProductFilterStatus, setFetchedProductFilterStatus] = useState(
+    searchParams.get("productStatus") || "all",
+  )
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'
+
+  // Prevent /admin from being treated as a sellerId
+  useEffect(() => {
+    if (sellerId === 'admin' || sellerId.startsWith('admin/')) {
+      router.replace('/404')
+    }
+  }, [sellerId, router])
+
+  const fetchSellerData = useCallback(
+    async (query: string, status: string) => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const url = new URL(`/api/sellers/${sellerId}`, baseUrl)
+        if (query) {
+          url.searchParams.append("productQ", query)
+        }
+        if (status !== "all") {
+          url.searchParams.append("productStatus", status)
+        }
+
+        console.log(`[SellerPage] Fetching from ${url.toString()}`)
+        const response = await fetch(url.toString())
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.details || `Failed to fetch seller data (Status: ${response.status})`)
+        }
+        const data: SellerData = await response.json()
+        setSeller(data.seller)
+        setProducts(data.products)
+        setFetchedProductSearchQuery(query)
+        setFetchedProductFilterStatus(status)
+      } catch (err) {
+        console.error(`[SellerPage] Error fetching seller data for ${sellerId}:`, err)
+        setError((err as Error).message)
+        toast.error("Failed to load seller data: " + (err as Error).message, { duration: 5000 })
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [sellerId, baseUrl],
+  )
 
   useEffect(() => {
-    const fetchSeller = async () => {
-      try {
-        const response = await fetch(`/api/sellers/${sellerId}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        const data = await response.json();
-        if (data.seller) {
-          setSeller({
-            id: data.seller.id,
-            name: data.seller.name,
-            location: data.seller.location,
-            active: data.seller.active,
-            products: data.products,
-          });
-        } else {
-          setSeller(null);
-        }
-      } catch (error) {
-        console.error('[Client] Error fetching seller:', error);
-        toast.error(`Failed to load seller: ${(error as Error).message}`, { duration: 3000 });
+    const handler = setTimeout(() => {
+      fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      if (currentProductSearchQuery) {
+        newSearchParams.set("productQ", currentProductSearchQuery)
+      } else {
+        newSearchParams.delete("productQ")
       }
-    };
+      if (currentProductFilterStatus !== "all") {
+        newSearchParams.set("productStatus", currentProductFilterStatus)
+      } else {
+        newSearchParams.delete("productStatus")
+      }
+      router.replace(`?${newSearchParams.toString()}`, { scroll: false })
+    }, 500)
 
-    if (sellerId) fetchSeller();
-  }, [sellerId]);
-
-  const handleDeleteSeller = async () => {
-    setIsDeleting(true);
-    try {
-      const response = await fetch('/api/admin/delete-seller', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to delete seller');
-
-      toast.success('Seller deleted successfully', {
-        position: 'top-center',
-        duration: 3000,
-      });
-      router.push('/admin');
-    } catch (error) {
-      toast.error(`Failed to delete seller: ${(error as Error).message}`, {
-        position: 'top-center',
-        duration: 4000,
-      });
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
+    return () => {
+      clearTimeout(handler)
     }
-  };
+  }, [currentProductSearchQuery, currentProductFilterStatus, fetchSellerData, router, searchParams])
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentProductSearchQuery(e.target.value)
+  }
+
+  const handleFilterChange = (value: string) => {
+    setCurrentProductFilterStatus(value)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-purple-50 dark:bg-purple-950">
+        <Loader2 className="h-10 w-10 animate-spin text-purple-600 dark:text-purple-400" />
+        <span className="sr-only">Loading seller store...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-red-50 dark:bg-red-950 p-4 text-center">
+        <AlertCircle className="h-16 w-16 text-red-600 dark:text-red-400 mb-6" />
+        <h2 className="text-2xl font-bold text-red-800 dark:text-red-200 mb-3">Something went wrong!</h2>
+        <p className="text-red-700 dark:text-red-300 mb-6">
+          An error occurred while loading this seller's store. Please try again.
+        </p>
+        <Button
+          onClick={() => fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)}
+          className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg"
+        >
+          Try again
+        </Button>
+      </div>
+    )
+  }
+
+  if (!seller) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 text-center">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Seller Not Found</h2>
+        <p className="text-muted-foreground mb-6">The seller you are looking for does not exist or has been removed.</p>
+        <Button asChild>
+          <Link href="/sellers">Browse All Sellers</Link>
+        </Button>
+      </div>
+    )
+  }
+
+  if (!seller.active) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 flex items-center justify-center px-4">
+        <Card className="shadow-xl p-12 text-center max-w-md mx-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl border border-gray-100 dark:border-gray-700">
+          <CardContent>
+            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Store className="w-10 h-10 text-red-600 dark:text-red-400" />
+            </div>
+            <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Store Temporarily Closed
+            </CardTitle>
+            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+              This store has been temporarily deactivated. Please contact our support team for more information.
+            </p>
+            <Button
+              asChild
+              className="mt-8 bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+            >
+              <a href="https://wa.me/+233209832978" target="_blank" rel="noopener noreferrer">
+                Contact Support
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-900 transition-colors duration-300">
-      <div className="flex flex-col min-h-screen">
-        {/* Mobile Header */}
-        <header className="md:hidden bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-md p-4 flex justify-between items-center z-50">
-          <div className="flex items-center gap-3">
-            <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Seller Dashboard</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
-            >
-              {isSidebarOpen ? <X className="h-6 w-6 text-gray-600 dark:text-gray-300" /> : <Menu className="h-6 w-6 text-gray-600 dark:text-gray-300" />}
-            </Button>
-          </div>
-        </header>
-
-        {/* Mobile Sidebar (Drawer) */}
-        <div
-          className={`fixed top-0 left-0 h-full w-full max-w-[16rem] bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-2xl z-50 transform transition-transform duration-300 md:hidden ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <div className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">MarketChat Admin</h2>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSidebarOpen(false)}
-                aria-label="Close menu"
-              >
-                <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-              </Button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-950 dark:to-blue-950 transition-colors duration-300">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 dark:from-blue-900 dark:via-purple-900 dark:to-indigo-900 overflow-hidden pt-16">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundRepeat: "repeat",
+            }}
+          ></div>
+        </div>
+        <div className="relative container mx-auto px-4 py-16 text-white">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 rounded-full mb-6 backdrop-blur-sm">
+              <Store className="w-12 h-12 text-white" />
             </div>
-            <nav className="space-y-2">
-              <a
-                href="/admin"
-                className="flex items-center gap-2 p-2 sm:p-3 rounded-lg bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold text-sm sm:text-base"
-              >
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                Sellers
-              </a>
-              <a
-                href="/admin/products"
-                className="flex items-center gap-2 p-2 sm:p-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm sm:text-base"
-              >
-                <Package className="h-4 w-4 sm:h-5 sm:w-5" />
-                Products
-              </a>
-              <div className="mt-4 pt-4">
-                <LogoutButton />
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">{seller.name}</h1>
+            <div className="flex items-center justify-center gap-6 text-white/90 mb-8">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                <span className="text-lg">{seller.location}</span>
               </div>
-            </nav>
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5" />
+                <span className="text-lg">{products.length} Products</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <Badge variant="secondary" className="bg-white/20 text-white border-white/30 px-4 py-2 text-base">
+                <Star className="w-4 h-4 mr-2 fill-current" />
+                {seller.rating && seller.reviewCount ? (
+                  <span>
+                    {seller.rating.toFixed(1)} ({seller.reviewCount} reviews)
+                  </span>
+                ) : (
+                  "No Reviews Yet"
+                )}
+              </Badge>
+              {seller.active && (
+                <Badge
+                  variant="secondary"
+                  className="bg-green-500/20 text-green-100 border-green-400/30 px-4 py-2 text-base"
+                >
+                  Active Now
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:block fixed top-0 left-0 h-full w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-2xl z-40">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">MarketChat Admin</h2>
+      </div>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-12">
+        {/* Stats Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <Card className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+            <CardContent className="flex items-center justify-between p-0">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Total Products</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{products.length}</p>
               </div>
-              <ThemeToggle />
-            </div>
-            <nav className="space-y-2">
-              <a
-                href="/admin"
-                className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold"
-              >
-                <User className="h-5 w-5" />
-                Sellers
-              </a>
-              <a
-                href="/admin/products"
-                className="flex items-center gap-3 p-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                <Package className="h-5 w-5" />
-                Products
-              </a>
-              <div className="mt-auto pt-4">
-                <LogoutButton />
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center">
+                <ShoppingBag className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-            </nav>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <div className="w-full md:ml-64 px-4 sm:px-6 md:px-8 py-6 sm:py-8 max-w-7xl mx-auto">
-          {seller ? (
-            <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg rounded-xl border border-gray-100 dark:border-gray-700">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-blue-600 dark:text-blue-400">
-                    <User className="h-4 w-4 sm:h-5 sm:w-5" /> Seller: {seller.name}
-                  </CardTitle>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push('/admin')}
-                      className="text-xs sm:text-sm border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/50"
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back to Dashboard
-                    </Button>
-                  </motion.div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-6">
-                  <p className="text-sm text-gray-600 dark:text-gray-300">ID: {seller.id}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Location: {seller.location}</p>
-                  <Badge
-                    variant="outline"
-                    className={`${
-                      seller.active
-                        ? 'bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-600'
-                        : 'bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-600'
-                    } text-xs sm:text-sm mt-2`}
-                  >
-                    {seller.active ? 'Active' : 'Inactive'}
-                  </Badge>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                  <form
-                    action={`/admin/toggle-seller?sellerId=${seller.id}&active=${!seller.active}`}
-                    method="post"
-                  >
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button
-                        type="submit"
-                        variant={seller.active ? 'destructive' : 'default'}
-                        className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-md hover:shadow-lg text-xs sm:text-sm py-2"
-                      >
-                        {seller.active ? 'Deactivate Seller' : 'Reactivate Seller'}
-                      </Button>
-                    </motion.div>
-                  </form>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                   <Button
-        variant="destructive"
-        onClick={() => setIsDeleteDialogOpen(true)}
-        disabled={isDeleting}
-      >
-        <Trash2 className="h-4 w-4 mr-2" />
-        {isDeleting ? 'Deleting...' : 'Delete Seller'}
-      </Button>
-
-      <DeleteConfirmationDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleDeleteSeller}
-        title="Confirm Deletion"
-        description={`Are you sure you want to delete seller ${seller?.name} (ID: ${sellerId})? This will also delete all their products.`}
-        confirmText={isDeleting ? 'Deleting...' : 'Delete'}
-      />
-                  </motion.div>
-                </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50 dark:bg-gray-700/50">
-                        <TableHead className="hidden sm:table-cell w-16 sm:w-20">Image</TableHead>
-                        <TableHead className="text-xs sm:text-sm">Description</TableHead>
-                        <TableHead className="text-xs sm:text-sm">Price</TableHead>
-                        <TableHead className="text-xs sm:text-sm">Status</TableHead>
-                        <TableHead className="text-xs sm:text-sm">Stock</TableHead>
-                        <TableHead className="text-xs sm:text-sm">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {seller.products.map((product, index) => (
-                        <TableRow
-                          key={product.id}
-                          className="hover:bg-blue-50/30 dark:hover:bg-blue-900/30 transition-all duration-200"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <TableCell className="hidden sm:table-cell">
-                            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-md overflow-hidden group">
-                              <TwilioMediaDisplay
-                                mediaUrl={product.imageUrl}
-                                alt={product.description}
-                                width={64}
-                                height={64}
-                                className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                              />
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-xs sm:text-sm max-w-[150px] sm:max-w-xs truncate">
-                            {product.description}
-                          </TableCell>
-                          <TableCell className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
-                            ₵{product.price}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className="text-xs sm:text-sm capitalize bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-600"
-                            >
-                              {product.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={`text-xs sm:text-sm ${
-                                product.isAvailable
-                                  ? 'bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-600'
-                                  : 'bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-600'
-                              }`}
-                            >
-                              {product.stockStatus}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <form action="/admin/update-product" method="post" className="flex flex-col gap-2">
-                              <input type="hidden" name="productId" value={product.id} />
-                              <Button
-                                type="submit"
-                                name="action"
-                                value="markAvailable"
-                                size="sm"
-                                className="text-xs sm:text-sm bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white shadow-md hover:shadow-lg py-1.5"
-                              >
-                                In Stock
-                              </Button>
-                              <Button
-                                type="submit"
-                                name="action"
-                                value="markOutOfStock"
-                                variant="outline"
-                                size="sm"
-                                className="text-xs sm:text-sm border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 py-1.5"
-                              >
-                                Out of Stock
-                              </Button>
-                              <Button
-                                type="submit"
-                                name="action"
-                                value="delete"
-                                variant="destructive"
-                                size="sm"
-                                className="text-xs sm:text-sm bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 shadow-md hover:shadow-lg py-1.5"
-                              >
-                                Delete
-                              </Button>
-                            </form>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg rounded-xl border border-gray-100 dark:border-gray-700">
-              <CardContent className="text-center py-8 sm:py-12">
-                <Package className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-gray-400 dark:text-gray-500 mb-3 sm:mb-4" />
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Seller Not Found</h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-2 max-w-md mx-auto">
-                  No seller found with ID {sellerId}.
+            </CardContent>
+          </Card>
+          <Card className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+            <CardContent className="flex items-center justify-between p-0">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Available Items</p>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                  {products.filter((p) => p.isAvailable).length}
                 </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6 text-green-600 dark:text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+            <CardContent className="flex items-center justify-between p-0">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Seller ID</p>
+                <p className="text-lg font-mono text-gray-900 dark:text-white truncate">{sellerId}</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center">
+                <Store className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        {/* Products Section */}
+        <>
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Featured Products</h2>
+              <p className="text-gray-600 dark:text-gray-300">Discover amazing products from this seller</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  placeholder="Search products..."
+                  value={currentProductSearchQuery}
+                  onChange={handleSearchChange}
+                  className="pl-10 w-full sm:w-auto"
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              </div>
+              <Select value={currentProductFilterStatus} onValueChange={handleFilterChange}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Products</SelectItem>
+                  <SelectItem value="available">In Stock</SelectItem>
+                  <SelectItem value="outOfStock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {products.map((product, index) => (
+                <Card
+                  key={product.id}
+                  className={`group bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up`}
+                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: "both" }}
+                >
+                  <div className="relative overflow-hidden">
+                    <div className="aspect-square relative">
+                      <TwilioMediaDisplay
+                        mediaUrl={product.imageUrl}
+                        alt={product.description}
+                        width={400}
+                        height={400}
+                        className="w-full h-full group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {!product.isAvailable && (
+                        <Badge className="bg-red-500 text-white dark:bg-red-600">Out of Stock</Badge>
+                      )}
+                      {product.status === "new" && (
+                        <Badge className="bg-green-500 text-white dark:bg-green-600">New</Badge>
+                      )}
+                    </div>
+                    <div className="absolute top-4 right-4">
+                      <Badge
+                        variant="secondary"
+                        className="bg-white/90 text-gray-700 dark:bg-gray-700/90 dark:text-gray-200"
+                      >
+                        {product.stockStatus}
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-6">
+                    <h3
+                      className="font-bold text-lg text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors overflow-hidden"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                      }}
+                    >
+                      {product.description}
+                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">₵{product.price}</p>
+                      <div className="flex items-center gap-1 text-yellow-500">
+                        <Star className="w-4 h-4 fill-current" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                          {seller.rating ? seller.rating.toFixed(1) : "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Badge
+                        variant="outline"
+                        className={`${
+                          product.isAvailable
+                            ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/50 dark:text-green-400 dark:border-green-600"
+                            : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-400 dark:border-red-600"
+                        }`}
+                      >
+                        {product.isAvailable ? "Available" : "Unavailable"}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="flex-1 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 bg-transparent"
+                      >
+                        <Link
+                          href={`/${sellerId}/product/${product.id}`}
+                          className="flex items-center justify-center"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View
+                        </Link>
+                      </Button>
+                      <Button
+                        asChild
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700"
+                      >
+                        <a
+                          href={`https://wa.me/${sellerId}?text=I'm%20interested%20in%20buying%20your%20product:%20"${encodeURIComponent(
+                            product.description,
+                          )}"%20for%20${encodeURIComponent(product.price)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Chat
+                        </a>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+              <CardContent>
+                <div className="w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <Package className="w-16 h-16 text-gray-400 dark:text-gray-500" />
+                </div>
+                <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                  No Products Found
+                </CardTitle>
+                <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
+                  {currentProductSearchQuery || currentProductFilterStatus !== "all"
+                    ? "No products match your current search and filter criteria."
+                    : "This seller hasn't added any products to their store yet. Check back later for amazing deals!"}
+                </p>
+                <div className="flex justify-center gap-4">
+                  <Button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800">
+                    Notify Me
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="px-6 py-3 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 bg-transparent"
+                  >
+                    <Link href="/sellers">Browse Other Sellers</Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
+        </>
+        {/* Reviews Section */}
+        <section className="container mx-auto px-4 py-12">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+            Customer Reviews for {seller.name}
+          </h2>
+          <SellerReviewsDisplay sellerId={sellerId} />
+        </section>
+      </main>
+      {/* Footer */}
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-20">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Store className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <span className="text-xl font-bold text-gray-900 dark:text-white">MarketChat GH</span>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">Connecting buyers and sellers across Ghana</p>
+            <div className="flex items-center justify-center gap-6">
+              <a
+                href="https://wa.me/+233209832978"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <MapPin className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
         </div>
-      </div>
-    </main>
-  );
+      </footer>
+    </div>
+  )
 }

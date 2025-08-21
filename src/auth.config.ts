@@ -1,82 +1,7 @@
-import { adminFirestore } from '@/lib/firebase-admin';
-import bcrypt from 'bcrypt';
-import type { DefaultSession, NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-
-// 1. First extend the base types
-declare module 'next-auth' {
-  interface User {
-    id: string;
-    email: string;
-    isAdmin?: boolean;
-  }
-
-  interface Session extends DefaultSession {
-    user?: {
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      isAdmin?: boolean;
-    };
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string;
-    email: string;
-    isAdmin: boolean;
-  }
-}
+import type { NextAuthOptions } from 'next-auth';
 
 export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            throw new Error('Email and password are required');
-          }
-
-          const email = credentials.email.toLowerCase().trim();
-          const snapshot = await adminFirestore
-            .collection('admins')
-            .where('email', '==', email)
-            .limit(1)
-            .get();
-
-          if (snapshot.empty) {
-            throw new Error('Invalid credentials');
-          }
-
-          const adminDoc = snapshot.docs[0];
-          const admin = adminDoc.data();
-
-          const isValid = await bcrypt.compare(
-            credentials.password,
-            admin.password
-          );
-          if (!isValid) {
-            throw new Error('Invalid credentials');
-          }
-
-          return {
-            id: adminDoc.id,
-            email: admin.email,
-            isAdmin: true,
-          };
-        } catch (error) {
-          console.error('Authentication error:', error);
-          return null;
-        }
-      },
-    }),
-  ],
+  providers: [],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -94,6 +19,10 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async signIn({ user }) {
+      console.log('[Auth] signIn callback:', user);
+      return !!user?.isAdmin;
+    },
   },
   pages: {
     signIn: '/admin/signin',
@@ -101,8 +30,10 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 24 * 60 * 60,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || (() => {
+    throw new Error('NEXTAUTH_SECRET is not set. Please set it in your .env file.');
+  })(),
   debug: process.env.NODE_ENV === 'development',
 };

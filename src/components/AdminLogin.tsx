@@ -1,40 +1,59 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Lock, User, Loader2 } from "lucide-react"
-import { AnimatePresence } from "framer-motion" // Import AnimatePresence
-import { signIn } from "next-auth/react"
+import { AnimatePresence } from "framer-motion"
+import { signIn, useSession } from "next-auth/react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { toast } from "react-hot-toast"
 
 export function AdminLogin({ onClose }: { onClose: () => void }) {
   const [credentials, setCredentials] = useState({ email: "", password: "" })
   const [error, setError] = useState("")
   const [isSigningIn, setIsSigningIn] = useState(false)
   const router = useRouter()
+  const { data: session, status } = useSession()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    console.log('[AdminLogin] Session:', { status, session })
+    if (status === 'authenticated' && session?.user?.isAdmin) {
+      console.log('[AdminLogin] Redirecting to /admin')
+      router.push('/admin')
+      onClose()
+    }
+  }, [status, session, router, onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsSigningIn(true)
 
-    const result = await signIn("credentials", {
-      email: credentials.email,
-      password: credentials.password,
-      redirect: false,
-    })
+    try {
+      const result = await signIn("credentials", {
+        email: credentials.email,
+        password: credentials.password,
+        redirect: false,
+      })
 
-    setIsSigningIn(false)
-
-    if (result?.error) {
-      setError(result.error)
-    } else {
-      router.push("/admin")
-      onClose() // Close the dialog on successful login
+      if (result?.error) {
+        console.log('[AdminLogin] Sign-in error:', result.error)
+        setError(result.error)
+        toast.error(result.error, { duration: 5000 })
+      } else {
+        console.log('[AdminLogin] Sign-in successful, waiting for session')
+        // Session update will trigger redirect via useEffect
+      }
+    } catch (err) {
+      console.error('[AdminLogin] Error:', err)
+      setError("Failed to sign in")
+      toast.error("Failed to sign in", { duration: 5000 })
+    } finally {
+      setIsSigningIn(false)
     }
   }
 
@@ -88,12 +107,15 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
               </div>
             </div>
             {error && <div className="text-red-500 text-sm">{error}</div>}
+            {searchParams.get('error') && (
+              <div className="text-red-500 text-sm">Invalid credentials</div>
+            )}
             <Button
               type="submit"
               className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md"
-              disabled={isSigningIn}
+              disabled={isSigningIn || status === 'loading'}
             >
-              {isSigningIn ? (
+              {isSigningIn || status === 'loading' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Logging in...

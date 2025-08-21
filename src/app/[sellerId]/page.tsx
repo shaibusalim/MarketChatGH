@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams, useParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
@@ -51,9 +50,7 @@ interface SellerData {
   products: Product[]
 }
 
-export default function SellerPage({ params }: { params: { sellerId: string } }) {
-  // The warning indicates params might be a Promise in Next.js 15.
-  // Use React.use to unwrap it safely.
+export default function SellerPage() {
   const { sellerId } = useParams() as { sellerId: string }
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -67,19 +64,26 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
   const [currentProductFilterStatus, setCurrentProductFilterStatus] = useState(
     searchParams.get("productStatus") || "all",
   )
-
-  // State to track the query/status that was actually used for the last fetch
   const [fetchedProductSearchQuery, setFetchedProductSearchQuery] = useState(searchParams.get("productQ") || "")
   const [fetchedProductFilterStatus, setFetchedProductFilterStatus] = useState(
     searchParams.get("productStatus") || "all",
   )
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'
+
+  // Prevent /admin from being treated as a sellerId
+  useEffect(() => {
+    if (sellerId === 'admin' || sellerId.startsWith('admin/')) {
+      router.replace('/404')
+    }
+  }, [sellerId, router])
 
   const fetchSellerData = useCallback(
     async (query: string, status: string) => {
       setIsLoading(true)
       setError(null)
       try {
-        const url = new URL(`/api/sellers/${sellerId}`, window.location.origin)
+        const url = new URL(`/api/sellers/${sellerId}`, baseUrl)
         if (query) {
           url.searchParams.append("productQ", query)
         }
@@ -87,6 +91,7 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
           url.searchParams.append("productStatus", status)
         }
 
+        console.log(`[SellerPage] Fetching from ${url.toString()}`)
         const response = await fetch(url.toString())
         if (!response.ok) {
           const errorData = await response.json()
@@ -95,24 +100,22 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
         const data: SellerData = await response.json()
         setSeller(data.seller)
         setProducts(data.products)
-        setFetchedProductSearchQuery(query) // Update fetched state
-        setFetchedProductFilterStatus(status) // Update fetched state
+        setFetchedProductSearchQuery(query)
+        setFetchedProductFilterStatus(status)
       } catch (err) {
-        console.error(`Error fetching seller data for ${sellerId}:`, err)
+        console.error(`[SellerPage] Error fetching seller data for ${sellerId}:`, err)
         setError((err as Error).message)
         toast.error("Failed to load seller data: " + (err as Error).message, { duration: 5000 })
       } finally {
         setIsLoading(false)
       }
     },
-    [sellerId],
-  ) // Dependencies are now only sellerId
+    [sellerId, baseUrl],
+  )
 
   useEffect(() => {
     const handler = setTimeout(() => {
       fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)
-
-      // Update URL after debounce
       const newSearchParams = new URLSearchParams(searchParams.toString())
       if (currentProductSearchQuery) {
         newSearchParams.set("productQ", currentProductSearchQuery)
@@ -125,7 +128,7 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
         newSearchParams.delete("productStatus")
       }
       router.replace(`?${newSearchParams.toString()}`, { scroll: false })
-    }, 500) // Debounce delay of 500ms
+    }, 500)
 
     return () => {
       clearTimeout(handler)
@@ -134,12 +137,10 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentProductSearchQuery(e.target.value)
-    // The URL update is now handled by the debounced useEffect
   }
 
   const handleFilterChange = (value: string) => {
     setCurrentProductFilterStatus(value)
-    // The URL update is now handled by the debounced useEffect
   }
 
   if (isLoading) {
@@ -160,7 +161,7 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
           An error occurred while loading this seller's store. Please try again.
         </p>
         <Button
-          onClick={() => fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)} // Retry fetching data
+          onClick={() => fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)}
           className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg"
         >
           Try again
@@ -170,8 +171,6 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
   }
 
   if (!seller) {
-    // This case should ideally be handled by notFound() in a Server Component,
-    // but as a Client Component, we handle it here.
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Seller Not Found</h2>
@@ -316,7 +315,7 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
                 <Input
                   type="text"
                   placeholder="Search products..."
-                  value={currentProductSearchQuery} // Use the current input state
+                  value={currentProductSearchQuery}
                   onChange={handleSearchChange}
                   className="pl-10 w-full sm:w-auto"
                 />
@@ -342,7 +341,6 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
                   className={`group bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up`}
                   style={{ animationDelay: `${index * 100}ms`, animationFillMode: "both" }}
                 >
-                  {/* Product Image */}
                   <div className="relative overflow-hidden">
                     <div className="aspect-square relative">
                       <TwilioMediaDisplay
@@ -370,7 +368,6 @@ export default function SellerPage({ params }: { params: { sellerId: string } })
                       </Badge>
                     </div>
                   </div>
-                  {/* Product Content */}
                   <CardContent className="p-6">
                     <h3
                       className="font-bold text-lg text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors overflow-hidden"

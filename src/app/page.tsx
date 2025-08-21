@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
+import { useState, Suspense, useEffect, useRef } from "react"
 import { InteractiveElements, FloatingWhatsAppButton } from "@/components/InteractiveElements"
 import { AdminLogin } from "@/components/AdminLogin"
 import { Header } from "@/components/header"
@@ -10,8 +9,46 @@ import Image from "next/image"
 
 function HomeComponent() {
   const [showAdminLogin, setShowAdminLogin] = useState(false)
-  const searchParams = useSearchParams()
-  const showAdminButton = searchParams.get("admin") === "true"
+  const longPressTimerRef = useRef<number | null>(null)
+  const tapCountRef = useRef(0)
+  const tapResetTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault()
+        setShowAdminLogin(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const handleTouchStart = () => {
+    if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current)
+    longPressTimerRef.current = window.setTimeout(() => {
+      setShowAdminLogin(true)
+    }, 1200)
+  }
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
+
+  const handleTap = () => {
+    tapCountRef.current += 1
+    if (tapResetTimerRef.current) window.clearTimeout(tapResetTimerRef.current)
+    tapResetTimerRef.current = window.setTimeout(() => {
+      tapCountRef.current = 0
+    }, 3000)
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0
+      setShowAdminLogin(true)
+    }
+  }
 
   return (
     <main className="relative flex flex-col items-center min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
@@ -20,18 +57,17 @@ function HomeComponent() {
       <div className="relative z-10 w-full max-w-[1440px] mx-auto">
         <InteractiveElements />
         <FloatingWhatsAppButton />
-        {/* Admin Login Link */}
-        {showAdminButton && (
-          <motion.button
-            whileHover={{ scale: 1.1, color: "#3b82f6" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowAdminLogin(true)}
-            className="fixed bottom-3 right-3 text-xs text-gray-300 hover:text-primary underline z-20 sm:bottom-4 sm:right-4"
-          >
-            Admin Login
-          </motion.button>
-        )}
-        {/* Admin Login Modal */}
+
+        {/* Hidden mobile hotspot: long-press (1.2s) or 5 taps to open admin login */}
+        <div
+          aria-hidden="true"
+          className="fixed bottom-3 right-3 w-12 h-12 z-20"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onClick={handleTap}
+        />
+
+        {/* Admin Login Modal (hidden behind keyboard/gesture) */}
         {showAdminLogin && <AdminLogin onClose={() => setShowAdminLogin(false)} />}
         {/* Footer */}
         <footer className="w-full py-8 px-4 sm:px-6 md:px-8 border-t border-gray-100 dark:border-gray-800 mt-auto bg-gradient-to-t from-gray-100/50 to-transparent dark:from-gray-800/50">
