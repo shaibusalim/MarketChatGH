@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const name = (data.get("name") as string)?.trim();
     const location = (data.get("location") as string)?.trim();
 
-    console.log(`[API] Form data: sellerId=${sellerId}, name=${name}, location=${location}`);
+    
 
     if (!sellerId || !name || !location) {
       console.warn("[API] Missing required fields");
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       createdAt: new Date(),
     }, { merge: true }); // Use merge to avoid overwriting existing data
 
-    console.log(`[API] Seller ${sellerId} successfully onboarded`);
+    
 
     return NextResponse.json({ message: "Seller onboarded successfully" }, {
       status: 200,
