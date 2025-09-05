@@ -54,12 +54,8 @@ function AdminDashboardContent() {
 	const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'
 
 	useEffect(() => {
-		console.log('[AdminDashboardContent] Search params:', { q: searchParams.get("q"), page: searchParams.get("page") })
-		console.log('[AdminDashboardContent] searchQuery:', searchQuery)
-		console.log('[AdminDashboardContent] baseUrl:', baseUrl)
 		if (status === 'loading') return
 		if (!session || !session.user?.isAdmin) {
-			console.log('[AdminDashboardContent] Redirecting to /admin/signin')
 			router.push('/admin/signin')
 		}
 	}, [status, session, router, searchParams, searchQuery])
@@ -73,9 +69,7 @@ function AdminDashboardContent() {
 			url.searchParams.append("page", page.toString())
 			url.searchParams.append("pageSize", pageSize.toString())
 
-			console.log(`[Client] Fetching from ${url.toString()}`)
 			const response = await fetch(url.toString())
-			console.log(`[Client] Response status: ${response.status}`)
 
 			if (!response.ok) {
 				const errorData = await response.json()
@@ -83,7 +77,6 @@ function AdminDashboardContent() {
 			}
 
 			const data = await response.json()
-			console.log("[Client] Fetched data:", data)
 			const validatedSellers = (data.sellers || []).map((seller: Seller) => ({
 				...seller,
 				name: seller.name || 'Unknown Seller',
@@ -92,7 +85,6 @@ function AdminDashboardContent() {
 			setSellers(validatedSellers)
 			setTotal(data.total || 0)
 		} catch (err) {
-			console.error("[Client] Error fetching sellers:", err)
 			setError((err as Error).message)
 			toast.error("Failed to load sellers: " + (err as Error).message, { duration: 5000 })
 		} finally {
@@ -114,14 +106,12 @@ function AdminDashboardContent() {
 				const url = new URL("/api/sellers", baseUrl)
 				url.searchParams.append("all", "true")
 
-				console.log(`[Client] Fetching chart data from ${url.toString()}`)
 				const response = await fetch(url.toString())
 				if (!response.ok) {
 					const errorData = await response.json()
 					throw new Error(errorData.error || `Failed to fetch chart data (Status: ${response.status})`)
 				}
 				const data = await response.json()
-				console.log("[Client] Chart data:", data)
 				const validatedChartSellers = (data.sellers || []).map((seller: Seller) => ({
 					...seller,
 					name: seller.name || 'Unknown Seller',
@@ -129,7 +119,6 @@ function AdminDashboardContent() {
 				}))
 				setChartSellers(validatedChartSellers)
 			} catch (err) {
-				console.error("[Client] Error fetching chart data:", err)
 				setChartError((err as Error).message)
 				toast.error("Failed to load chart data: " + (err as Error).message)
 			} finally {
@@ -157,20 +146,17 @@ function AdminDashboardContent() {
 	const totalPages = Math.ceil(total / pageSize)
 
 	const handleSearch = (newQuery: string) => {
-		console.log('[AdminDashboardContent] New search query:', newQuery)
 		setSearchQuery(newQuery || '')
 		setPage(1)
 		router.push(`/admin?q=${encodeURIComponent(newQuery || '')}&page=1`)
 	}
 
 	const handlePageChange = (newPage: number) => {
-		console.log('[AdminDashboardContent] Changing page to:', newPage)
 		setPage(newPage)
 		router.push(`/admin?q=${encodeURIComponent(searchQuery || '')}&page=${newPage}`)
 	}
 
 	const handleDataRefresh = () => {
-		console.log('[AdminDashboardContent] Refreshing data')
 		fetchSellers()
 	}
 
@@ -253,4 +239,4 @@ export default function AdminPage() {
 			<AdminDashboardContent />
 		</Suspense>
 	)
-} 
+}

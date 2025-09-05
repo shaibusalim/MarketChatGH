@@ -15,7 +15,6 @@ export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
   const controls = useAnimation()
 
   useEffect(() => {
-    console.log('[AdminProductsChart] Sellers:', sellers);
     if (isInView) {
       controls.start("visible")
     }

@@ -37,21 +37,18 @@ function ProductsComponent() {
   const startAfter = searchParams.get('startAfter');
 
   useEffect(() => {
-    console.log('[ProductsComponent] Fetching with params:', { q, filter, sort, page, startAfter });
     const pageNum = parseInt(page, 10) || 1;
     setPageNumber(pageNum);
     const fetchData = async () => {
       try {
         const pageSize = 10;
         const { products, sellers, total, lastDocId } = await getProducts(q, filter, sort, pageSize, startAfter || undefined);
-        console.log('[ProductsComponent] Fetch result:', { products: products.length, total, lastDocId });
         setProducts(products);
         setSellers(sellers);
         setTotal(total);
         setTotalPages(Math.ceil(total / pageSize));
         setLastDocId(lastDocId);
       } catch (error) {
-        console.error('[ProductsComponent] Error fetching products:', error);
       }
     };
     fetchData();

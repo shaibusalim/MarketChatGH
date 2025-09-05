@@ -20,7 +20,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async signIn({ user }) {
-      console.log('[Auth] signIn callback:', user);
       return !!user?.isAdmin;
     },
   },

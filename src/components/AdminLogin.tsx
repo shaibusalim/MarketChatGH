@@ -20,9 +20,7 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    console.log('[AdminLogin] Session:', { status, session })
     if (status === 'authenticated' && session?.user?.isAdmin) {
-      console.log('[AdminLogin] Redirecting to /admin')
       router.push('/admin')
       onClose()
     }
@@ -41,15 +39,12 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
       })
 
       if (result?.error) {
-        console.log('[AdminLogin] Sign-in error:', result.error)
         setError(result.error)
         toast.error(result.error, { duration: 5000 })
       } else {
-        console.log('[AdminLogin] Sign-in successful, waiting for session')
         // Session update will trigger redirect via useEffect
       }
     } catch (err) {
-      console.error('[AdminLogin] Error:', err)
       setError("Failed to sign in")
       toast.error("Failed to sign in", { duration: 5000 })
     } finally {

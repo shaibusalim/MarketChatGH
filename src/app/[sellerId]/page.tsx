@@ -91,7 +91,6 @@ export default function SellerPage() {
           url.searchParams.append("productStatus", status)
         }
 
-        console.log(`[SellerPage] Fetching from ${url.toString()}`)
         const response = await fetch(url.toString())
         if (!response.ok) {
           const errorData = await response.json()
@@ -103,7 +102,6 @@ export default function SellerPage() {
         setFetchedProductSearchQuery(query)
         setFetchedProductFilterStatus(status)
       } catch (err) {
-        console.error(`[SellerPage] Error fetching seller data for ${sellerId}:`, err)
         setError((err as Error).message)
         toast.error("Failed to load seller data: " + (err as Error).message, { duration: 5000 })
       } finally {
