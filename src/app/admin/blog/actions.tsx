@@ -19,7 +19,8 @@ export async function createBlogPost(formData: FormData) {
 
   const title = formData.get("title") as string
   const excerpt = formData.get("excerpt") as string
-  const content = formData.get("content") as string
+  let content = formData.get("content") as string
+  content = content.replace(/\n/g, "<p>");
   const imageUrl = formData.get("imageUrl") as string
 
   if (!title || !excerpt || !content || !imageUrl) {
