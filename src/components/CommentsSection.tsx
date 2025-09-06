@@ -24,10 +24,12 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [newComment, setNewComment] = useState("");
   const [author, setAuthor] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !author.trim()) return;
+    if (!newComment.trim() || !author.trim() || loading) return;
+    setLoading(true);
 
     const optimisticComment: Comment = {
       id: Date.now().toString(),
@@ -50,6 +52,8 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
       console.error("Failed to post comment:", error);
       // Revert optimistic update on failure
       setComments(comments);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,6 +66,7 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
           onChange={(e) => setAuthor(e.target.value)}
           placeholder="Your name"
           required
+          disabled={loading}
         />
         <Textarea
           value={newComment}
@@ -69,9 +74,13 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
           placeholder="Write a comment..."
           rows={4}
           required
+          disabled={loading}
         />
-        <Button type="submit" disabled={!newComment.trim() || !author.trim()}>
-          Post Comment
+        <Button
+          type="submit"
+          disabled={!newComment.trim() || !author.trim() || loading}
+        >
+          {loading ? "Posting..." : "Post Comment"}
         </Button>
       </form>
       <div className="space-y-6">

@@ -113,9 +113,10 @@ export default async function BlogPostPage({
           <p className="text-sm text-muted-foreground mb-6">
             Published on {format(new Date(blogPost.date), "MMMM dd, yyyy")}
           </p>
-          <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
-            <p>{blogPost.content}</p>
-          </div>
+          <div
+            className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed mb-8"
+            dangerouslySetInnerHTML={{ __html: blogPost.content }}
+          />
 
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
             <LikeButton postId={blogPost.id} initialLikes={blogPost.likes} />
