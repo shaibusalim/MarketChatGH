@@ -113,9 +113,9 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
                   Reply
                 </Button>
               </div>
-            </div>
-            {replyingTo === comment.id && (
-              <form onSubmit={handleSubmitComment} className="mt-4 space-y-2">
+              </div>
+              {replyingTo === comment.id && (
+              <form onSubmit={handleSubmitComment} className="mt-4 space-y-2 ml-8">
                 <Textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
@@ -123,6 +123,7 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
                   rows={2}
                   required
                   disabled={loading}
+                  className="w-full"
                 />
                 <div className="flex justify-end space-x-2">
                   <Button
