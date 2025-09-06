@@ -71,6 +71,7 @@ async function getComments(postId: string): Promise<Comment[]> {
         authorImageUrl: data.authorImageUrl,
         text: data.text,
         timestamp: data.timestamp.toDate().toISOString(),
+        likes: data.likes || 0,
       };
     });
   } catch (error) {

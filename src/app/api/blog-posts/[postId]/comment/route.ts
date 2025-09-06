@@ -28,6 +28,7 @@ export async function POST(
       text,
       author: author.trim(),
       timestamp: new Date(),
+      likes: 0,
     };
 
     await commentsRef.add(newComment);

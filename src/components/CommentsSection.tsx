@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import { CommentLikeButton } from "@/components/CommentLikeButton";
 
 interface Comment {
   id: string;
@@ -13,6 +14,7 @@ interface Comment {
   authorImageUrl?: string;
   text: string;
   timestamp: string; // ISO string
+  likes?: number;
 }
 
 interface CommentsSectionProps {
@@ -25,14 +27,17 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
   const [newComment, setNewComment] = useState("");
   const [author, setAuthor] = useState("");
   const [loading, setLoading] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !author.trim() || loading) return;
+    if (!newComment.trim() || (!author.trim() && replyingTo === null) || loading) return;
     setLoading(true);
 
+    const isReply = replyingTo !== null;
+
     const optimisticComment: Comment = {
-      id: Date.now().toString(),
+      id: `${postId}_${Date.now().toString()}`,
       author: author.trim(),
       text: newComment,
       timestamp: new Date().toISOString(),
@@ -41,13 +46,17 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
     setComments([optimisticComment, ...comments]);
     setNewComment("");
     setAuthor("");
+    setReplyingTo(null);
 
     try {
-      await fetch(`/api/blog-posts/${postId}/comment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: newComment, author: author.trim() }),
-      });
+      const url = isReply
+        ? `/api/blog-posts/comments/${replyingTo}/reply`
+        : `/api/blog-posts/${postId}/comment`;
+      const method = "POST";
+      const headers = { "Content-Type": "application/json" };
+      const body = JSON.stringify({ text: newComment, author: author.trim() });
+
+      await fetch(url, { method, headers, body });
     } catch (error) {
       console.error("Failed to post comment:", error);
       // Revert optimistic update on failure
@@ -98,7 +107,41 @@ export function CommentsSection({ postId, initialComments }: CommentsSectionProp
                 </p>
               </div>
               <p className="text-gray-700 dark:text-gray-300 mt-1">{comment.text}</p>
+              <div className="flex items-center space-x-2">
+                <CommentLikeButton commentId={comment.id} initialLikes={comment.likes || 0} />
+                <Button variant="ghost" size="sm" onClick={() => setReplyingTo(comment.id)}>
+                  Reply
+                </Button>
+              </div>
             </div>
+            {replyingTo === comment.id && (
+              <form onSubmit={handleSubmitComment} className="mt-4 space-y-2">
+                <Textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Write a reply..."
+                  rows={2}
+                  required
+                  disabled={loading}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReplyingTo(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!newComment.trim() || loading}
+                  >
+                    {loading ? "Replying..." : "Reply"}
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
         ))}
       </div>
