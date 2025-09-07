@@ -6,6 +6,8 @@ import { AdminLogin } from "@/components/AdminLogin"
 import { Header } from "@/components/header"
 import { motion } from "framer-motion"
 import Image from "next/image"
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 function HomeComponent() {
   const [showAdminLogin, setShowAdminLogin] = useState(false)
@@ -56,6 +58,9 @@ function HomeComponent() {
       {/* Content */}
       <div className="relative z-10 w-full max-w-[1440px] mx-auto">
         <InteractiveElements />
+         <Link href="/blog" className="inline-flex items-center text-primary hover:underline text-sm font-medium">
+            View All Posts <ArrowRight className="ml-1 h-4 w-4" />
+          </Link>
         <FloatingWhatsAppButton />
 
         {/* Hidden mobile hotspot: long-press (1.2s) or 5 taps to open admin login */}
