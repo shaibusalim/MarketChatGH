@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { motion, useAnimation, useInView } from "framer-motion"
@@ -18,6 +18,7 @@ interface Seller {
   id: string
   name: string
   products: Product[]
+  summary: string
 }
 
 interface SellerCardProps {
@@ -55,6 +56,7 @@ export function SellerCard({ seller, index }: SellerCardProps) {
       <Card className="h-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg rounded-2xl border border-gray-100 dark:border-gray-700 flex flex-col">
         <CardHeader className="pb-4">
           <CardTitle className="text-2xl font-semibold text-gray-900 dark:text-white">{seller.name}</CardTitle>
+          <CardDescription>{seller.summary}</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow flex flex-col">
           {seller.products.length > 0 ? (

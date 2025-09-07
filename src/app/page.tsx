@@ -10,6 +10,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BlogPostCard } from "@/components/blog-post-card";
 import BlogPosts from "@/components/BlogPosts";
+import { PersonalizedProducts } from "@/components/PersonalizedProducts";
 
 function HomeComponent() {
   const [showAdminLogin, setShowAdminLogin] = useState(false)

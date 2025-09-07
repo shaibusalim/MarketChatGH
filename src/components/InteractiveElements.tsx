@@ -15,8 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { BlogSection } from "./blog-section" // Import the new BlogSection
+import { PersonalizedProducts } from "./PersonalizedProducts"
 
-const AnimatedGradientText = ({ children }: { children: React.ReactNode }) => (
+const AnimatedGradientText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <motion.span
     initial={{ backgroundPosition: "0% 50%" }}
     animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
@@ -510,6 +511,8 @@ export function InteractiveElements() {
           </div>
         </div>
       </section>
+
+      <PersonalizedProducts />
 
       {/* Contact Section */}
       <section id="contact" className="relative w-full py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">

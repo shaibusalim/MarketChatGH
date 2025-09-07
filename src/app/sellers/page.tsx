@@ -1,5 +1,6 @@
 import { adminFirestore } from "@/lib/firebase-admin" // Assuming this path is correct and setup
 import { SellerCard } from "@/components/seller-card" // Import the new SellerCard component
+import { generateSellerSummaryFlow } from "@/ai/flows/generate-seller-summary"
 
 export const revalidate = 0 // Ensure data is always fresh
 
@@ -15,6 +16,7 @@ interface Seller {
   id: string
   name: string
   products: Product[]
+  summary: string
 }
 
 // --- Firestore query ---
@@ -42,10 +44,16 @@ async function getSellersWithProducts(): Promise<Seller[]> {
         }
       })
 
+      const { summary } = await generateSellerSummaryFlow({
+        sellerName: sellerData.name ?? "Unnamed Seller",
+        products,
+      })
+
       sellers.push({
         id: sellerDoc.id,
         name: sellerData.name ?? "Unnamed Seller",
         products,
+        summary,
       })
     }
     return sellers
