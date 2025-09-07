@@ -8,32 +8,8 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { adminFirestore } from "@/lib/firebase-admin";
 import { BlogPostCard } from "@/components/blog-post-card";
-
-async function getLatestBlogPosts(limit: number = 3) {
-  const blogPostsSnapshot = await adminFirestore
-    .collection("blogPosts")
-    .orderBy("date", "desc")
-    .limit(limit)
-    .get();
-
-  const blogPosts = blogPostsSnapshot.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      title: data.title || "Untitled Post",
-      date: data.date || new Date().toISOString(),
-      excerpt: data.excerpt || "No excerpt available",
-      image: data.imageUrl || "/placeholder.svg",
-      link: `/blog/${doc.id}`,
-    };
-  });
-
-  return blogPosts;
-}
-
-export { getLatestBlogPosts };
+import BlogPosts from "@/components/BlogPosts";
 
 function HomeComponent() {
   const [showAdminLogin, setShowAdminLogin] = useState(false)
@@ -85,7 +61,6 @@ function HomeComponent() {
       <div className="relative z-10 w-full max-w-[1440px] mx-auto">
         <InteractiveElements />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {/* @ts-expect-error Server Component */}
           <BlogPosts />
         </div>
         <Link href="/blog" className="inline-flex items-center text-primary hover:underline text-sm font-medium">

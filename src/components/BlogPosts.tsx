@@ -1,5 +1,5 @@
+import { useState, useEffect } from "react";
 import { BlogPostCard } from "@/components/blog-post-card";
-import { getLatestBlogPosts } from "@/app/page";
 
 interface BlogPost {
   id: string;
@@ -10,8 +10,18 @@ interface BlogPost {
   link: string;
 }
 
-async function BlogPosts() {
-  const blogPosts = await getLatestBlogPosts();
+function BlogPosts() {
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+
+  useEffect(() => {
+    async function fetchBlogPosts() {
+      const res = await fetch("/api/latest-blog-posts");
+      const data: BlogPost[] = await res.json();
+      setBlogPosts(data);
+    }
+
+    fetchBlogPosts();
+  }, []);
 
   return (
     <>
