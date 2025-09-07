@@ -58,6 +58,7 @@ function HomeComponent() {
       {/* Content */}
       <div className="relative z-10 w-full max-w-[1440px] mx-auto">
         <InteractiveElements />
+        
         <FloatingWhatsAppButton />
 
         {/* Hidden mobile hotspot: long-press (1.2s) or 5 taps to open admin login */}
