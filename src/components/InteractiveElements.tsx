@@ -406,7 +406,16 @@ export function InteractiveElements() {
       </section>
 
       {/* Blog Section */}
-      <BlogSection />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+         <BlogSection /> 
+        </div>
+        <div className="flex justify-center mt-4">
+          <Link href="/blog" className="inline-flex items-center text-primary hover:underline text-sm font-medium">
+            View All Posts <ArrowRight className="ml-1 h-4 w-4" />
+          </Link>
+        </div>
+      
 
       {/* About Us Section */}
       <section id="about" className="relative w-full py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
