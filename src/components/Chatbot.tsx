@@ -56,7 +56,7 @@ export function Chatbot() {
 
   return (
     <>
-      <div className="fixed bottom-24 right-8 z-50">
+      <div className="fixed bottom-32 sm:bottom-20 right-4 sm:right-8 z-50">
         <Button onClick={() => setIsOpen(!isOpen)} className="rounded-full w-16 h-16 bg-blue-600 hover:bg-blue-700">
           <Bot className="w-8 h-8 text-white" />
         </Button>
@@ -68,7 +68,7 @@ export function Chatbot() {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-44 right-8 w-80 h-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col z-[100]"
+            className="fixed bottom-52 sm:bottom-40 right-8 w-80 h-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col z-[100]"
           >
             <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
               <h3 className="text-lg font-semibold">Shopping Assistant</h3>
