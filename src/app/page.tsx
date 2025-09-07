@@ -8,8 +8,6 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { BlogPostCard } from "@/components/blog-post-card";
-import BlogPosts from "@/components/BlogPosts";
 
 function HomeComponent() {
   const [showAdminLogin, setShowAdminLogin] = useState(false)
@@ -60,14 +58,6 @@ function HomeComponent() {
       {/* Content */}
       <div className="relative z-10 w-full max-w-[1440px] mx-auto">
         <InteractiveElements />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <BlogPosts />
-        </div>
-        <div className="flex justify-center mt-4">
-          <Link href="/blog" className="inline-flex items-center text-primary hover:underline text-sm font-medium">
-            View All Posts <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
         <FloatingWhatsAppButton />
 
         {/* Hidden mobile hotspot: long-press (1.2s) or 5 taps to open admin login */}
