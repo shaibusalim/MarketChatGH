@@ -2,21 +2,26 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getProducts, Product } from '@/lib/product-actions';
+import { getProducts } from '@/lib/product-actions';
 
 const ShoppingAssistantInputSchema = z.object({
-  message: z.string().describe('The user\'s message to the shopping assistant.'),
-  products: z.array(z.object({
-    id: z.string(),
-    description: z.string(),
-    price: z.string(),
-    sellerId: z.string(),
-  })).optional().describe('A list of available products.'),
+  message: z.string().describe("The user's message to the shopping assistant."),
+  products: z
+    .array(
+      z.object({
+        id: z.string(),
+        description: z.string(),
+        price: z.string(),
+        sellerId: z.string(),
+      })
+    )
+    .optional()
+    .describe('A list of available products.'),
 });
 export type ShoppingAssistantInput = z.infer<typeof ShoppingAssistantInputSchema>;
 
 const ShoppingAssistantOutputSchema = z.object({
-  reply: z.string().describe('The shopping assistant\'s response.'),
+  reply: z.string().describe("The shopping assistant's response."),
 });
 export type ShoppingAssistantOutput = z.infer<typeof ShoppingAssistantOutputSchema>;
 
@@ -29,18 +34,25 @@ Your goal is to help users find products and guide them through the shopping pro
 You have access to a list of products.
 
 Here are the rules you must follow:
-- If the user asks for a specific product, search for it using the provided product data and provide a link to the product page (e.g., /sellerId/product/productId).
+- Always stay on topic and focus on shopping-related queries. Do not discuss unrelated topics.
+- If the user asks for a specific product, search for it in the provided product data.
+  - If found, provide a direct link to the product page in the format: \`/[sellerId]/product/[productId]\`.
+  - Also provide a link to the seller’s store in the format: \`/[sellerId]/store\`.
+  - Example: If a product has sellerId "seller123" and id "product456", the product link should be \`/seller123/product/product456\` and the seller store link should be \`/seller123/store\`.
+  - Search for it in the provided product data.  
+  - If found, provide a direct link to the product page in this format: \`/[sellerId]/product/[productId]\`.  
+  - Also provide a link to the seller’s store in this format: \`/[sellerId]/store\`.  
 - If the user asks for a recommendation, ask clarifying questions to understand their needs (e.g., "What kind of products are you interested in?", "What's your budget?").
-- If the user asks about payment, instruct them to pay via MTN Mobile Money to the number 055 123 4567 and to send a screenshot of the payment confirmation to finalize the order.
 - Be friendly, polite, and use Ghanaian colloquialisms where appropriate.
-- If you cannot find a relevant product, apologize and suggest broadening the search or contacting a human agent.
+- If you cannot find a relevant product, apologize and suggest broadening the search or contacting a human agent. Do not make up products or links.
+- Do not provide any payment instructions.
 
 Available Products:
 {{#each products}}
-- ID: {{this.id}}, Description: {{this.description}}, Price: {{this.price}}, Seller ID: {{this.sellerId}}
+- ID: {{id}}, Description: {{description}}, Price: {{price}}, Seller ID: {{sellerId}}
 {{/each}}
 
-User message: {{{message}}}`,
+User message: {{{message}}}`
 });
 
 export const shoppingAssistantFlow = ai.defineFlow(
@@ -50,17 +62,37 @@ export const shoppingAssistantFlow = ai.defineFlow(
     outputSchema: ShoppingAssistantOutputSchema,
   },
   async (input) => {
-    const { products } = await getProducts('', 'all', 'createdAt-desc', 20); // Fetch some products
-    const productData = products.map(p => ({
+    // Fetch recent products (limit 50 for efficiency)
+    const { products } = await getProducts('', 'all', 'createdAt-desc', 50);
+
+    // Basic keyword filtering (split user message into words and match against description)
+    const userQuery = input.message.toLowerCase();
+    let filteredProducts = products.filter((p) =>
+      userQuery
+        .split(/\s+/)
+        .some((word) => p.description.toLowerCase().includes(word))
+    );
+
+    // If no matches, fallback to all products
+    if (filteredProducts.length === 0) {
+      filteredProducts = products;
+    }
+
+    const productData = filteredProducts.map((p) => ({
       id: p.id,
       description: p.description,
       price: p.price,
       sellerId: p.sellerId,
     }));
 
-    const { output } = await prompt({ ...input, products: productData });
+    const promptInput = {
+      ...input,
+      products: productData,
+    };
+
+    const { output } = await prompt(promptInput);
     if (!output?.reply) {
-      throw new Error("Empty response from AI");
+      throw new Error('Empty response from AI');
     }
     return output;
   }
