@@ -56,9 +56,9 @@ export function Chatbot() {
 
   return (
     <>
-      <div className="fixed bottom-32 sm:bottom-20 right-4 sm:right-8 z-50">
-        <Button onClick={() => setIsOpen(!isOpen)} className="rounded-full w-16 h-16 bg-blue-600 hover:bg-blue-700">
-          <Bot className="w-8 h-8 text-white" />
+      <div className="fixed bottom-28 sm:bottom-13 right-4 sm:right-8 z-50">
+        <Button onClick={() => setIsOpen(!isOpen)} className="rounded-full w-12 h-12 sm:w-16 sm:h-16  bg-blue-600 hover:bg-blue-700">
+          <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
         </Button>
       </div>
 
