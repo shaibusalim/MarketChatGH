@@ -1,6 +1,7 @@
 import { adminFirestore } from "@/lib/firebase-admin" // Assuming this path is correct and setup
 import { SellerCard } from "@/components/seller-card" // Import the new SellerCard component
 import { generateSellerSummaryFlow } from "@/ai/flows/generate-seller-summary"
+import { callAIWithRetry } from "@/ai/genkit"
 
 export const revalidate = 0 // Ensure data is always fresh
 
@@ -44,10 +45,33 @@ async function getSellersWithProducts(): Promise<Seller[]> {
         }
       })
 
-      const { summary } = await generateSellerSummaryFlow({
-        sellerName: sellerData.name ?? "Unnamed Seller",
-        products,
-      })
+      // Check if summary exists in cache (seller document)
+      let summary = sellerData.summary || ""
+
+      // If no cached summary, generate one and cache it
+      if (!summary) {
+        try {
+          const result = await callAIWithRetry(
+            () => generateSellerSummaryFlow({
+              sellerName: sellerData.name ?? "Unnamed Seller",
+              products,
+            }),
+            3, // max retries
+            2000 // initial delay
+          )
+          summary = result.summary
+
+          // Cache the summary in Firestore
+          await adminFirestore.collection("sellers").doc(sellerDoc.id).update({
+            summary,
+            summaryLastGenerated: new Date(),
+          })
+        } catch (aiError) {
+          console.error(`Failed to generate summary for seller ${sellerDoc.id} after retries:`, aiError)
+          // Fallback to a generic summary if AI fails
+          summary = `${sellerData.name ?? "This seller"} offers quality products in our marketplace.`
+        }
+      }
 
       sellers.push({
         id: sellerDoc.id,
