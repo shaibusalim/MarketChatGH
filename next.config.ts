@@ -5,9 +5,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
        {
@@ -36,14 +33,7 @@ const nextConfig: NextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET, // Ensure server-side secret is explicitly passed
     NEXT_PUBLIC_NEXTAUTH_URL: process.env.NEXT_PUBLIC_NEXTAUTH_URL, // Expose client-side URL
   },
-  webpack: (config, { isServer }) => {
-    config.externals.push(
-      // Exclude the problematic modules from both server and client bundles
-      /@mapbox\/node-pre-gyp/,
-      'nock'
-    );
-    return config;
-  },
+  turbopack: {},
 };
 
 export default nextConfig;
