@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     const imageBuffer = await mediaResponse.arrayBuffer();
     const contentType = mediaResponse.headers.get('Content-Type') || 'image/jpeg';
 
-    return new NextResponse(Buffer.from(imageBuffer), {
+    return new NextResponse(imageBuffer, {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=86400',
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       const placeholderResponse = await fetch(`${origin}/placeholder-product.jpg`);
       if (placeholderResponse.ok) {
         const placeholderBuffer = await placeholderResponse.arrayBuffer();
-        return new NextResponse(Buffer.from(placeholderBuffer), {
+        return new NextResponse(placeholderBuffer, {
           headers: {
             'Content-Type': 'image/jpeg',
             'Cache-Control': 'public, max-age=3600',

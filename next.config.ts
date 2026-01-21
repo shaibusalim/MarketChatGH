@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  outputFileTracingRoot: process.cwd(),
   // Windows-specific configuration to prevent EPERM errors
   webpack: (config, { isServer }) => {
     // Configure webpack to handle Windows file system better
@@ -16,19 +17,11 @@ const nextConfig: NextConfig = {
     return config;
   },
   images: {
-    localPatterns: [
-      {
-        pathname: '/**',
-      },
-    ],
     remotePatterns: [
        {
         protocol: 'https',
         hostname: 'images.pexels.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**', // optionally allow all external images
+        pathname: '/**',
       },
       {
         protocol: 'https',
