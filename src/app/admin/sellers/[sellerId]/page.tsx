@@ -44,7 +44,7 @@ export default function AdminSellerDetailsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'
+  const baseUrl = undefined
 
   useEffect(() => {
     console.log('[AdminSellerDetails] Session:', { status, isAdmin: session?.user?.isAdmin })
@@ -59,7 +59,7 @@ export default function AdminSellerDetailsPage() {
     setIsLoading(true)
     setError(null)
     try {
-      const url = new URL(`/api/sellers/${sellerId}`, baseUrl)
+      const url = new URL(`/api/sellers/${sellerId}`, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
       console.log(`[AdminSellerDetails] Fetching from ${url.toString()}`)
       const response = await fetch(url.toString())
       if (!response.ok) {
@@ -90,7 +90,7 @@ export default function AdminSellerDetailsPage() {
     }
     setIsDeleting(true)
     try {
-      const response = await fetch(`${baseUrl}/api/admin/delete-seller`, {
+      const response = await fetch(`/api/admin/delete-seller`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sellerId }),

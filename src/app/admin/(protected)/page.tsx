@@ -51,7 +51,7 @@ function AdminDashboardContent() {
 	const [chartError, setChartError] = useState<string | null>(null)
 
 	const pageSize = 10
-	const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'
+	const baseUrl = undefined
 
 	useEffect(() => {
 		if (status === 'loading') return
@@ -64,7 +64,7 @@ function AdminDashboardContent() {
 		setIsLoading(true)
 		setError(null)
 		try {
-			const url = new URL("/api/sellers", baseUrl)
+			const url = new URL("/api/sellers", typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
 			url.searchParams.append("q", searchQuery)
 			url.searchParams.append("page", page.toString())
 			url.searchParams.append("pageSize", pageSize.toString())
@@ -103,7 +103,7 @@ function AdminDashboardContent() {
 			setIsChartLoading(true)
 			setChartError(null)
 			try {
-				const url = new URL("/api/sellers", baseUrl)
+				const url = new URL("/api/sellers", typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
 				url.searchParams.append("all", "true")
 
 				const response = await fetch(url.toString())

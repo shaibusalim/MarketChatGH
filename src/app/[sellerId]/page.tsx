@@ -70,7 +70,7 @@ export default function SellerPage() {
     searchParams.get("productStatus") || "all",
   )
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'
+  const baseUrl = undefined
 
   // Prevent /admin from being treated as a sellerId
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function SellerPage() {
       setIsLoading(true)
       setError(null)
       try {
-        const url = new URL(`/api/sellers/${sellerId}`, baseUrl)
+        const url = new URL(`/api/sellers/${sellerId}`, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
         if (query) {
           url.searchParams.append("productQ", query)
         }

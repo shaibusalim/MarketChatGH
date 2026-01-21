@@ -48,8 +48,8 @@ export async function GET(request: Request) {
 
     // Attempt to serve placeholder image
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const placeholderResponse = await fetch(`${baseUrl}/placeholder-product.jpg`);
+      const origin = new URL(request.url).origin;
+      const placeholderResponse = await fetch(`${origin}/placeholder-product.jpg`);
       if (placeholderResponse.ok) {
         const placeholderBuffer = await placeholderResponse.arrayBuffer();
         return new NextResponse(Buffer.from(placeholderBuffer), {
