@@ -1,8 +1,8 @@
-// app/api/twilio-media/route.ts
 import { NextResponse } from 'next/server';
 import { twilioClient } from '@/lib/twilio';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

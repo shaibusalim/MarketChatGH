@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { adminFirestore } from "@/lib/firebase-admin"
-import type  FirebaseFirestore  from "firebase-admin/firestore"
+import type FirebaseFirestore from "firebase-admin/firestore"
 
-export const dynamic = "force-dynamic" // Ensure this API route is dynamic
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 // --- Types ---
 interface Product {

@@ -2,6 +2,8 @@ import { adminFirestore } from "@/lib/firebase-admin";
 import { NextResponse } from "next/server";
 import { FieldValue } from "@google-cloud/firestore";
 
+export const runtime = "nodejs";
+
 interface Params {
   commentId: string;
 }

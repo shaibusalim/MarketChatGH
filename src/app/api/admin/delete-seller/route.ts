@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { adminFirestore } from '@/lib/firebase-admin';
 import { authOptions } from '@/auth.config';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     // Verify authentication and admin status

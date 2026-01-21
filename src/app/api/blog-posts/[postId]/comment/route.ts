@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { adminFirestore } from "@/lib/firebase-admin";
 
+export const runtime = "nodejs";
+
 export async function POST(
   req: Request,
   props: { params: Promise<{ postId: string }> }
