@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  turbopack: {},
   outputFileTracingRoot: process.cwd(),
   // Windows-specific configuration to prevent EPERM errors
   webpack: (config, { isServer }) => {
