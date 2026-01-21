@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { twilioClient } from '@/lib/twilio';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -15,19 +14,28 @@ export async function GET(request: Request) {
   }
 
   try {
-    const authHeader = `Basic ${Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64')}`;
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    if (!accountSid || !authToken) {
+      return NextResponse.json({ error: 'Twilio env not configured' }, { status: 500 });
+    }
+    const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
     
     // Construct the correct Twilio media URL
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages/${messageSid}/Media/${mediaSid}`;
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages/${messageSid}/Media/${mediaSid}/Content`;
     
     
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     const mediaResponse = await fetch(twilioUrl, {
       headers: {
         'Authorization': authHeader,
+        'Accept': '*/*',
       },
-      signal: AbortSignal.timeout(15000),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!mediaResponse.ok) {
      
