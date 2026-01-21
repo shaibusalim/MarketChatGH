@@ -20,7 +20,7 @@ export function ProductPreviewCard({ product }: ProductPreviewCardProps) {
       transition={{ duration: 0.2 }}
     >
       <Image
-        src={product.imageUrl || "/placeholder.svg"}
+        src={product.imageUrl || "/img1.jpg"}
         alt={product.description}
         layout="fill"
         objectFit="cover"

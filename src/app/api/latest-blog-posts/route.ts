@@ -16,7 +16,7 @@ export async function GET() {
         title: data.title || "Untitled Post",
         date: data.date || new Date().toISOString(),
         excerpt: data.excerpt || "No excerpt available",
-        image: data.imageUrl || "/placeholder.svg",
+        image: data.imageUrl || "/img1.jpg",
         link: `/blog/${doc.id}`,
       };
     });

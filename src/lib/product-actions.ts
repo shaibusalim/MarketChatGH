@@ -71,7 +71,7 @@ export const getProducts = async (
     const products = productsSnapshot.docs.map((doc) => {
       const data = doc.data();
       const description = typeof data.description === 'string' ? data.description.slice(0, 1000) : "No description";
-      const imageUrl = typeof data.imageUrl === 'string' ? data.imageUrl.slice(0, 1000) : "/placeholder-product.jpg";
+      const imageUrl = typeof data.imageUrl === 'string' ? data.imageUrl.slice(0, 1000) : "/img1.jpg";
       const price = typeof data.price === 'string' ? data.price.slice(0, 100) : "Price not specified";
       const createdAt = data.createdAt && typeof data.createdAt.toDate === 'function'
         ? data.createdAt.toDate().toISOString()

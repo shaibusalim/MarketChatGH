@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     // Attempt to serve placeholder image
     try {
       const origin = new URL(request.url).origin;
-      const placeholderResponse = await fetch(`${origin}/placeholder-product.jpg`);
+      const placeholderResponse = await fetch(`${origin}/background-fallback.jpg`);
       if (placeholderResponse.ok) {
         const placeholderBuffer = await placeholderResponse.arrayBuffer();
         return new NextResponse(placeholderBuffer, {

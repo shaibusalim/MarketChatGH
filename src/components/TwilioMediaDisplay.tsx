@@ -27,7 +27,11 @@ export function TwilioMediaDisplay({
       height={height}
       className={className}
       loading={loading}
-      unoptimized={mediaUrl.includes('ngrok') || mediaUrl.includes('twilio')}
+      unoptimized={
+        mediaUrl.includes('ngrok') ||
+        mediaUrl.includes('twilio') ||
+        mediaUrl.startsWith('/api/twilio-media')
+      }
     />
   );
 }

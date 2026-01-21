@@ -79,7 +79,7 @@ const getSellerAndProducts = async (
       const data = doc.data()
       return {
         id: doc.id,
-        imageUrl: data.imageUrl ?? "/placeholder-product.jpg",
+        imageUrl: data.imageUrl ?? "/img1.jpg",
         price: data.price ?? "Price not specified",
         description: data.description ?? "No description",
         sellerId: data.sellerId ?? "",

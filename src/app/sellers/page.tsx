@@ -39,7 +39,7 @@ async function getSellersWithProducts(): Promise<Seller[]> {
         const productData = productDoc.data()
         return {
           id: productDoc.id,
-          imageUrl: productData.imageUrl ?? "/placeholder-product.png", // Use the generated placeholder
+          imageUrl: productData.imageUrl ?? "/img1.jpg",
           price: productData.price ?? "N/A",
           description: productData.description ?? "No description",
         }

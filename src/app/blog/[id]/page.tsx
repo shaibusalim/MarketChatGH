@@ -40,7 +40,7 @@ async function getBlogPost(id: string): Promise<BlogPost | null> {
       title: data?.title ?? "Untitled Post",
       excerpt: data?.excerpt ?? "No excerpt available.",
       content: data?.content ?? "No content available.",
-      imageUrl: data?.imageUrl ?? "/placeholder.svg?height=400&width=800",
+      imageUrl: data?.imageUrl ?? "/img1.jpg",
       date: data?.date ?? new Date().toISOString(),
       likes: data?.likes ?? 0,
     };
@@ -100,7 +100,7 @@ export default async function BlogPostPage({
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
         <div className="relative w-full h-64 sm:h-80 md:h-96">
           <Image
-            src={blogPost.imageUrl || "/placeholder.svg"}
+            src={blogPost.imageUrl || "/img1.jpg"}
             alt={blogPost.title}
             layout="fill"
             objectFit="cover"

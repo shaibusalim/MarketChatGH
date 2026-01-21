@@ -159,7 +159,7 @@ function AdminBlogContent() {
                         >
                           <TableCell>
                             <Image
-                              src={post.imageUrl || "/placeholder.svg"}
+                              src={post.imageUrl || "/img1.jpg"}
                               alt={post.title}
                               width={60}
                               height={40}

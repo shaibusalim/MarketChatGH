@@ -37,7 +37,7 @@ async function getProductAndSeller(sellerId: string, productId: string): Promise
     const productData = productDoc.data()!;
     const product: Product = {
       id: productDoc.id,
-      imageUrl: productData.imageUrl ?? "/placeholder-product.jpg",
+      imageUrl: productData.imageUrl ?? "/img1.jpg",
       price: productData.price ?? "Price not specified",
       description: productData.description ?? "No description",
       sellerId: productData.sellerId ?? "",

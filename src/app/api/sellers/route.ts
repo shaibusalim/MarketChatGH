@@ -74,7 +74,7 @@ async function fetchPaginatedSellers(
         const productData = productDoc.data()
         return {
           id: productDoc.id,
-          imageUrl: productData.imageUrl ?? "/placeholder-product.png",
+          imageUrl: productData.imageUrl ?? "/img1.jpg",
           price: productData.price ?? "N/A",
           description: productData.description ?? "No description",
           sellerId: productData.sellerId ?? "",
@@ -120,7 +120,7 @@ async function fetchAllSellers(): Promise<{ sellers: Seller[] }> {
         const productData = productDoc.data()
         return {
           id: productDoc.id,
-          imageUrl: productData.imageUrl ?? "/placeholder-product.png",
+          imageUrl: productData.imageUrl ?? "/img1.jpg",
           price: productData.price ?? "N/A",
           description: productData.description ?? "No description",
           sellerId: productData.sellerId ?? "",

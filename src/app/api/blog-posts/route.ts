@@ -23,7 +23,7 @@ export async function GET() {
         title: data.title ?? "Untitled Post",
         excerpt: data.excerpt ?? "No excerpt available.",
         content: data.content ?? "No content available.",
-        imageUrl: data.imageUrl ?? "/placeholder.svg?height=250&width=400",
+        imageUrl: data.imageUrl ?? "/img1.jpg",
         date: data.date ?? new Date().toISOString(),
       }
     })
