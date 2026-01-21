@@ -16,10 +16,20 @@ if (!admin.apps.length) {
       throw new Error('Firebase service account string is empty after base64 decoding.');
     }
     
-    const serviceAccount: ServiceAccount = JSON.parse(serviceAccountString);
+    const raw = JSON.parse(serviceAccountString) as {
+      project_id: string
+      client_email: string
+      private_key: string
+    }
+    const serviceAccount: ServiceAccount = {
+      projectId: raw.project_id,
+      clientEmail: raw.client_email,
+      privateKey: raw.private_key,
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
+      projectId: serviceAccount.projectId,
       databaseURL: `https://${serviceAccount.projectId}.firebaseio.com`,
       storageBucket: `${serviceAccount.projectId}.appspot.com`
     });

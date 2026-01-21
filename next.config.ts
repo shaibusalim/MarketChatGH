@@ -5,7 +5,22 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Windows-specific configuration to prevent EPERM errors
+  webpack: (config, { isServer }) => {
+    // Configure webpack to handle Windows file system better
+    config.watchOptions = {
+      poll: 1000, // Check for changes every second
+      aggregateTimeout: 300, // Delay before rebuilding
+      ignored: /node_modules/,
+    };
+    return config;
+  },
   images: {
+    localPatterns: [
+      {
+        pathname: '/**',
+      },
+    ],
     remotePatterns: [
        {
         protocol: 'https',
@@ -33,7 +48,6 @@ const nextConfig: NextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET, // Ensure server-side secret is explicitly passed
     NEXT_PUBLIC_NEXTAUTH_URL: process.env.NEXT_PUBLIC_NEXTAUTH_URL, // Expose client-side URL
   },
-  turbopack: {},
 };
 
 export default nextConfig;

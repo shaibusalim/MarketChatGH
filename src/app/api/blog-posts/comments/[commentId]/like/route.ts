@@ -8,8 +8,9 @@ interface Params {
 
 export async function POST(
   request: Request,
-  { params }: { params: Params }
+  props: { params: Promise<Params> }
 ) {
+  const params = await props.params;
   const { commentId } = params;
 
   if (!commentId) {

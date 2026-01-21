@@ -91,13 +91,13 @@ const getSellerAndProducts = async (
 
     return { seller, products }
   } catch (error) {
-  
-    throw new Error("Failed to fetch seller data")
+    console.error("Error in getSellerAndProducts:", error);
+    throw error;
   }
 }
 
-export async function GET(request: Request, { params }: { params: { sellerId: string } }) {
-
+export async function GET(request: Request, props: { params: Promise<{ sellerId: string }> }) {
+  const params = await props.params;
   try {
     const { sellerId } = params
     const { searchParams } = new URL(request.url)

@@ -3,8 +3,9 @@ import { adminFirestore } from "@/lib/firebase-admin";
 
 export async function POST(
   req: Request,
-  { params }: { params: { postId: string } }
+  props: { params: Promise<{ postId: string }> }
 ) {
+  const params = await props.params;
   try {
     const { postId } = params;
     if (!postId) {

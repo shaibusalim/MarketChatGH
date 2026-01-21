@@ -59,6 +59,7 @@ export default function SellerPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasFetched, setHasFetched] = useState(false)
 
   const [currentProductSearchQuery, setCurrentProductSearchQuery] = useState(searchParams.get("productQ") || "")
   const [currentProductFilterStatus, setCurrentProductFilterStatus] = useState(
@@ -106,6 +107,7 @@ export default function SellerPage() {
         toast.error("Failed to load seller data: " + (err as Error).message, { duration: 5000 })
       } finally {
         setIsLoading(false)
+        setHasFetched(true)
       }
     },
     [sellerId, baseUrl],
@@ -113,25 +115,39 @@ export default function SellerPage() {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)
-      const newSearchParams = new URLSearchParams(searchParams.toString())
+      const shouldFetch =
+        !hasFetched ||
+        currentProductSearchQuery !== fetchedProductSearchQuery ||
+        currentProductFilterStatus !== fetchedProductFilterStatus
+      if (shouldFetch) {
+        fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)
+      }
+      const newSearchParams = new URLSearchParams()
       if (currentProductSearchQuery) {
         newSearchParams.set("productQ", currentProductSearchQuery)
-      } else {
-        newSearchParams.delete("productQ")
       }
       if (currentProductFilterStatus !== "all") {
         newSearchParams.set("productStatus", currentProductFilterStatus)
-      } else {
-        newSearchParams.delete("productStatus")
       }
-      router.replace(`?${newSearchParams.toString()}`, { scroll: false })
+      const target = `?${newSearchParams.toString()}`
+      const current = `?${searchParams.toString()}`
+      if (target !== current) {
+        router.replace(target, { scroll: false })
+      }
     }, 500)
 
     return () => {
       clearTimeout(handler)
     }
-  }, [currentProductSearchQuery, currentProductFilterStatus, fetchSellerData, router, searchParams])
+  }, [
+    currentProductSearchQuery,
+    currentProductFilterStatus,
+    fetchedProductSearchQuery,
+    fetchedProductFilterStatus,
+    fetchSellerData,
+    router,
+    hasFetched,
+  ])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentProductSearchQuery(e.target.value)

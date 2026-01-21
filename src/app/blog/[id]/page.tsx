@@ -83,11 +83,12 @@ async function getComments(postId: string): Promise<Comment[]> {
 export default async function BlogPostPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const [blogPost, comments] = await Promise.all([
-    getBlogPost(params.id),
-    getComments(params.id),
+    getBlogPost(id),
+    getComments(id),
   ]);
 
   if (!blogPost) {
