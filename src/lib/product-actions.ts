@@ -72,6 +72,13 @@ export const getProducts = async (
       const data = doc.data();
       const description = typeof data.description === 'string' ? data.description.slice(0, 1000) : "No description";
       const imageUrl = typeof data.imageUrl === 'string' ? data.imageUrl.slice(0, 1000) : "/img1.jpg";
+      if (!data.imageUrl) {
+        console.warn(`Product ${doc.id} missing imageUrl:`, {
+          description: description.substring(0, 30),
+          sellerId: data.sellerId,
+          status: data.status,
+        });
+      }
       const price = typeof data.price === 'string' ? data.price.slice(0, 100) : "Price not specified";
       const createdAt = data.createdAt && typeof data.createdAt.toDate === 'function'
         ? data.createdAt.toDate().toISOString()

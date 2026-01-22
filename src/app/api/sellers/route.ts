@@ -72,9 +72,16 @@ async function fetchPaginatedSellers(
 
       const products = productsSnapshot.docs.map((productDoc) => {
         const productData = productDoc.data()
+        const imageUrl = productData.imageUrl ?? "/img1.jpg"
+        if (!productData.imageUrl) {
+          console.warn(`[API] fetchPaginatedSellers: Product ${productDoc.id} missing imageUrl for seller ${sellerId}`, {
+            description: productData.description?.substring(0, 30),
+            hasMediaReference: !!productData.mediaReference,
+          })
+        }
         return {
           id: productDoc.id,
-          imageUrl: productData.imageUrl ?? "/img1.jpg",
+          imageUrl,
           price: productData.price ?? "N/A",
           description: productData.description ?? "No description",
           sellerId: productData.sellerId ?? "",
@@ -118,9 +125,15 @@ async function fetchAllSellers(): Promise<{ sellers: Seller[] }> {
       const productsSnapshot = await adminFirestore.collection("products").where("sellerId", "==", sellerId).get()
       const products = productsSnapshot.docs.map((productDoc) => {
         const productData = productDoc.data()
+        const imageUrl = productData.imageUrl ?? "/img1.jpg"
+        if (!productData.imageUrl) {
+          console.warn(`[API] fetchAllSellers: Product ${productDoc.id} missing imageUrl for seller ${sellerId}`, {
+            description: productData.description?.substring(0, 30),
+          })
+        }
         return {
           id: productDoc.id,
-          imageUrl: productData.imageUrl ?? "/img1.jpg",
+          imageUrl,
           price: productData.price ?? "N/A",
           description: productData.description ?? "No description",
           sellerId: productData.sellerId ?? "",

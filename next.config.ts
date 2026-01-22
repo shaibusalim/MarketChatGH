@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -18,8 +18,12 @@ const nextConfig: NextConfig = {
     return config;
   },
   images: {
+    localPatterns: [
+      { pathname: '/**' },
+      { pathname: '/api/twilio-media' },
+    ],
     remotePatterns: [
-       {
+      {
         protocol: 'https',
         hostname: 'images.pexels.com',
         pathname: '/**',
@@ -35,6 +39,36 @@ const nextConfig: NextConfig = {
         hostname: 's3.amazonaws.com',
         port: '',
         pathname: '/com.twilio.prod.media/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media-api.twilio.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
+        pathname: '/**',
       },
     ],
   },

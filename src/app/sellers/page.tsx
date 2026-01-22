@@ -48,29 +48,18 @@ async function getSellersWithProducts(): Promise<Seller[]> {
       // Check if summary exists in cache (seller document)
       let summary = sellerData.summary || ""
 
-      // If no cached summary, generate one and cache it
+      // Skip AI generation due to Google API quota limits on free tier
+      // If no cached summary, use a generic one
       if (!summary) {
-        try {
-          const result = await callAIWithRetry(
-            () => generateSellerSummaryFlow({
-              sellerName: sellerData.name ?? "Unnamed Seller",
-              products,
-            }),
-            3, // max retries
-            2000 // initial delay
-          )
-          summary = result.summary
-
-          // Cache the summary in Firestore
-          await adminFirestore.collection("sellers").doc(sellerDoc.id).update({
-            summary,
-            summaryLastGenerated: new Date(),
-          })
-        } catch (aiError) {
-          console.error(`Failed to generate summary for seller ${sellerDoc.id} after retries:`, aiError)
-          // Fallback to a generic summary if AI fails
-          summary = `${sellerData.name ?? "This seller"} offers quality products in our marketplace.`
-        }
+        const productCount = products.length
+        const productTypes = products
+          .slice(0, 2)
+          .map((p) => p.description.split(" ").slice(0, 2).join(" "))
+          .join(", ")
+        
+        summary = productCount > 0
+          ? `Sells ${productTypes}${productCount > 2 ? " and more" : ""}. Quality seller in MarketChat GH.`
+          : `${sellerData.name ?? "This seller"} offers quality products in our marketplace.`
       }
 
       sellers.push({

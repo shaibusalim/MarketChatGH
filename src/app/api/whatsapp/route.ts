@@ -50,6 +50,17 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Validate media URL
+      if (!mediaUrl) {
+        console.error("Media URL is missing", { sellerId, messageSid, numMedia });
+        twiml.message(
+          "⚠️ Unable to process image. Please try uploading again."
+        );
+        return new Response(twiml.toString(), {
+          headers: { "Content-Type": "text/xml" },
+        });
+      }
+
       const lines = body.split("\n").map((line) => line.trim()).filter(Boolean);
       const priceLine = lines.find(
         (line) =>
@@ -61,24 +72,13 @@ export async function POST(req: NextRequest) {
       const description = descriptionLines.join("\n") || "No description provided";
       const price = priceLine || "Price not specified";
 
-      let mediaSid = "";
-      if (mediaUrl.includes("/Media/")) {
-        mediaSid = mediaUrl.split("/Media/")[1]?.split("/")[0] || "";
-      } else {
-        console.error("Invalid media URL format", { mediaUrl });
-        twiml.message("⚠️ Invalid media URL format. Please try again.");
-        return new Response(twiml.toString(), {
-          headers: { "Content-Type": "text/xml" },
-        });
-      }
+      // Use mediaUrl directly from Twilio - it's already a valid image URL
+      const imageUrl = mediaUrl;
 
       const mediaReference = {
         messageSid,
-        mediaSid,
         originalUrl: mediaUrl,
       };
-
-      const proxyMediaUrl = `/api/twilio-media?sid=${mediaSid}&msgSid=${messageSid}`;
 
       const existingProducts = await adminFirestore
         .collection("products")
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       try {
         await adminFirestore.collection("products").add({
           sellerId,
-          imageUrl: proxyMediaUrl,
+          imageUrl,
           mediaReference,
           price,
           description,
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       } catch (error) {
-        console.error("Failed to save product to adminFirestore", { error, sellerId, mediaSid });
+        console.error("Failed to save product to adminFirestore", { error, sellerId, imageUrl });
         twiml.message("⚠️ Failed to add product. Please try again or contact support.");
         return new Response(twiml.toString(), {
           headers: { "Content-Type": "text/xml" },
