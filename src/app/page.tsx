@@ -58,7 +58,7 @@ function HomeComponent() {
       {/* Content */}
       <div className="relative z-10 w-full max-w-[1440px] mx-auto">
         <InteractiveElements />
-        
+
         <FloatingWhatsAppButton />
 
         {/* Hidden mobile hotspot: long-press (1.2s) or 5 taps to open admin login */}
@@ -86,34 +86,32 @@ function HomeComponent() {
               </div>
               <span className="font-headline text-lg font-bold text-gray-900 dark:text-white">MarketChat</span>
             </motion.div>
-            <div className="flex flex-col md:flex-row gap-3 items-center">
-              <p className="text-muted-foreground text-xs">
-                © {new Date().getFullYear()} MarketChat. All rights reserved.
-              </p>
-              <div className="flex gap-3">
-                <motion.a
-                  href="https://x.com/MarketChatGH"
-                  whileHover={{ scale: 1.2, rotate: 5 }}
-                  className="text-gray-500 hover:text-primary text-sm"
-                >
-                  X
-                </motion.a>
-                <motion.a
-                  href="https://facebook.com/MarketChatGH"
-                  whileHover={{ scale: 1.2, rotate: 5 }}
-                  className="text-gray-500 hover:text-primary text-sm"
-                >
-                  Facebook
-                </motion.a>
-                <motion.a
-                  href="https://instagram.com/MarketChatGH"
-                  whileHover={{ scale: 1.2, rotate: 5 }}
-                  className="text-gray-500 hover:text-primary text-sm"
-                >
-                  Instagram
-                </motion.a>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 mt-8 md:mt-0 text-sm text-gray-500 dark:text-gray-400 w-full md:w-auto">
+              <div className="flex flex-col space-y-3">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">Company</span>
+                <Link href="/about" className="hover:text-green-500 transition-colors">About</Link>
+                <Link href="/pricing" className="hover:text-green-500 transition-colors">Pricing</Link>
+                <Link href="#contact" className="hover:text-green-500 transition-colors">Contact</Link>
+              </div>
+              <div className="flex flex-col space-y-3">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">Legal</span>
+                <Link href="/privacy" className="hover:text-green-500 transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="hover:text-green-500 transition-colors">Terms of Service</Link>
+              </div>
+              <div className="flex flex-col space-y-3 col-span-2 md:col-span-1 border-t border-gray-200 dark:border-gray-800 md:border-t-0 pt-6 md:pt-0">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">Social</span>
+                <div className="flex gap-4">
+                  <motion.a href="https://x.com/MarketChatGH" whileHover={{ y: -2 }} className="hover:text-green-500">X (Twitter)</motion.a>
+                  <motion.a href="https://facebook.com/MarketChatGH" whileHover={{ y: -2 }} className="hover:text-green-500">Facebook</motion.a>
+                  <motion.a href="https://instagram.com/MarketChatGH" whileHover={{ y: -2 }} className="hover:text-green-500">Instagram</motion.a>
+                </div>
               </div>
             </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col items-center">
+            <p className="text-muted-foreground text-xs text-center">
+              © {new Date().getFullYear()} MarketChat. All rights reserved.
+            </p>
           </div>
         </footer>
       </div>

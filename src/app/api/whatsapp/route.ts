@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { TwilioMessagingResponse } from "@/lib/twilio";
-import { adminFirestore } from "@/lib/firebase-admin";
+import { adminFirestore, adminStorage } from "@/lib/firebase-admin";
 import admin from "firebase-admin";
 import { answerComplexQuery } from "@/ai/flows/answer-complex-queries";
 
@@ -73,7 +73,60 @@ export async function POST(req: NextRequest) {
       const price = priceLine || "Price not specified";
 
       // Use mediaUrl directly from Twilio - it's already a valid image URL
-      const imageUrl = mediaUrl;
+      // FIX: Download from Twilio and upload to Firebase Storage to ensure persistence
+      let imageUrl = mediaUrl;
+      try {
+        console.log("Attempting to download media from Twilio:", mediaUrl);
+        const accountSid = process.env.TWILIO_ACCOUNT_SID;
+        const authToken = process.env.TWILIO_AUTH_TOKEN;
+
+        if (accountSid && authToken) {
+          // Construct the API URL for the media
+          // The MediaUrl0 from form data is usually the public redirect URL or the API resource URL
+          // If it is a direct URL, we might need to authenticate.
+
+          const mediaId = mediaUrl.split('/').pop(); // Extract media SID if possible
+          // If mediaUrl is like https://api.twilio.com/...
+
+          const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
+
+          const response = await fetch(mediaUrl, {
+            headers: {
+              'Authorization': authHeader
+            }
+          });
+
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            const contentType = response.headers.get('content-type') || 'image/jpeg';
+            const ext = contentType.split('/')[1] || 'jpg';
+            const filename = `products/${sellerId}/${messageSid}_${Date.now()}.${ext}`;
+            const bucket = adminStorage.bucket();
+            const file = bucket.file(filename);
+
+            await file.save(Buffer.from(buffer), {
+              metadata: {
+                contentType: contentType,
+              }
+            });
+
+            // Make the file publicly accessible or sign it (long expiration)
+            // Here we generate a long-lived signed URL
+            const [signedUrl] = await file.getSignedUrl({
+              action: 'read',
+              expires: '03-01-2500',
+            });
+
+            imageUrl = signedUrl;
+            console.log("Successfully uploaded to Firebase Storage:", imageUrl);
+          } else {
+            console.warn("Failed to fetch media from Twilio", { status: response.status });
+          }
+        }
+      } catch (uploadError) {
+        console.error("Error uploading media to Firebase:", uploadError);
+        // Fallback to original URL if upload fails, though it might broken later
+      }
 
       const mediaReference = {
         messageSid,

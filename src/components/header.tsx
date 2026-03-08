@@ -24,35 +24,16 @@ export function Header() {
         </div>
         <span className="font-headline text-xl font-bold text-gray-900 dark:text-white">MarketChat</span>
       </Link>
-      <nav className="hidden md:flex gap-6">
-        <motion.a
-          href="#features"
-          whileHover={{ scale: 1.05, color: "#3b82f6" }}
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors"
-        >
-          Features
-        </motion.a>
-        <motion.a
-          href="#testimonials"
-          whileHover={{ scale: 1.05, color: "#3b82f6" }}
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors"
-        >
-          Testimonials
-        </motion.a>
-        <motion.a
-          href="#about"
-          whileHover={{ scale: 1.05, color: "#3b82f6" }}
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors"
-        >
+      <nav className="hidden md:flex gap-6 items-center">
+        <Link href="/about" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors">
           About
-        </motion.a>
-        <motion.a
-          href="#contact"
-          whileHover={{ scale: 1.05, color: "#3b82f6" }}
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors"
-        >
+        </Link>
+        <Link href="/pricing" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors">
+          Pricing
+        </Link>
+        <Link href="/contact" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors">
           Contact
-        </motion.a>
+        </Link>
       </nav>
       <div className="hidden md:block">
         <Link href="/sellers">
@@ -72,51 +53,53 @@ export function Header() {
       </div>
 
       {isMobileMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="absolute top-16 left-0 w-full bg-white dark:bg-gray-900 shadow-lg py-4 md:hidden"
-        >
-          <nav className="flex flex-col items-center gap-4">
-            <Link
-              href="#features"
-              className="text-base font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Features
-            </Link>
-            <Link
-              href="#testimonials"
-              className="text-base font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Testimonials
-            </Link>
-            <Link
-              href="#about"
-              className="text-base font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              href="#contact"
-              className="text-base font-medium text-gray-700 dark:text-gray-300 hover:text-primary"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            <Link href="/sellers">
-              <Button
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium"
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-16 left-0 w-full bg-white dark:bg-gray-900 shadow-xl py-6 md:hidden z-50 rounded-b-2xl border-t border-gray-100 dark:border-gray-800"
+          >
+            <nav className="flex flex-col items-center gap-4">
+              <Link
+                href="/about"
+                className="text-base font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Get Started
-              </Button>
-            </Link>
-          </nav>
-        </motion.div>
+                About
+              </Link>
+              <Link
+                href="/pricing"
+                className="text-base font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Pricing
+              </Link>
+              <Link
+                href="/contact"
+                className="text-base font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Contact
+              </Link>
+              <Link href="/sellers">
+                <Button
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Get Started
+                </Button>
+              </Link>
+            </nav>
+          </motion.div>
+        </>
       )}
     </motion.header>
   )

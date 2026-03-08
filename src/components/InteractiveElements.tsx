@@ -6,7 +6,7 @@ import type React from "react"
 
 import { useEffect, useRef } from "react"
 import { motion, useAnimation, useInView } from "framer-motion"
-import { Bot, ShoppingCart, Smartphone, Store, ArrowRight, MessageCircle, Star, Info, Mail } from "lucide-react"
+import { Bot, ShoppingCart, Smartphone, Store, ArrowRight, MessageCircle, Star, Info, Mail, User } from "lucide-react"
 import Link from "next/link"
 import { ErrorBoundary } from "./error-boundary"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
@@ -84,7 +84,7 @@ const FeatureCard = ({
   )
 }
 
-const TestimonialCard = ({ quote, author, role }: { quote: string; author: string; role: string }) => {
+const TestimonialCard = ({ quote, author, role, avatarUrl }: { quote: string; author: string; role: string; avatarUrl?: string }) => {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true })
   const controls = useAnimation()
@@ -110,9 +110,18 @@ const TestimonialCard = ({ quote, author, role }: { quote: string; author: strin
     >
       <Star className="h-5 w-5 text-yellow-400 mb-3" />
       <p className="text-muted-foreground text-sm mb-3">"{quote}"</p>
-      <div>
-        <p className="font-semibold text-sm">{author}</p>
-        <p className="text-xs text-gray-500">{role}</p>
+      <div className="flex items-center gap-3">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={author} className="w-10 h-10 rounded-full object-cover border-2 border-green-100 dark:border-green-900" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm">
+            {author.charAt(0)}
+          </div>
+        )}
+        <div>
+          <p className="font-semibold text-sm text-gray-900 dark:text-white">{author}</p>
+          <p className="text-xs text-gray-500">{role}</p>
+        </div>
       </div>
     </motion.div>
   )
@@ -129,78 +138,114 @@ export function InteractiveElements() {
   }, [isInView, controls])
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative w-full min-h-[60vh] sm:min-h-[80vh] xl:h-[800px] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 overflow-hidden pt-16">
-           {/* Background Carousel */} 
-                 <Carousel  
-                  className="absolute inset-0 w-full h-full" 
-                           plugins={[  Autoplay({delay: 5000,}),]}          
-                           opts={{loop: true,}}> 
-                            <CarouselContent> 
-                              <CarouselItem>
-                                 <img src="/hero1.jpg" 
-                                  alt="Background 1"
-                                   className="w-full h-full object-cover opacity-68"/>
-                                    </CarouselItem> 
-                                      <CarouselItem> 
-                                         <img src="/hero2.jpg" 
-                                          alt="Background 2"
-                                          className="w-full h-full object-cover opacity-68"/>
-                                           </CarouselItem>
-                                            <CarouselItem>
-                                              <img 
-                                                src="/hero3.jpg" 
-                                                 alt="Background 3" 
-                                                 className="w-full h-full object-cover opacity-68"/>
-                                                 </CarouselItem>
-                                                 </CarouselContent>
-                                                 </Carousel>
-                                                 <div className="absolute inset-0 bg-black/60 z-0" />   
-        <ErrorBoundary
-          fallback={
-            <div className="hidden sm:block absolute top-4 right-4 w-40 h-40 sm:w-64 sm:h-64 bg-gray-100 rounded-full items-center justify-center opacity-50">
-              <p className="text-gray-500 text-sm">Globe unavailable</p>
-            </div>
-          }
-        >
-          {/* Removed the empty globe div as it was not rendering anything */}
-          {/* Provide an empty fragment as children */}
-          <></>
-        </ErrorBoundary>
-        <div className="text-center z-10 relative max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="inline-block bg-gradient-to-br from-red-500 via-yellow-400 to-green-500 p-4 sm:p-6 rounded-2xl mb-4 sm:mb-6 shadow-xl"
-          >
-            <ShoppingCart className="text-white h-12 w-12 sm:h-16 sm:w-16" />
-          </motion.div>
-          <h1 className="font-headline text-3xl sm:text-5xl md:text-6xl font-bold tracking-tighter mb-4">
-            <AnimatedGradientText>MarketChat</AnimatedGradientText>
-          </h1>
-          <p className="mt-2 text-base sm:text-lg md:text-xl max-w-xl mx-auto text-gray-100 dark:text-gray-200 bg-black/30 dark:bg-black/50 backdrop-blur-sm py-2 px-4 rounded-lg">
-            Empowering Ghanaian commerce with AI-driven WhatsApp shopping.
-          </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/sellers">
-              <motion.button
-                whileHover={{ scale: 1.1, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 sm:px-8 sm:py-4 bg-green-500 text-white rounded-xl font-medium shadow-lg hover:bg-green-600 transition-all duration-300"
-              >
-                Start Shopping
-                <ArrowRight className="inline ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-              </motion.button>
-            </Link>
-            <motion.button
-              whileHover={{ scale: 1.1, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 sm:px-8 sm:py-4 bg-transparent border-2 border-white text-white rounded-xl font-medium shadow-lg hover:bg-white/10 transition-all duration-300"
+      <section className="relative w-full min-h-[60vh] sm:min-h-[80vh] xl:h-[800px] flex flex-col md:flex-row items-center justify-center p-4 sm:p-6 md:p-8 overflow-hidden pt-24 bg-gradient-to-b from-green-50/50 to-white dark:from-green-950/20 dark:to-gray-900">
+
+        {/* Abstract Background Element */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-green-500/10 blur-3xl" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[30rem] h-[30rem] rounded-full bg-yellow-500/10 blur-3xl z-0" />
+
+        <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center z-10 gap-8 md:gap-12">
+          {/* Left Text Column */}
+          <div className="flex-1 text-center md:text-left z-10">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="inline-block bg-gradient-to-br from-green-400 to-green-600 p-3 sm:p-4 rounded-2xl mb-6 shadow-lg shadow-green-500/30"
             >
-              Learn More
-            </motion.button>
+              <ShoppingCart className="text-white h-8 w-8 sm:h-12 sm:w-12" />
+            </motion.div>
+            <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6 text-gray-900 dark:text-white leading-tight">
+              <AnimatedGradientText>MarketChat</AnimatedGradientText><br />
+              <span className="text-gray-800 dark:text-gray-100">AI Commerce</span>
+            </h1>
+            <p className="mt-2 text-lg sm:text-xl max-w-lg mx-auto md:mx-0 text-gray-600 dark:text-gray-300">
+              Transforming how Ghana buys and sells. AI-driven shopping experiences directly on WhatsApp.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <Link href="/for-buyers">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto px-8 py-4 bg-green-500 text-white rounded-xl font-semibold shadow-lg shadow-green-500/30 hover:bg-green-600 transition-all duration-300"
+                >
+                  I want to Shop
+                </motion.button>
+              </Link>
+              <Link href="/for-sellers">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-xl font-semibold shadow-sm hover:border-green-500 hover:text-green-600 transition-all duration-300"
+                >
+                  I want to Sell
+                </motion.button>
+              </Link>
+            </div>
+
+            {/* Trusted By Logos banner placeholder below CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800"
+            >
+              <p className="text-sm text-gray-500 font-medium mb-4 text-center md:text-left">Trusted by local businesses across Ghana</p>
+              <div className="flex flex-wrap justify-center md:justify-start gap-6 items-center opacity-60 grayscale">
+                <div className="h-6 flex items-center gap-2 font-bold text-gray-600"><Store className="h-5 w-5" /> BizStore GH</div>
+                <div className="h-6 flex items-center gap-2 font-bold text-gray-600"><Bot className="h-5 w-5" /> AI Retail</div>
+                <div className="h-6 flex items-center gap-2 font-bold text-gray-600"><ShoppingCart className="h-5 w-5" /> QuickMart</div>
+              </div>
+            </motion.div>
           </div>
+
+          {/* Right Visual Column (Smartphone Mockup) */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="flex-1 flex justify-center mt-12 md:mt-0 relative z-10 w-full"
+          >
+            {/* The wrapper scales down the phone on mobile to fit nicely without overwhelming the screen */}
+            <div className="relative w-[300px] h-[550px] sm:h-[600px] md:scale-100 scale-[0.85] origin-top bg-gray-900 rounded-[3rem] border-[8px] border-gray-800 shadow-2xl overflow-hidden flex flex-col pt-8">
+              {/* Phone Notch */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-xl z-20" />
+              {/* WhatsApp Mock UI */}
+              <div className="bg-[#075e54] text-white p-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Bot className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">MarketChat AI</h3>
+                  <p className="text-[10px] text-white/80">Online</p>
+                </div>
+              </div>
+              <div className="flex-1 bg-[#e5ddd5] p-3 flex flex-col gap-3 overflow-hidden">
+                <div className="self-end bg-[#dcf8c6] p-2 rounded-lg rounded-tr-none text-sm shadow-sm max-w-[85%] text-gray-800">
+                  Hi, I'm looking for a new smartphone under 2000 GHS.
+                  <span className="text-[10px] text-gray-500 float-right mt-2 ml-2">10:42 AM</span>
+                </div>
+                <div className="self-start bg-white p-2 rounded-lg rounded-tl-none text-sm shadow-sm max-w-[85%] text-gray-800">
+                  <div className="bg-gray-100 rounded p-1 mb-2 text-xs flex gap-2 border-l-2 border-green-500">
+                    <Smartphone className="h-10 w-10 text-gray-400 p-1 bg-white rounded" />
+                    <div>
+                      <p className="font-bold text-green-600">Premium Tech Hub</p>
+                      <p>Infinix Note 30 - 1850 GHS</p>
+                    </div>
+                  </div>
+                  I found 3 options from highly rated sellers in Accra! Would you like to see them?
+                  <span className="text-[10px] text-gray-500 float-right mt-2 ml-2">10:43 AM</span>
+                </div>
+              </div>
+              {/* Chat Input */}
+              <div className="bg-[#f0f0f0] p-2 flex gap-2 items-center text-gray-500">
+                <div className="flex-1 bg-white rounded-full px-4 py-2 text-sm shadow-sm">Yes please show me</div>
+                <div className="w-10 h-10 bg-[#128c7e] rounded-full flex items-center justify-center shadow-sm">
+                  <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1"></div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -215,8 +260,8 @@ export function InteractiveElements() {
           transition={{ duration: 0.8 }}
           className="text-center mb-12"
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-headline mb-3">
-            <AnimatedGradientText>Why MarketChat?</AnimatedGradientText>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-headline mb-3 text-gray-900 dark:text-white">
+            Why MarketChat?
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
             Discover the power of seamless, AI-driven commerce tailored for Ghana.
@@ -252,122 +297,136 @@ export function InteractiveElements() {
           transition={{ duration: 0.8 }}
           className="text-center mb-12"
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-headline mb-3">
-            <AnimatedGradientText>How It Works</AnimatedGradientText>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-headline mb-3 text-gray-900 dark:text-white">
+            How It Works
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
             A seamless bridge between sellers and buyers, powered by AI.
           </p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          <div>
-            <FeatureCard
-              icon={<Store className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
-              title="For Sellers"
-              description="Transform your WhatsApp into a powerful e-commerce platform with just a few messages. Manage inventory, orders, and customer interactions effortlessly."
-              delay={0.2}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-6"
-            >
-              <Carousel
-                className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg"
-                opts={{
-                  loop: true,
-                }}
+
+        {/* Sticky Scroll Redesign */}
+        <div className="flex flex-col lg:flex-row gap-12 items-start relative">
+
+          {/* Left Side: Steps */}
+          <div className="flex-1 space-y-12 lg:py-24">
+            <div className="relative">
+              <div className="absolute left-6 top-10 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-800 -z-10" />
+
+              {/* Step 1 */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ margin: "-100px" }}
+                className="flex gap-6 relative"
               >
-                <CarouselContent>
-                  <CarouselItem>
-                    <Image
-                      src="/img1.jpg"
-                      alt="Seller Feature 1"
-                      width={800}
-                      height={450}
-                      className="w-full h-auto object-cover"
-                    />
-                  </CarouselItem>
-                  <CarouselItem>
-                    <Image
-                      src="/img2.jpg"
-                      alt="Seller Feature 2"
-                      width={800}
-                      height={450}
-                      className="w-full h-auto object-cover"
-                    />
-                  </CarouselItem>
-                  <CarouselItem>
-                    <Image
-                      src="/img3.jpg"
-                      alt="Seller Feature 3"
-                      width={800}
-                      height={450}
-                      className="w-full h-auto object-cover"
-                    />
-                  </CarouselItem>
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
-            </motion.div>
-          </div>
-          <div>
-            <FeatureCard
-              icon={<ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
-              title="For Buyers"
-              description="Discover and shop from local businesses with the convenience of WhatsApp. Get personalized recommendations and track your orders easily."
-              delay={0.4}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="mt-6"
-            >
-              <Carousel
-                className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg"
-                opts={{
-                  loop: true,
-                }}
+                <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-lg shadow-green-500/30">1</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Connect your Business</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">Sellers link their WhatsApp numbers and upload their product catalogs directly through our seamless onboarding.</p>
+
+                  {/* Mobile Only: Inline Visual to prevent text wall */}
+                  <div className="md:hidden mt-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm w-full mx-auto max-w-[280px]">
+                    <div className="flex items-center gap-3 bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <div className="bg-green-100 dark:bg-green-900/40 p-2 rounded-full"><Store className="h-5 w-5 text-green-600" /></div>
+                      <div>
+                        <p className="font-bold text-sm text-gray-900 dark:text-white">Business Account</p>
+                        <p className="text-xs text-gray-500">Connected</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Step 2 */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ margin: "-100px" }}
+                className="flex gap-6 mt-16 relative"
               >
-                <CarouselContent>
-                  <CarouselItem>
-                    <Image
-                      src="/img4.jpg"
-                      alt="Buyer Feature 1"
-                      width={800}
-                      height={450}
-                      className="w-full h-auto object-cover"
-                    />
-                  </CarouselItem>
-                  <CarouselItem>
-                    <Image
-                      src="/img5.jpg"
-                      alt="Buyer Feature 2"
-                      width={800}
-                      height={450}
-                      className="w-full h-auto object-cover"
-                    />
-                  </CarouselItem>
-                  <CarouselItem>
-                    <Image
-                      src="/img6.jpg"
-                      alt="Buyer Feature 3"
-                      width={800}
-                      height={450}
-                      className="w-full h-auto object-cover"
-                    />
-                  </CarouselItem>
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
-            </motion.div>
+                <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-lg shadow-green-500/30">2</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Buyers Chat with AI</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">Customers chat with our intelligent MarketChat bot on WhatsApp to find exactly what they are looking for.</p>
+
+                  {/* Mobile Only: Inline Visual */}
+                  <div className="md:hidden mt-4 bg-[#e5ddd5] rounded-2xl p-4 shadow-inner w-full mx-auto max-w-[280px]">
+                    <div className="self-end bg-[#dcf8c6] p-2 rounded-lg rounded-tr-none text-xs shadow-sm w-[85%] ml-auto text-gray-800 mb-3">
+                      I need a new smartphone under 2000 GHS
+                    </div>
+                    <div className="self-start bg-white p-2 rounded-lg rounded-tl-none text-xs shadow-sm w-[85%] text-gray-800 flex gap-2">
+                      <Bot className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                      <p>Found 3 great options from verified sellers!</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Step 3 */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ margin: "-100px" }}
+                className="flex gap-6 mt-16 relative"
+              >
+                <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-lg shadow-green-500/30">3</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Seamless Direct Connection</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">Once a buyer selects a product, they are directly connected to the seller's verified WhatsApp for secure negotiation and payment.</p>
+
+                  {/* Mobile Only: Inline Visual */}
+                  <div className="md:hidden mt-4 flex items-center justify-center gap-2 w-full mx-auto max-w-[280px]">
+                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                      <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-green-500 stroke-[3px]" />
+                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/40">
+                      <MessageCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-green-500 stroke-[3px]" />
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center border border-blue-200 dark:border-blue-800">
+                      <Store className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           </div>
+
+          {/* Right Side: Sticky Visual (Simplified Mockup) */}
+          <div className="flex-1 lg:sticky lg:top-32 hidden md:flex justify-center h-[600px] w-full">
+            <div className="relative w-full max-w-md h-full bg-gray-50 dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden p-8 flex flex-col justify-center items-center">
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="w-full"
+              >
+                <FeatureCard
+                  icon={<Bot className="h-6 w-6 text-white" />}
+                  title="Intelligent Matching"
+                  description="Our engine connects buyers to the best local sellers instantly via WhatsApp."
+                />
+
+                <div className="mt-6 flex justify-center">
+                  <ArrowRight className="h-8 w-8 text-green-500 rotate-90" />
+                </div>
+
+                <div className="mt-6">
+                  <FeatureCard
+                    icon={<Store className="h-6 w-6 text-white" />}
+                    title="Direct to Seller"
+                    description="No middlemen. Cut the friction and close deals quickly on your terms."
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
         </div>
       </section>
+
+      <PersonalizedProducts />
 
       {/* Testimonials Section */}
       <section
@@ -380,8 +439,8 @@ export function InteractiveElements() {
           transition={{ duration: 0.8 }}
           className="text-center mb-12"
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-headline mb-3">
-            <AnimatedGradientText>What Our Users Say</AnimatedGradientText>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-headline mb-3 text-gray-900 dark:text-white">
+            What Our Users Say
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
             Hear from our community of buyers and sellers in Ghana.
@@ -392,82 +451,20 @@ export function InteractiveElements() {
             quote="MarketChat has transformed how I sell my products. It's so easy to manage everything through WhatsApp!"
             author="Mohammed Alhassan"
             role="Local Artisan"
+            avatarUrl="https://i.pravatar.cc/150?u=a042581f4e29026704d"
           />
           <TestimonialCard
             quote="Shopping on MarketChat is a breeze. I found exactly what I needed in minutes."
             author="Ahmed Salam"
             role="Customer"
+            avatarUrl="https://i.pravatar.cc/150?u=a042581f4e29026704b"
           />
           <TestimonialCard
             quote="The AI recommendations helped me discover new local businesses. Highly recommend!"
             author="Fatima Mensah"
             role="Entrepreneur"
+            avatarUrl="https://i.pravatar.cc/150?u=a04258a2462d826712d"
           />
-        </div>
-      </section>
-
-      {/* Blog Section */}
-
-      
-         <BlogSection /> 
-       
-        <div className="flex justify-center mt-4">
-          <Link href="/blog" className="inline-flex items-center text-primary hover:underline text-sm font-medium">
-            View All Posts <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
-      
-
-      {/* About Us Section */}
-      <section id="about" className="relative w-full py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-headline mb-3">
-            <AnimatedGradientText>About MarketChat</AnimatedGradientText>
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
-            Our mission is to revolutionize commerce in Ghana by making buying and selling accessible and efficient for
-            everyone.
-          </p>
-        </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <Image
-              src="/img7.png"
-              width={600}
-              height={400}
-              alt="About MarketChat"
-              className="rounded-xl shadow-lg object-cover w-full h-auto"
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="space-y-4"
-          >
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Our Vision</h3>
-            <p className="text-muted-foreground text-base">
-              We envision a future where every Ghanaian business, no matter how small, can thrive in the digital
-              marketplace. By leveraging the power of AI and the ubiquity of WhatsApp, we bridge the gap between
-              traditional commerce and modern technology.
-            </p>
-            <p className="text-muted-foreground text-base">
-              MarketChat is built on the principles of accessibility, innovation, and community support. We are
-              committed to providing tools that empower local entrepreneurs and simplify shopping for consumers.
-            </p>
-            <Button variant="outline" className="mt-4 bg-transparent">
-              Learn More About Us <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </motion.div>
         </div>
       </section>
 
@@ -512,81 +509,63 @@ export function InteractiveElements() {
         </div>
       </section>
 
-      <PersonalizedProducts />
+      {/* FAQ Section */}
+      <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 md:px-8 bg-gray-50 dark:bg-gray-900/50">
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-3 text-gray-900 dark:text-white">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">Everything you need to know about MarketChat.</p>
+          </motion.div>
 
-      {/* Contact Section */}
-      <section id="contact" className="relative w-full py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-headline mb-3">
-            <AnimatedGradientText>Get in Touch</AnimatedGradientText>
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
-            Have questions or need support? Reach out to us!
-          </p>
-        </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="space-y-4 text-center md:text-left"
-          >
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <Mail className="h-6 w-6 text-primary" />
-              <p className="text-lg text-gray-700 dark:text-gray-300">shaibusalim0000@gmail.com</p>
-            </div>
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <MessageCircle className="h-6 w-6 text-primary" />
-              <p className="text-lg text-gray-700 dark:text-gray-300">+233 20 983 2978</p>
-            </div>
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <Info className="h-6 w-6 text-primary" />
-              <p className="text-lg text-gray-700 dark:text-gray-300">Tamale, Ghana</p>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 shadow-lg"
-          >
-            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Send us a message</h3>
-            <form className="space-y-4">
-              <div>
-                <label htmlFor="name" className="sr-only">
-                  Name
-                </label>
-                <Input id="name" placeholder="Your Name" className="w-full" />
-              </div>
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Email
-                </label>
-                <Input id="email" type="email" placeholder="Your Email" className="w-full" />
-              </div>
-              <div>
-                <label htmlFor="message" className="sr-only">
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  placeholder="Your Message"
-                  rows={4}
-                  className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              </div>
-              <Button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold">
-                Send Message
-              </Button>
-            </form>
-          </motion.div>
+          <div className="space-y-4">
+            {[
+              {
+                q: "How does WhatsApp shopping work?",
+                a: "You simply start a chat with our AI bot, tell it what you need, and it finds the exact products from local sellers. You are then connected directly to the seller's WhatsApp to complete the purchase.",
+              },
+              {
+                q: "Is it secure to buy through MarketChat?",
+                a: "Yes. We thoroughly verify our sellers. Additionally, because the final transaction happens directly with the seller via WhatsApp, you have a direct line of communication, ensuring transparency.",
+              },
+              {
+                q: "How much does it cost to sell on MarketChat?",
+                a: "Creating a catalogue and getting listed on MarketChat is completely free for basic use! We offer premium tools for verified sellers to boost their visibility.",
+              },
+            ].map((faq, i) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                key={i}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
+              >
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{faq.q}</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{faq.a}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
+
+
+      {/* Blog Section */}
+
+
+      <BlogSection />
+
+      <div className="flex justify-center mt-4">
+        <Link href="/blog" className="inline-flex items-center text-primary hover:underline text-sm font-medium">
+          View All Posts <ArrowRight className="ml-1 h-4 w-4" />
+        </Link>
+      </div>
+
     </>
   )
 }
