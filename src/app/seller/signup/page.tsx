@@ -44,7 +44,7 @@ export default function SellerSignupPage() {
       }
 
       toast.success(data.message, { duration: 6000 })
-      router.push("/admin/signin") // Redirect to signin after successful signup
+      router.push("/seller/signin") // Redirect to dedicated seller signin after successful signup
     } catch (error: any) {
       toast.error(error.message)
     } finally {
@@ -165,7 +165,7 @@ export default function SellerSignupPage() {
 
               <p className="text-center text-sm text-gray-500 mt-6">
                 Already have an account?{" "}
-                <Link href="/admin/signin" className="text-green-600 font-bold hover:underline">
+                <Link href="/seller/signin" className="text-green-600 font-bold hover:underline">
                   Sign In
                 </Link>
               </p>

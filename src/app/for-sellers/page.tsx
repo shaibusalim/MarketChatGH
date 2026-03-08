@@ -203,7 +203,7 @@ export default function ForSellersPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/admin/signin" className="inline-block mt-12">
+              <Link href="/seller/signup" className="inline-block mt-12">
                 <Button className="px-8 py-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl text-lg flex items-center gap-2">
                   Create your Shop <ArrowRight className="h-5 w-5" />
                 </Button>
@@ -243,7 +243,7 @@ export default function ForSellersPage() {
           <p className="text-green-50 text-xl mb-12 max-w-2xl mx-auto relative z-10 opacity-90">
             Join thousands of successful sellers on Ghana's #1 WhatsApp-integrated marketplace.
           </p>
-          <Link href="/admin/signin" className="relative z-10 inline-block">
+          <Link href="/seller/signup" className="relative z-10 inline-block">
             <Button className="bg-white text-green-600 hover:bg-green-50 font-bold px-12 py-8 rounded-2xl text-2xl shadow-xl">
               Launch your Shop Now
             </Button>
