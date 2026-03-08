@@ -18,6 +18,10 @@ export interface Product {
 export interface Seller {
   id: string;
   name: string;
+  location?: string;
+  active?: boolean;
+  products?: Product[];
+  summary?: string;
 }
 
 // --- Firestore query ---
@@ -116,5 +120,50 @@ export const getProducts = async (
     return { products, sellers, total, lastDocId: lastDoc?.id };
   } catch (error: any) {
     throw new Error(`Failed to fetch products: ${error.message}`);
+  }
+};
+
+export const getSellers = async (
+  pageSize: number = 6
+): Promise<Seller[]> => {
+  try {
+    const sellersSnapshot = await adminFirestore.collection("sellers").limit(pageSize).get();
+    const sellers: Seller[] = [];
+
+    for (const doc of sellersSnapshot.docs) {
+      const data = doc.data();
+      const sellerId = doc.id;
+
+      // Fetch a few products for preview
+      const productsSnapshot = await adminFirestore.collection("products")
+        .where("sellerId", "==", sellerId)
+        .limit(3)
+        .get();
+
+      const products = productsSnapshot.docs.map((pDoc) => ({
+        id: pDoc.id,
+        imageUrl: pDoc.data().imageUrl ?? "/img1.jpg",
+        price: pDoc.data().price ?? "N/A",
+        description: pDoc.data().description ?? "No description",
+        sellerId: pDoc.data().sellerId ?? "",
+        createdAt: pDoc.data().createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
+        status: pDoc.data().status ?? "unknown",
+        stockStatus: pDoc.data().stockStatus ?? "unknown",
+        isAvailable: pDoc.data().isAvailable ?? false,
+      })) as Product[];
+
+      sellers.push({
+        id: sellerId,
+        name: data.name ?? "Unnamed Seller",
+        location: data.location ?? "Unknown",
+        active: data.active ?? true,
+        summary: data.summary ?? "No description available",
+        products
+      });
+    }
+
+    return sellers;
+  } catch (error: any) {
+    throw new Error(`Failed to fetch sellers: ${error.message}`);
   }
 };

@@ -21,7 +21,7 @@ import {
   AlertCircle,
 } from "lucide-react"
 import Link from "next/link"
-import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay"
+import ProductCard from "@/components/ProductCard"
 import { SellerReviewsDisplay } from "@/components/seller-review-display"
 import { toast } from "react-hot-toast"
 
@@ -350,103 +350,14 @@ export default function SellerPage() {
           {products.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {products.map((product, index) => (
-                <Card
+                <motion.div
                   key={product.id}
-                  className={`group bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up`}
-                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: "both" }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <div className="relative overflow-hidden">
-                    <div className="aspect-square relative">
-                      <TwilioMediaDisplay
-                        mediaUrl={product.imageUrl}
-                        alt={product.description}
-                        width={400}
-                        height={400}
-                        className="w-full h-full group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="absolute top-4 left-4 flex flex-col gap-2">
-                      {!product.isAvailable && (
-                        <Badge className="bg-red-500 text-white dark:bg-red-600">Out of Stock</Badge>
-                      )}
-                      {product.status === "new" && (
-                        <Badge className="bg-green-500 text-white dark:bg-green-600">New</Badge>
-                      )}
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <Badge
-                        variant="secondary"
-                        className="bg-white/90 text-gray-700 dark:bg-gray-700/90 dark:text-gray-200"
-                      >
-                        {product.stockStatus}
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3
-                      className="font-bold text-lg text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors overflow-hidden"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                      }}
-                    >
-                      {product.description}
-                    </h3>
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">₵{product.price}</p>
-                      <div className="flex items-center gap-1 text-yellow-500">
-                        <Star className="w-4 h-4 fill-current" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {seller.rating ? seller.rating.toFixed(1) : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge
-                        variant="outline"
-                        className={`${
-                          product.isAvailable
-                            ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/50 dark:text-green-400 dark:border-green-600"
-                            : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-400 dark:border-red-600"
-                        }`}
-                      >
-                        {product.isAvailable ? "Available" : "Unavailable"}
-                      </Badge>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="flex-1 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 bg-transparent"
-                      >
-                        <Link
-                          href={`/${sellerId}/product/${product.id}`}
-                          className="flex items-center justify-center"
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View
-                        </Link>
-                      </Button>
-                      <Button
-                        asChild
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700"
-                      >
-                        <a
-                          href={`https://wa.me/${sellerId}?text=I'm%20interested%20in%20buying%20your%20product:%20"${encodeURIComponent(
-                            product.description,
-                          )}"%20for%20${encodeURIComponent(product.price)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center"
-                        >
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          Chat
-                        </a>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <ProductCard product={product} />
+                </motion.div>
               ))}
             </div>
           ) : (

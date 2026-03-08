@@ -33,6 +33,7 @@ async function fetchPaginatedSellers(
   searchQuery = "",
   page = 1,
   pageSize = 10,
+  status = "all",
 ): Promise<{ sellers: Seller[]; total: number }> {
 
   try {
@@ -40,8 +41,14 @@ async function fetchPaginatedSellers(
 
     // Apply search filter if query is provided
     if (searchQuery) {
-      
       baseSellersQuery = baseSellersQuery.where("name", ">=", searchQuery).where("name", "<=", searchQuery + "\uf8ff")
+    }
+
+    // Filter by approval status if provided
+    if (status === "pending") {
+      baseSellersQuery = baseSellersQuery.where("isApproved", "==", false);
+    } else if (status === "approved") {
+      baseSellersQuery = baseSellersQuery.where("isApproved", "==", true);
     }
 
     // Get total count for pagination (before applying offset/limit)
@@ -179,9 +186,10 @@ export async function GET(request: Request) {
     const q = searchParams.get("q") || ""
     const page = Number.parseInt(searchParams.get("page") || "1", 10) || 1
     const pageSize = Number.parseInt(searchParams.get("pageSize") || "10", 10) || 10
+    const status = searchParams.get("status") || "all"
 
    
-    const { sellers, total } = await fetchPaginatedSellers(q, page, pageSize)
+    const { sellers, total } = await fetchPaginatedSellers(q, page, pageSize, status)
 
     return NextResponse.json({ sellers, total }, { status: 200 })
   } catch (error) {

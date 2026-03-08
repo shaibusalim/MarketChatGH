@@ -7,6 +7,7 @@ import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X, Search, ChevronDown, ShoppingBag, Store } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import ThemeToggle from "./ThemeToggle"
 import {
   DropdownMenu,
@@ -17,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 
 export function Header() {
+  const { data: session } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -112,15 +114,27 @@ export function Header() {
         <ThemeToggle />
 
         <div className="hidden md:block">
-          <Link href="/sellers">
-            <motion.button
-              whileHover={{ scale: 1.05, boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)" }}
-              whileTap={{ scale: 0.95 }}
-              className="px-5 py-2 bg-green-500 text-white rounded-xl font-medium shadow-md hover:bg-green-600 transition-all duration-300"
-            >
-              Get Started
-            </motion.button>
-          </Link>
+          {session ? (
+            <Link href={(session.user as any).role === 'admin' ? '/admin' : '/seller/dashboard'}>
+              <motion.button
+                whileHover={{ scale: 1.05, boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)" }}
+                whileTap={{ scale: 0.95 }}
+                className="px-5 py-2 bg-green-500 text-white rounded-xl font-medium shadow-md hover:bg-green-600 transition-all duration-300"
+              >
+                Dashboard
+              </motion.button>
+            </Link>
+          ) : (
+            <Link href="/sellers">
+              <motion.button
+                whileHover={{ scale: 1.05, boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)" }}
+                whileTap={{ scale: 0.95 }}
+                className="px-5 py-2 bg-green-500 text-white rounded-xl font-medium shadow-md hover:bg-green-600 transition-all duration-300"
+              >
+                Get Started
+              </motion.button>
+            </Link>
+          )}
         </div>
 
         <div className="md:hidden">
@@ -189,14 +203,28 @@ export function Header() {
               >
                 Contact
               </Link>
-              <Link href="/sellers" className="w-full pt-4">
-                <Button
-                  className="w-full py-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl text-lg shadow-lg shadow-green-500/30"
-                  onClick={() => setIsMobileMenuOpen(false)}
+              {session ? (
+                <Link 
+                  href={(session.user as any).role === 'admin' ? '/admin' : '/seller/dashboard'} 
+                  className="w-full pt-4"
                 >
-                  Get Started
-                </Button>
-              </Link>
+                  <Button
+                    className="w-full py-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl text-lg shadow-lg shadow-green-500/30"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/sellers" className="w-full pt-4">
+                  <Button
+                    className="w-full py-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl text-lg shadow-lg shadow-green-500/30"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              )}
             </nav>
           </motion.div>
         </>

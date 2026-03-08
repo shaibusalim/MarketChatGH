@@ -9,6 +9,7 @@ import { AdminOnboardSellerForm } from "@/components/admin/admin-onboard-seller-
 import { AdminProductsChart } from "@/components/admin/admin-products-chart"
 import { AdminSellerSearch } from "@/components/admin/admin-seller-search"
 import { AdminSellersTable } from "@/components/admin/admin-sellers-table"
+import { AdminPendingSellers } from "@/components/admin/admin-pending-sellers"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { Loader2 } from "lucide-react"
 import { toast } from "react-hot-toast"
@@ -166,6 +167,7 @@ function AdminDashboardContent() {
 
 			<div className="flex min-h-screen">
 				<div className="flex-1 md:ml-64 pt-16 md:pt-0 px-4 sm:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto">
+					<AdminPendingSellers onDataRefresh={handleDataRefresh} />
 					<AdminStatsCards
 						totalSellers={total}
 						activeSellers={activeSellers}

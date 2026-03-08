@@ -23,32 +23,68 @@ const handler = NextAuth({
           }
 
           const email = credentials.email.toLowerCase().trim();
-          const snapshot = await adminFirestore
+          
+          // Try to find in admins collection first
+          const adminSnapshot = await adminFirestore
             .collection('admins')
             .where('email', '==', email)
             .limit(1)
             .get();
 
-          if (snapshot.empty) {
-            console.log('[Auth] No admin found for email:', email);
-            throw new Error('Invalid credentials');
+          if (!adminSnapshot.empty) {
+            const adminDoc = adminSnapshot.docs[0];
+            const admin = adminDoc.data();
+            const isValid = await bcrypt.compare(credentials.password, admin.password);
+            if (isValid) {
+              return {
+                id: adminDoc.id,
+                email: admin.email,
+                isAdmin: true,
+                role: 'admin',
+              };
+            }
           }
 
-          const adminDoc = snapshot.docs[0];
-          const admin = adminDoc.data();
+          // If not admin, try to find in sellers collection
+          const sellerSnapshot = await adminFirestore
+            .collection('sellers')
+            .where('email', '==', email)
+            .limit(1)
+            .get();
 
-          const isValid = await bcrypt.compare(credentials.password, admin.password);
-          if (!isValid) {
-            console.log('[Auth] Invalid password for email:', email);
-            throw new Error('Invalid credentials');
+          if (!sellerSnapshot.empty) {
+            const sellerDoc = sellerSnapshot.docs[0];
+            const seller = sellerDoc.data();
+            
+            // Check if seller has a password (they might have been onboarded by admin without a password)
+            if (!seller.password) {
+               console.log('[Auth] Seller has no password:', email);
+               throw new Error('Please sign up or reset your password');
+            }
+
+            const isValid = await bcrypt.compare(credentials.password, seller.password);
+            if (!isValid) {
+              console.log('[Auth] Invalid password for seller:', email);
+              throw new Error('Invalid credentials');
+            }
+
+            if (!seller.isApproved) {
+              console.log('[Auth] Seller not approved:', email);
+              throw new Error('Your account is pending approval');
+            }
+
+            console.log('[Auth] Authorized seller:', sellerDoc.id);
+            return {
+              id: sellerDoc.id,
+              email: seller.email,
+              isAdmin: false,
+              role: 'seller',
+              isApproved: seller.isApproved,
+            };
           }
 
-          console.log('[Auth] Authorized user:', adminDoc.id);
-          return {
-            id: adminDoc.id,
-            email: admin.email,
-            isAdmin: true,
-          };
+          console.log('[Auth] No user found for email:', email);
+          throw new Error('Invalid credentials');
         } catch (error) {
           console.error('[Auth] Authentication error:', error);
           return null;

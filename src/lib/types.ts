@@ -15,5 +15,6 @@ export interface Seller {
   name: string | null | undefined
   location: string
   active: boolean
+  isApproved?: boolean
   products: Product[]
 }
