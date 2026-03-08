@@ -1,12 +1,13 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 import type React from "react"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion, useAnimation, useInView } from "framer-motion"
-import { Bot, ShoppingCart, Smartphone, Store, ArrowRight, MessageCircle, Star, Info, Mail, User } from "lucide-react"
+import { Bot, ShoppingCart, Smartphone, Store, ArrowRight, MessageCircle, Star, Info, Mail, User, Play } from "lucide-react"
 import Link from "next/link"
 import { ErrorBoundary } from "./error-boundary"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
@@ -127,6 +128,102 @@ const TestimonialCard = ({ quote, author, role, avatarUrl }: { quote: string; au
   )
 }
 
+const ChatSimulation = () => {
+  const [messages, setMessages] = useState<{ text: string; sender: "user" | "bot"; product?: any }[]>([])
+  const [typing, setTyping] = useState(false)
+
+  const script = [
+    { text: "Hi, I'm looking for a new smartphone under 2000 GHS.", sender: "user" as const },
+    { text: "Searching through local verified sellers...", sender: "bot" as const },
+    { 
+      text: "I found 3 great options from highly rated sellers in Accra! Here's the best match:", 
+      sender: "bot" as const,
+      product: { name: "Infinix Note 30", price: "1850 GHS", seller: "Premium Tech Hub" }
+    },
+    { text: "That looks perfect! Can I talk to the seller?", sender: "user" as const },
+    { text: "Connecting you directly to Premium Tech Hub on WhatsApp...", sender: "bot" as const },
+  ]
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+    let currentIdx = 0
+
+    const runScript = () => {
+      if (currentIdx >= script.length) {
+        timeout = setTimeout(() => {
+          setMessages([])
+          currentIdx = 0
+          runScript()
+        }, 5000)
+        return
+      }
+
+      const msg = script[currentIdx]
+      if (msg.sender === "bot") {
+        setTyping(true)
+        timeout = setTimeout(() => {
+          setTyping(false)
+          setMessages(prev => [...prev, msg])
+          currentIdx++
+          timeout = setTimeout(runScript, 2000)
+        }, 1500)
+      } else {
+        timeout = setTimeout(() => {
+          setMessages(prev => [...prev, msg])
+          currentIdx++
+          timeout = setTimeout(runScript, 1000)
+        }, 1500)
+      }
+    }
+
+    runScript()
+    return () => clearTimeout(timeout)
+  }, [])
+
+  return (
+    <div className="flex-1 bg-[#e5ddd5] dark:bg-gray-950/50 p-3 flex flex-col gap-3 overflow-y-auto custom-scrollbar">
+      {messages.map((msg, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className={cn(
+            "p-2 rounded-lg text-sm shadow-sm max-w-[85%] relative",
+            msg.sender === "user" 
+              ? "self-end bg-[#dcf8c6] dark:bg-green-900/40 rounded-tr-none text-gray-800 dark:text-gray-100" 
+              : "self-start bg-white dark:bg-gray-800 rounded-tl-none text-gray-800 dark:text-gray-100"
+          )}
+        >
+          {msg.product && (
+            <div className="bg-gray-50 dark:bg-gray-900 rounded p-2 mb-2 text-xs flex gap-3 border-l-4 border-green-500 shadow-inner">
+              <div className="bg-white dark:bg-gray-800 p-1 rounded">
+                <Smartphone className="h-8 w-8 text-green-500" />
+              </div>
+              <div>
+                <p className="font-bold text-green-600 dark:text-green-400">{msg.product.seller}</p>
+                <p className="font-medium">{msg.product.name} - {msg.product.price}</p>
+              </div>
+            </div>
+          )}
+          {msg.text}
+          <span className="text-[10px] text-gray-400 block mt-1 text-right">
+            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </motion.div>
+      ))}
+      {typing && (
+        <div className="self-start bg-white dark:bg-gray-800 p-3 rounded-lg rounded-tl-none shadow-sm">
+          <div className="flex gap-1">
+            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function InteractiveElements() {
   const controls = useAnimation()
   const ref = useRef<HTMLDivElement>(null)
@@ -169,18 +266,17 @@ export function InteractiveElements() {
                   whileTap={{ scale: 0.95 }}
                   className="w-full sm:w-auto px-8 py-4 bg-green-500 text-white rounded-xl font-semibold shadow-lg shadow-green-500/30 hover:bg-green-600 transition-all duration-300"
                 >
-                  I want to Shop
+                  Get Started
                 </motion.button>
               </Link>
-              <Link href="/for-sellers">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-xl font-semibold shadow-sm hover:border-green-500 hover:text-green-600 transition-all duration-300"
-                >
-                  I want to Sell
-                </motion.button>
-              </Link>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-xl font-semibold shadow-sm hover:border-green-500 hover:text-green-600 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Play className="h-4 w-4 fill-current" />
+                Watch Demo
+              </motion.button>
             </div>
 
             {/* Trusted By Logos banner placeholder below CTAs */}
@@ -220,26 +316,12 @@ export function InteractiveElements() {
                   <p className="text-[10px] text-white/80">Online</p>
                 </div>
               </div>
-              <div className="flex-1 bg-[#e5ddd5] p-3 flex flex-col gap-3 overflow-hidden">
-                <div className="self-end bg-[#dcf8c6] p-2 rounded-lg rounded-tr-none text-sm shadow-sm max-w-[85%] text-gray-800">
-                  Hi, I'm looking for a new smartphone under 2000 GHS.
-                  <span className="text-[10px] text-gray-500 float-right mt-2 ml-2">10:42 AM</span>
-                </div>
-                <div className="self-start bg-white p-2 rounded-lg rounded-tl-none text-sm shadow-sm max-w-[85%] text-gray-800">
-                  <div className="bg-gray-100 rounded p-1 mb-2 text-xs flex gap-2 border-l-2 border-green-500">
-                    <Smartphone className="h-10 w-10 text-gray-400 p-1 bg-white rounded" />
-                    <div>
-                      <p className="font-bold text-green-600">Premium Tech Hub</p>
-                      <p>Infinix Note 30 - 1850 GHS</p>
-                    </div>
-                  </div>
-                  I found 3 options from highly rated sellers in Accra! Would you like to see them?
-                  <span className="text-[10px] text-gray-500 float-right mt-2 ml-2">10:43 AM</span>
-                </div>
-              </div>
+              
+              <ChatSimulation />
+
               {/* Chat Input */}
-              <div className="bg-[#f0f0f0] p-2 flex gap-2 items-center text-gray-500">
-                <div className="flex-1 bg-white rounded-full px-4 py-2 text-sm shadow-sm">Yes please show me</div>
+              <div className="bg-[#f0f0f0] dark:bg-gray-800 p-2 flex gap-2 items-center text-gray-500">
+                <div className="flex-1 bg-white dark:bg-gray-900 rounded-full px-4 py-2 text-sm shadow-sm">Yes please show me</div>
                 <div className="w-10 h-10 bg-[#128c7e] rounded-full flex items-center justify-center shadow-sm">
                   <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1"></div>
                 </div>
