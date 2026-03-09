@@ -70,6 +70,44 @@ function ProductActionButton({
   )
 }
 
+function ApproveSellerButton({
+  sellerId,
+  onSuccess,
+}: {
+  sellerId: string
+  onSuccess: () => void
+}) {
+  const { pending } = useFormStatus()
+
+  const handleSubmit = async (formData: FormData) => {
+    formData.append("approved", "true")
+    const result = await approveSeller(formData)
+    if (result.success) {
+      toast.success(result.message, { duration: 3000 })
+      onSuccess()
+    } else {
+      toast.error(result.message, { duration: 3000 })
+    }
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <input type="hidden" name="sellerId" value={sellerId} />
+      <Button
+        type="submit"
+        className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg text-xs py-2"
+        disabled={pending}
+      >
+        {pending ? (
+          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+        ) : (
+          "Approve Seller"
+        )}
+      </Button>
+    </form>
+  )
+}
+
 function ToggleSellerButton({
   sellerId,
   active,
@@ -170,7 +208,15 @@ export function AdminSellersTable({
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
+                      {!seller.isApproved && (
+                        <ApproveSellerButton sellerId={seller.id} onSuccess={onDataRefresh} />
+                      )}
                       <ToggleSellerButton sellerId={seller.id} active={seller.active} onSuccess={onDataRefresh} />
+                      <Button asChild variant="outline" size="sm" className="text-xs">
+                        <Link href={`/seller/dashboard/${seller.id}`}>
+                          Manage Shop
+                        </Link>
+                      </Button>
                       <Link
                         href={`/admin/sellers/${seller.id}`}
                         className="text-blue-600 dark:text-blue-400 text-xs hover:underline"

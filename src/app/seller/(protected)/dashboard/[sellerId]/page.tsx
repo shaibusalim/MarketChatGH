@@ -25,6 +25,7 @@ import { toast } from "react-hot-toast"
 import Image from "next/image"
 import Link from "next/link"
 import { updateProductStatus } from "@/app/admin/actions"
+import { SellerProductForm } from "@/components/seller/seller-product-form"
 
 interface Product {
   id: string
@@ -36,10 +37,16 @@ interface Product {
   isAvailable: boolean
 }
 
+import { useParams } from "next/navigation"
+
 export default function SellerDashboardPage() {
   const { data: session } = useSession()
+  const params = useParams()
+  const sellerId = params.sellerId as string
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -47,10 +54,10 @@ export default function SellerDashboardPage() {
   })
 
   const fetchSellerData = useCallback(async () => {
-    if (!session?.user?.id) return
+    if (!sellerId) return
     setIsLoading(true)
     try {
-      const response = await fetch(`/api/sellers/${session.user.id}`)
+      const response = await fetch(`/api/sellers/${sellerId}`)
       if (!response.ok) throw new Error("Failed to fetch shop data")
       const data = await response.json()
       setProducts(data.products || [])
@@ -67,7 +74,7 @@ export default function SellerDashboardPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [session?.user?.id])
+  }, [sellerId])
 
   useEffect(() => {
     fetchSellerData()
@@ -102,6 +109,18 @@ export default function SellerDashboardPage() {
       toast.error(result.message)
     }
   }
+
+  const handleAddProduct = () => {
+    setEditingProduct(undefined)
+    setIsFormOpen(true)
+  }
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product)
+    setIsFormOpen(true)
+  }
+
+  const isAdmin = (session?.user as any)?.role === "admin"
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
@@ -141,16 +160,23 @@ export default function SellerDashboardPage() {
       <main className="flex-1 md:ml-64 p-4 sm:p-8">
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shop Dashboard</h1>
-            <p className="text-gray-500 dark:text-gray-400">Welcome back, {(session?.user as any)?.name || 'Seller'}</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {isAdmin ? "Seller Management" : "Shop Dashboard"}
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400">
+              {isAdmin ? `Managing shop: ${sellerId}` : `Welcome back, ${(session?.user as any)?.name || 'Seller'}`}
+            </p>
           </div>
           <div className="flex gap-3">
             <Button asChild variant="outline" className="rounded-xl border-gray-200">
-              <Link href={`/${session?.user?.id}`} target="_blank">
+              <Link href={`/${sellerId}`} target="_blank">
                 <ExternalLink className="h-4 w-4 mr-2" /> View Shop
               </Link>
             </Button>
-            <Button className="bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-500/20">
+            <Button 
+              onClick={handleAddProduct}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-500/20"
+            >
               <Plus className="h-5 w-5 mr-2" /> Add Product
             </Button>
           </div>
@@ -221,7 +247,10 @@ export default function SellerDashboardPage() {
                 </div>
                 <h3 className="text-lg font-bold">No products yet</h3>
                 <p className="text-gray-500 mb-6">Start by adding your first product to your shop.</p>
-                <Button className="bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl px-8 py-6">
+                <Button 
+                  onClick={handleAddProduct}
+                  className="bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl px-8 py-6"
+                >
                   <Plus className="h-5 w-5 mr-2" /> Add Your First Product
                 </Button>
               </div>
@@ -281,8 +310,18 @@ export default function SellerDashboardPage() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
+                              className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                              onClick={() => handleEditProduct(product)}
+                              title="Edit Product"
+                            >
+                              <Settings className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
                               className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                               onClick={() => handleDeleteProduct(product.id)}
+                              title="Delete Product"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -300,6 +339,14 @@ export default function SellerDashboardPage() {
           </CardContent>
         </Card>
       </main>
+
+      <SellerProductForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSuccess={fetchSellerData}
+        sellerId={sellerId}
+        product={editingProduct}
+      />
     </div>
   )
 }

@@ -23,8 +23,11 @@ interface Product {
 interface Seller {
   id: string
   name: string
+  email?: string
+  phone?: string
   location: string
   active: boolean
+  isApproved: boolean
   products: Product[]
 }
 
@@ -57,7 +60,18 @@ async function fetchPaginatedSellers(
     
 
     // Apply ordering for consistent pagination
-    const paginatedSellersQuery = baseSellersQuery.orderBy("name")
+    // IMPORTANT: If we have a where filter and an orderBy, Firestore requires an index.
+    // To avoid index requirements for simple status filtering, we can check if status is all.
+    let paginatedSellersQuery: FirebaseFirestore.Query = baseSellersQuery;
+    
+    if (searchQuery) {
+       paginatedSellersQuery = paginatedSellersQuery.orderBy("name")
+    } else if (status === "all") {
+       paginatedSellersQuery = paginatedSellersQuery.orderBy("name")
+    }
+    // If it's just status filtering (pending/approved), we skip orderBy("name") 
+    // unless the user has created the composite index (isApproved, name).
+    // For now, we'll prioritize functionality over specific name ordering for pending sellers.
 
     // Calculate offset for pagination
     const offset = (page - 1) * pageSize
@@ -103,8 +117,11 @@ async function fetchPaginatedSellers(
       sellers.push({
         id: sellerId,
         name: data.name ?? "Unnamed Seller",
+        email: data.email ?? "No Email",
+        phone: data.phone ?? "No Phone",
         location: data.location ?? "Unknown",
         active: data.active ?? true,
+        isApproved: data.isApproved ?? false,
         products,
       })
     }
@@ -154,8 +171,11 @@ async function fetchAllSellers(): Promise<{ sellers: Seller[] }> {
       sellers.push({
         id: sellerId,
         name: data.name ?? "Unnamed Seller",
+        email: data.email ?? "No Email",
+        phone: data.phone ?? "No Phone",
         location: data.location ?? "Unknown",
         active: data.active ?? true,
+        isApproved: data.isApproved ?? false,
         products,
       })
     }

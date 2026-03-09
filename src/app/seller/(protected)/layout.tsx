@@ -1,20 +1,37 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const params = useParams()
+  const sellerIdFromUrl = params.sellerId as string
 
   useEffect(() => {
     if (status === "loading") return
-    if (!session || (session.user as any).role !== "seller") {
+    
+    if (!session) {
       router.push("/admin/signin")
+      return
     }
-  }, [session, status, router])
+
+    const user = session.user as any
+    const isAdmin = user.role === "admin"
+    const isMatchingSeller = user.role === "seller" && user.id === sellerIdFromUrl
+
+    if (!isAdmin && !isMatchingSeller) {
+      // If not admin and not the matching seller, redirect
+      if (user.role === "seller") {
+        router.push(`/seller/dashboard/${user.id}`)
+      } else {
+        router.push("/admin/signin")
+      }
+    }
+  }, [session, status, router, sellerIdFromUrl])
 
   if (status === "loading") {
     return (
@@ -24,7 +41,8 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
     )
   }
 
-  if (!session || (session.user as any).role !== "seller") {
+  const user = session?.user as any
+  if (!session || (!user.isAdmin && user.role !== "seller")) {
     return null
   }
 

@@ -20,11 +20,11 @@ export default function SellerSignInPage() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      const role = (session?.user as any)?.role
-      if (role === 'seller') {
-        router.push('/seller/dashboard')
-      } else if (role === 'admin') {
+    if (status === 'authenticated' && session?.user) {
+      const user = session.user as any
+      if (user.role === 'seller') {
+        router.push(`/seller/dashboard/${user.id}`)
+      } else if (user.role === 'admin') {
         router.push('/admin')
       }
     }

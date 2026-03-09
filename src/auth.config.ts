@@ -9,6 +9,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.isAdmin = user.isAdmin ?? false;
         token.role = user.role ?? (user.isAdmin ? 'admin' : 'seller');
+        token.isApproved = user.isAdmin ? true : (user.isApproved ?? false);
       }
       return token;
     },
@@ -18,6 +19,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).email = token.email;
         (session.user as any).isAdmin = token.isAdmin;
         (session.user as any).role = token.role;
+        (session.user as any).isApproved = token.isApproved;
       }
       return session;
     },
