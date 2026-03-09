@@ -8,19 +8,25 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.isAdmin = user.isAdmin ?? false;
+        token.role = user.role ?? (user.isAdmin ? 'admin' : 'seller');
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as { id: string; email: string; isAdmin: boolean }).id = token.id;
-        (session.user as { id: string; email: string; isAdmin: boolean }).email = token.email;
-        (session.user as { id: string; email: string; isAdmin: boolean }).isAdmin = token.isAdmin;
+        (session.user as any).id = token.id;
+        (session.user as any).email = token.email;
+        (session.user as any).isAdmin = token.isAdmin;
+        (session.user as any).role = token.role;
       }
       return session;
     },
     async signIn({ user }) {
-      return !!user?.isAdmin;
+      if (user.isAdmin) return true;
+      if (user.role === 'seller') {
+        return (user as any).isApproved === true;
+      }
+      return false;
     },
   },
   pages: {

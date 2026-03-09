@@ -77,9 +77,18 @@ const getSellerAndProducts = async (
 
     const products: Product[] = productsSnapshot.docs.map((doc) => {
       const data = doc.data()
+      const imageUrl = data.imageUrl ?? "/img1.jpg"
+      if (!data.imageUrl) {
+        console.warn(`[API] Product ${doc.id} missing imageUrl, using fallback. Data:`, {
+          id: doc.id,
+          description: data.description?.substring(0, 50),
+          sellerId: data.sellerId,
+          hasMediaReference: !!data.mediaReference,
+        })
+      }
       return {
         id: doc.id,
-        imageUrl: data.imageUrl ?? "/img1.jpg",
+        imageUrl,
         price: data.price ?? "Price not specified",
         description: data.description ?? "No description",
         sellerId: data.sellerId ?? "",

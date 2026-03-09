@@ -73,8 +73,31 @@ export async function updateProductStatus(formData: FormData) {
   }
 }
 
+export async function approveSeller(formData: FormData) {
+  await simulateDelay(300)
+
+  const sellerId = formData.get("sellerId") as string
+  const approved = formData.get("approved") === "true"
+
+  if (!sellerId) {
+    return { success: false, message: "Seller ID is required." }
+  }
+
+  try {
+    await adminFirestore.collection("sellers").doc(sellerId).update({
+      isApproved: approved,
+    })
+
+    revalidatePath("/admin")
+    return { success: true, message: `Seller ${approved ? "approved" : "rejected"} successfully!` }
+  } catch (error) {
+    console.error(`Error approving seller ${sellerId}:`, error)
+    return { success: false, message: `Failed to update seller approval status: ${(error as Error).message}` }
+  }
+}
+
 export async function toggleSellerActiveStatus(formData: FormData) {
-  await simulateDelay(300) // Simulate network delay
+  await simulateDelay(300)
 
   const sellerId = formData.get("sellerId") as string
   const activeString = formData.get("active") as string

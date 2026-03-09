@@ -30,6 +30,7 @@ export function TwilioMediaDisplay({
       unoptimized={
         mediaUrl.includes('ngrok') ||
         mediaUrl.includes('twilio') ||
+        mediaUrl.includes('media-api') ||
         mediaUrl.startsWith('/api/twilio-media')
       }
     />

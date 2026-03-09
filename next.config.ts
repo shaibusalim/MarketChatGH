@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -18,8 +18,13 @@ const nextConfig: NextConfig = {
     return config;
   },
   images: {
+    unoptimized: true,
+    localPatterns: [
+      { pathname: '/**' },
+      { pathname: '/api/twilio-media' },
+    ],
     remotePatterns: [
-       {
+      {
         protocol: 'https',
         hostname: 'images.pexels.com',
         pathname: '/**',
@@ -32,15 +37,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 's3.amazonaws.com',
+        hostname: 'via.placeholder.com',
         port: '',
-        pathname: '/com.twilio.prod.media/**',
+        pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
+        hostname: 's3.amazonaws.com',
         port: '',
-        pathname: '/**',
+        pathname: '/com.twilio.prod.media/**',
       },
       {
         protocol: 'https',
@@ -49,10 +54,28 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '9002',
-        pathname: '/api/twilio-media/**',
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media-api.twilio.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
+        pathname: '/**',
       },
     ],
   },

@@ -152,6 +152,16 @@ export function AdminSellersTable({
                         >
                           {seller.active ? "Active" : "Inactive"}
                         </Badge>
+                        <Badge
+                          variant="outline"
+                          className={`${
+                            seller.isApproved
+                              ? "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 border-blue-200 dark:border-blue-600"
+                              : "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400 border-yellow-200 dark:border-yellow-600"
+                          } text-xs`}
+                        >
+                          {seller.isApproved ? "Approved" : "Pending"}
+                        </Badge>
                       </div>
                       <div className="text-xs text-gray-600 dark:text-gray-300">
                         ID: {seller.id} • {seller.location} • {seller.products.length} products

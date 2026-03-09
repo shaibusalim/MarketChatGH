@@ -41,5 +41,5 @@ export const ai = genkit({
     // Add API key from environment if needed
     apiKey: process.env.GOOGLE_GENAI_API_KEY,
   })],
-  model: 'googleai/gemini-pro', // Use stable gemini-pro model
+  model: 'googleai/gemini-2.0-flash', // Use latest flash model
 });

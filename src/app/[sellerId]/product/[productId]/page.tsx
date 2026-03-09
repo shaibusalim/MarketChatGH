@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay";
-import { Star, Package, MapPin } from "lucide-react";
+import { Star, Package, MapPin, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 interface Product {
@@ -126,20 +126,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild className="flex-1 bg-green-500 hover:bg-green-600 text-white">
+              <Button asChild className="flex-1 bg-green-500 hover:bg-green-600 text-white py-6 rounded-xl font-bold shadow-lg shadow-green-500/20">
                 <a
-                  href={`https://wa.me/${sellerId}?text=I'm%20interested%20in%20buying%20your%20product:%20"${encodeURIComponent(
-                    product.description
-                  )}"%20for%20${encodeURIComponent(product.price)}`}
+                  href={`https://wa.me/${sellerId}?text=${encodeURIComponent(
+                    `Hi, I found this on MarketChatGH: I'm interested in buying your "${product.description}" for ${product.price}. Is it still available?`
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center"
                 >
-                  <Package className="w-4 h-4 mr-2" />
-                  Contact Seller
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  Chat to Buy
                 </a>
               </Button>
-              <Button asChild variant="outline" className="flex-1">
+              <Button asChild variant="outline" className="flex-1 py-6 rounded-xl border-2">
                 <Link href={`/${sellerId}`} className="flex items-center justify-center">
                   Back to Store
                 </Link>
