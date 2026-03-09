@@ -3,13 +3,8 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { adminFirestore } from '@/lib/firebase-admin';
 import bcrypt from 'bcrypt';
-
-export const runtime = 'nodejs';
-
 import { ratelimit } from '@/lib/ratelimit';
 import { NextRequest } from 'next/server';
-
-export const runtime = 'nodejs';
 
 async function auth(req: NextRequest, res: any) {
   if (req.method === 'POST') {
