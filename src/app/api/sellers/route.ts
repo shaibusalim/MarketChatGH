@@ -25,6 +25,7 @@ interface Seller {
   name: string
   email?: string
   phone?: string
+  slug?: string
   location: string
   active: boolean
   isApproved: boolean
@@ -119,6 +120,7 @@ async function fetchPaginatedSellers(
         name: data.name ?? "Unnamed Seller",
         email: data.email ?? "No Email",
         phone: data.phone ?? "No Phone",
+        slug: data.slug,
         location: data.location ?? "Unknown",
         active: data.active ?? true,
         isApproved: data.isApproved ?? false,
@@ -173,6 +175,7 @@ async function fetchAllSellers(): Promise<{ sellers: Seller[] }> {
         name: data.name ?? "Unnamed Seller",
         email: data.email ?? "No Email",
         phone: data.phone ?? "No Phone",
+        slug: data.slug,
         location: data.location ?? "Unknown",
         active: data.active ?? true,
         isApproved: data.isApproved ?? false,

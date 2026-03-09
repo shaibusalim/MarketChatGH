@@ -78,7 +78,7 @@ export function SellerCard({ seller, index }: SellerCardProps) {
           )}
           <div className="mt-auto">
             <Button asChild className="w-full bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-green-600 dark:hover:bg-green-500 dark:hover:text-white text-white font-bold py-6 rounded-2xl transition-all duration-300 group/btn shadow-md">
-              <Link href={`/${seller.id}`} className="flex items-center justify-center gap-2">
+              <Link href={`/${seller.slug || seller.id}`} className="flex items-center justify-center gap-2">
                 Visit Shop
                 <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
               </Link>

@@ -34,15 +34,26 @@ interface SellerResponse {
 
 // --- Firestore query ---
 const getSellerAndProducts = async (
-  sellerId: string,
+  slugOrId: string,
   productQ = "",
   productStatus = "all",
 ): Promise<SellerResponse> => {
  
   try {
-    // Fetch seller info
-    const sellerDoc = await adminFirestore.collection("sellers").doc(sellerId).get()
+    // Try to fetch seller by ID first
+    let sellerDoc = await adminFirestore.collection("sellers").doc(slugOrId).get()
     let seller: SellerInfo | null = null
+    let actualSellerId = slugOrId;
+
+    if (!sellerDoc.exists) {
+      // If not found by ID, try to fetch by slug
+      const sellersBySlug = await adminFirestore.collection("sellers").where("slug", "==", slugOrId).limit(1).get();
+      if (!sellersBySlug.empty) {
+        sellerDoc = sellersBySlug.docs[0];
+        actualSellerId = sellerDoc.id;
+      }
+    }
+
     if (sellerDoc.exists) {
       const data = sellerDoc.data()
       console.log(`[API] Seller data:`, data)
@@ -54,12 +65,10 @@ const getSellerAndProducts = async (
         rating: data?.rating ?? 0, // Retrieve rating
         reviewCount: data?.reviewCount ?? 0, // Retrieve review count
       }
-    } else {
-     
     }
 
-    // Fetch products with filters
-    let productsQuery: FirebaseFirestore.Query = adminFirestore.collection("products").where("sellerId", "==", sellerId)
+    // Fetch products with filters using the actual doc ID
+    let productsQuery: FirebaseFirestore.Query = adminFirestore.collection("products").where("sellerId", "==", actualSellerId)
 
     if (productQ) {
       // Basic prefix search for description

@@ -13,6 +13,8 @@ export interface Product {
 export interface Seller {
   id: string
   name: string | null | undefined
+  phone: string
+  slug?: string
   location: string
   active: boolean
   isApproved?: boolean

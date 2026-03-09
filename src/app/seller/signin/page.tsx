@@ -131,12 +131,6 @@ export default function SellerSignInPage() {
                     Sign Up Now
                   </Link>
                 </p>
-                <p className="text-xs">
-                  Are you an admin?{" "}
-                  <Link href="/admin/signin" className="text-gray-400 hover:text-gray-600 hover:underline">
-                    Admin Login
-                  </Link>
-                </p>
               </div>
             </form>
           </CardContent>

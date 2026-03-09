@@ -2,6 +2,7 @@
 
 import { adminFirestore } from "@/lib/firebase-admin"
 import { revalidatePath } from "next/cache"
+import { generateSlug } from "@/lib/utils"
 
 // Helper to simulate delay for network requests
 const simulateDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -12,10 +13,13 @@ export async function onboardSeller(formData: FormData) {
   const sellerId = formData.get("sellerId") as string
   const name = formData.get("name") as string
   const location = formData.get("location") as string
+  const phone = sellerId // For onboarding, sellerId is the phone number
 
   if (!sellerId || !name || !location) {
     return { success: false, message: "All fields are required." }
   }
+
+  const slug = generateSlug(name)
 
   try {
     // Check if sellerId already exists
@@ -27,6 +31,8 @@ export async function onboardSeller(formData: FormData) {
     await adminFirestore.collection("sellers").doc(sellerId).set({
       name,
       location,
+      phone,
+      slug,
       active: true, // Default to active
       isApproved: true, // Auto-approve if onboarded by admin
       createdAt: new Date().toISOString(),

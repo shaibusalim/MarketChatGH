@@ -22,8 +22,11 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
     }
@@ -52,25 +55,27 @@ export function Header() {
         </Link>
 
         <nav className="hidden md:flex gap-1 items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors outline-none">
-              Solutions <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48 p-2">
-              <DropdownMenuItem asChild>
-                <Link href="/for-buyers" className="flex items-center gap-2 cursor-pointer">
-                  <ShoppingBag className="h-4 w-4 text-green-500" />
-                  <span>For Buyers</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/for-sellers" className="flex items-center gap-2 cursor-pointer">
-                  <Store className="h-4 w-4 text-red-500" />
-                  <span>For Sellers</span>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {mounted && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors outline-none">
+                Solutions <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48 p-2">
+                <DropdownMenuItem asChild>
+                  <Link href="/for-buyers" className="flex items-center gap-2 cursor-pointer">
+                    <ShoppingBag className="h-4 w-4 text-green-500" />
+                    <span>For Buyers</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/for-sellers" className="flex items-center gap-2 cursor-pointer">
+                    <Store className="h-4 w-4 text-red-500" />
+                    <span>For Sellers</span>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <Link href="/about" className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors">
             About
@@ -111,10 +116,10 @@ export function Header() {
           <Search className="h-5 w-5" />
         </Button>
 
-        <ThemeToggle />
+        {mounted && <ThemeToggle />}
 
         <div className="hidden md:block">
-          {session ? (
+          {mounted && session ? (
             <Link href={(session.user as any).role === 'admin' ? '/admin' : `/seller/dashboard/${(session.user as any).id}`}>
               <motion.button
                 whileHover={{ scale: 1.05, boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)" }}

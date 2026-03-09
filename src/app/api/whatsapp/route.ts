@@ -26,13 +26,27 @@ export async function POST(req: NextRequest) {
 
     console.log("Processing message", { sellerId, body, numMedia, mediaUrl, messageSid });
 
-    const sellerRef = adminFirestore.collection("sellers").doc(sellerId);
-    const sellerDoc = await sellerRef.get();
-
-    if (!sellerDoc.exists || !sellerDoc.data()?.name || !sellerDoc.data()?.location) {
+    // Identify seller by phone number
+    const sellersSnapshot = await adminFirestore.collection("sellers").where("phone", "==", sellerId).limit(1).get();
+    
+    if (sellersSnapshot.empty) {
       console.warn("Seller not registered", { sellerId });
       twiml.message(
-        "⚠️ You are not a registered seller. Please contact the admin to be onboarded."
+        "⚠️ You are not a registered seller. Please contact the admin to be onboarded or sign up on our website."
+      );
+      return new Response(twiml.toString(), {
+        headers: { "Content-Type": "text/xml" },
+      });
+    }
+
+    const sellerDoc = sellersSnapshot.docs[0];
+    const sellerData = sellerDoc.data();
+    const actualSellerId = sellerDoc.id; // Use the actual doc ID for product linking
+
+    if (!sellerData.name || !sellerData.location) {
+      console.warn("Seller profile incomplete", { sellerId });
+      twiml.message(
+        "⚠️ Your profile is incomplete. Please complete your registration on our website."
       );
       return new Response(twiml.toString(), {
         headers: { "Content-Type": "text/xml" },
@@ -135,13 +149,13 @@ export async function POST(req: NextRequest) {
 
       const existingProducts = await adminFirestore
         .collection("products")
-        .where("sellerId", "==", sellerId)
+        .where("sellerId", "==", actualSellerId)
         .limit(1)
         .get();
 
       try {
         await adminFirestore.collection("products").add({
-          sellerId,
+          sellerId: actualSellerId,
           imageUrl,
           mediaReference,
           price,
@@ -152,7 +166,7 @@ export async function POST(req: NextRequest) {
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       } catch (error) {
-        console.error("Failed to save product to adminFirestore", { error, sellerId, imageUrl });
+        console.error("Failed to save product to adminFirestore", { error, sellerId: actualSellerId, imageUrl });
         twiml.message("⚠️ Failed to add product. Please try again or contact support.");
         return new Response(twiml.toString(), {
           headers: { "Content-Type": "text/xml" },
@@ -161,7 +175,7 @@ export async function POST(req: NextRequest) {
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin;
       if (existingProducts.empty) {
-        const storeUrl = `${baseUrl}/${sellerId}`;
+        const storeUrl = `${baseUrl}/${sellerData.slug || actualSellerId}`;
         twiml.message(
           `✅ Product added successfully!\n\n🛍️ View your store: ${storeUrl}`
         );

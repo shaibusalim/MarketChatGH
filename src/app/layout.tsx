@@ -1,16 +1,30 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "react-hot-toast";
 import AuthProvider from "@/components/auth-provider";
 import { Chatbot } from '@/components/Chatbot';
 
 export const metadata: Metadata = {
   title: 'MarketChat GH',
   description: 'Your WhatsApp E-commerce solution for Ghana.',
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MarketChat GH",
+  },
   icons: {
     icon: "/favicon.ico",
+    apple: "/logo.png",
   }
 };
+
+export const viewport: Viewport = {
+  themeColor: "#22c55e",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+}
 
 export default function RootLayout({
   children,

@@ -27,14 +27,27 @@ interface ProductPageProps {
   params: Promise<{ sellerId: string; productId: string }>;
 }
 
-async function getProductAndSeller(sellerId: string, productId: string): Promise<{ product: Product | null; seller: Seller | null }> {
+async function getProductAndSeller(slugOrId: string, productId: string): Promise<{ product: Product | null; seller: Seller | null; sellerId: string | null }> {
   try {
     const productDoc = await adminFirestore.collection("products").doc(productId).get();
-    if (!productDoc.exists || productDoc.data()?.sellerId !== sellerId) {
-      return { product: null, seller: null };
+    if (!productDoc.exists) {
+      return { product: null, seller: null, sellerId: null };
     }
 
     const productData = productDoc.data()!;
+    const actualSellerId = productData.sellerId;
+
+    // Check if the provided slugOrId matches the actualSellerId or the seller's slug
+    const sellerDoc = await adminFirestore.collection("sellers").doc(actualSellerId).get();
+    if (!sellerDoc.exists) {
+      return { product: null, seller: null, sellerId: null };
+    }
+
+    const sellerData = sellerDoc.data()!;
+    if (actualSellerId !== slugOrId && sellerData.slug !== slugOrId) {
+      return { product: null, seller: null, sellerId: null };
+    }
+
     const product: Product = {
       id: productDoc.id,
       imageUrl: productData.imageUrl ?? "/img1.jpg",
@@ -46,24 +59,21 @@ async function getProductAndSeller(sellerId: string, productId: string): Promise
       isAvailable: productData.isAvailable ?? false,
     };
 
-    const sellerDoc = await adminFirestore.collection("sellers").doc(sellerId).get();
-    const seller: Seller | null = sellerDoc.exists
-      ? {
-          name: sellerDoc.data()!.name ?? "Unnamed Seller",
-          location: sellerDoc.data()!.location ?? "Unknown",
-        }
-      : null;
+    const seller: Seller = {
+      name: sellerData.name ?? "Unnamed Seller",
+      location: sellerData.location ?? "Unknown",
+    };
 
-    return { product, seller };
+    return { product, seller, sellerId: actualSellerId };
   } catch (error) {
     console.error("Error fetching product or seller:", error);
-    return { product: null, seller: null };
+    return { product: null, seller: null, sellerId: null };
   }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { sellerId, productId } = await params;
-  const { product, seller } = await getProductAndSeller(sellerId, productId);
+  const { sellerId: slugOrId, productId } = await params;
+  const { product, seller } = await getProductAndSeller(slugOrId, productId);
 
   if (!product || !seller) {
     notFound();

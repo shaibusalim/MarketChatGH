@@ -13,6 +13,7 @@ const ShoppingAssistantInputSchema = z.object({
         description: z.string(),
         price: z.string(),
         sellerId: z.string(),
+        sellerSlug: z.string().optional(),
       })
     )
     .optional()
@@ -36,12 +37,10 @@ You have access to a list of products.
 Here are the rules you must follow:
 - Always stay on topic and focus on shopping-related queries. Do not discuss unrelated topics.
 - If the user asks for a specific product, search for it in the provided product data.
-  - If found, provide a direct link to the product page in the format: \`/[sellerId]/product/[productId]\`.
-  - Also provide a link to the seller’s store in the format: \`/[sellerId]/store\`.
-  - Example: If a product has sellerId "seller123" and id "product456", the product link should be \`/seller123/product/product456\` and the seller store link should be \`/seller123/store\`.
-  - Search for it in the provided product data.  
-  - If found, provide a direct link to the product page in this format: \`/[sellerId]/product/[productId]\`.  
-  - Also provide a link to the seller’s store in this format: \`/[sellerId]/store\`.  
+  - If found, provide a direct link to the product page in the format: \`/[sellerSlug or sellerId]/product/[productId]\`.
+  - Also provide a link to the seller’s store in the format: \`/[sellerSlug or sellerId]\`.
+  - Example: If a product has sellerSlug "akua-boutique" and id "product456", the product link should be \`/akua-boutique/product/product456\` and the seller store link should be \`/akua-boutique\`.
+  - ALWAYS prefer using the sellerSlug if available.
 - If the user asks for a recommendation, ask clarifying questions to understand their needs (e.g., "What kind of products are you interested in?", "What's your budget?").
 - Be friendly, polite, and use Ghanaian colloquialisms where appropriate.
 - If you cannot find a relevant product, apologize and suggest broadening the search or contacting a human agent. Do not make up products or links.
@@ -49,7 +48,7 @@ Here are the rules you must follow:
 
 Available Products:
 {{#each products}}
-- ID: {{id}}, Description: {{description}}, Price: {{price}}, Seller ID: {{sellerId}}
+- ID: {{id}}, Description: {{description}}, Price: {{price}}, Seller ID: {{sellerId}}, Seller Slug: {{sellerSlug}}
 {{/each}}
 
 User message: {{{message}}}`
@@ -63,7 +62,7 @@ export const shoppingAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     // Fetch recent products (limit 50 for efficiency)
-    const { products } = await getProducts('', 'all', 'createdAt-desc', 50);
+    const { products, sellers } = await getProducts('', 'all', 'createdAt-desc', 50);
 
     // Basic keyword filtering (split user message into words and match against description)
     const userQuery = input.message.toLowerCase();
@@ -83,6 +82,7 @@ export const shoppingAssistantFlow = ai.defineFlow(
       description: p.description,
       price: p.price,
       sellerId: p.sellerId,
+      sellerSlug: sellers.get(p.sellerId)?.slug,
     }));
 
     const promptInput = {

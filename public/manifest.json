@@ -1,0 +1,21 @@
+{
+  "name": "MarketChat GH",
+  "short_name": "MarketChat",
+  "description": "Transforming how Ghana buys and sells. AI-driven shopping experiences directly on WhatsApp.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#22c55e",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

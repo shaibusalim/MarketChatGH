@@ -18,6 +18,8 @@ export interface Product {
 export interface Seller {
   id: string;
   name: string;
+  phone?: string;
+  slug?: string;
   location?: string;
   active?: boolean;
   products?: Product[];
