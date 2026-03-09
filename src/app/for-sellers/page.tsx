@@ -122,22 +122,65 @@ export default function ForSellersPage() {
                     <p className="text-white/70 text-[10px]">Verified Marketplace Seller</p>
                   </div>
                 </div>
-                <div className="p-4 space-y-4 h-[400px] overflow-hidden">
-                   <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex gap-4">
-                      <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-3/4" />
-                        <div className="h-6 bg-green-50 dark:bg-green-900/30 rounded w-1/4" />
-                        <div className="h-8 bg-green-500 rounded-lg w-full" />
+                <div className="p-4 space-y-4 h-[400px] overflow-hidden bg-gray-50/50 dark:bg-gray-900/50">
+                   {/* Example Product 1 */}
+                   <motion.div 
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.5 }}
+                     className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex gap-4"
+                   >
+                      <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
+                        <Image src="/img1.jpg" alt="Product" width={80} height={80} className="object-cover h-full w-full" />
                       </div>
-                   </div>
-                   <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex gap-4 opacity-50">
-                      <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-3/4" />
-                        <div className="h-6 bg-green-50 dark:bg-green-900/30 rounded w-1/4" />
+                      <div className="flex-1 space-y-1">
+                        <h4 className="font-bold text-sm text-gray-900 dark:text-white">Premium Cotton T-Shirt</h4>
+                        <p className="text-green-600 dark:text-green-400 font-bold text-xs">GHS 120.00</p>
+                        <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                          <CheckCircle2 className="h-3 w-3 text-green-500" />
+                          <span>In Stock</span>
+                        </div>
+                        <Button className="h-7 w-full text-[10px] bg-[#25d366] hover:bg-[#128c7e] text-white rounded-lg mt-1">
+                          <MessageCircle className="h-3 w-3 mr-1" /> Chat to Buy
+                        </Button>
                       </div>
-                   </div>
+                   </motion.div>
+
+                   {/* Example Product 2 */}
+                   <motion.div 
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.7 }}
+                     className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex gap-4 opacity-70"
+                   >
+                      <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
+                        <Image src="/img2.jpg" alt="Product" width={80} height={80} className="object-cover h-full w-full" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <h4 className="font-bold text-sm text-gray-900 dark:text-white">Casual Summer Dress</h4>
+                        <p className="text-green-600 dark:text-green-400 font-bold text-xs">GHS 250.00</p>
+                        <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                          <CheckCircle2 className="h-3 w-3 text-green-500" />
+                          <span>In Stock</span>
+                        </div>
+                      </div>
+                   </motion.div>
+
+                   {/* Example Product 3 */}
+                   <motion.div 
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.9 }}
+                     className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex gap-4 opacity-40"
+                   >
+                      <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
+                        <Image src="/img3.jpg" alt="Product" width={80} height={80} className="object-cover h-full w-full" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <h4 className="font-bold text-sm text-gray-900 dark:text-white">Leather Handbag</h4>
+                        <p className="text-green-600 dark:text-green-400 font-bold text-xs">GHS 450.00</p>
+                      </div>
+                   </motion.div>
                 </div>
               </div>
             </div>

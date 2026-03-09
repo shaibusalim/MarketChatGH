@@ -266,17 +266,18 @@ export function InteractiveElements() {
                   whileTap={{ scale: 0.95 }}
                   className="w-full sm:w-auto px-8 py-4 bg-green-500 text-white rounded-xl font-semibold shadow-lg shadow-green-500/30 hover:bg-green-600 transition-all duration-300"
                 >
-                  Get Started
+                  How it Works
                 </motion.button>
               </Link>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-xl font-semibold shadow-sm hover:border-green-500 hover:text-green-600 transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <Play className="h-4 w-4 fill-current" />
-                Watch Demo
-              </motion.button>
+              <Link href="/sellers">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-gray-800 text-green-600 dark:text-green-400 border-2 border-green-500 rounded-xl font-semibold shadow-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-300"
+                >
+                  Browse Shops
+                </motion.button>
+              </Link>
             </div>
 
             {/* Trusted By Logos banner placeholder below CTAs */}
@@ -571,13 +572,13 @@ export function InteractiveElements() {
             Join MarketChat today and experience the future of commerce in Ghana.
           </motion.p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/sellers">
+            <Link href="/for-buyers">
               <motion.button
                 whileHover={{ scale: 1.05, boxShadow: "0 8px 16px rgba(0,0,0,0.3)" }}
                 whileTap={{ scale: 0.95 }}
                 className="px-8 py-4 bg-white text-green-600 rounded-xl font-semibold shadow-lg hover:bg-gray-100 transition-all duration-300"
               >
-                Get Started Now
+                Learn How it Works
               </motion.button>
             </Link>
             <motion.button

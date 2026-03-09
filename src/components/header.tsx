@@ -131,7 +131,7 @@ export function Header() {
                 whileTap={{ scale: 0.95 }}
                 className="px-5 py-2 bg-green-500 text-white rounded-xl font-medium shadow-md hover:bg-green-600 transition-all duration-300"
               >
-                Get Started
+                Browse Shops
               </motion.button>
             </Link>
           )}
@@ -221,7 +221,7 @@ export function Header() {
                     className="w-full py-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl text-lg shadow-lg shadow-green-500/30"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Get Started
+                    Browse Shops
                   </Button>
                 </Link>
               )}

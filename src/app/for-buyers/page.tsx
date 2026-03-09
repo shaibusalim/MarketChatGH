@@ -1,38 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Header } from "@/components/header"
-import { Bot, ShoppingBag, Store, ArrowRight, MessageCircle, Star, Search, ShieldCheck, Zap } from "lucide-react"
+import { Bot, ShoppingBag, MessageCircle, ShieldCheck, Zap, Smartphone, CreditCard, Share2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { getProducts, getSellers, Product, Seller } from "@/lib/product-actions"
-import ProductCard from "@/components/ProductCard"
-import { SellerCard } from "@/components/seller-card"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 export default function ForBuyersPage() {
-  const [trendingProducts, setTrendingProducts] = useState<Product[]>([])
-  const [featuredSellers, setFeaturedSellers] = useState<Seller[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { products } = await getProducts("", "all", "createdAt-desc", 8)
-        const sellers = await getSellers(6)
-        setTrendingProducts(products)
-        setFeaturedSellers(sellers)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
-
   return (
     <main className="relative flex flex-col items-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
@@ -55,18 +30,21 @@ export default function ForBuyersPage() {
               <span className="text-green-600">shop in Ghana.</span>
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-xl mb-8">
-              Discover unique products from verified local sellers. Browse visually or let our AI find exactly what you need on WhatsApp.
+              Experience the future of commerce. No complex apps, just simple AI-driven shopping directly on WhatsApp.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <Link href="https://wa.me/+233209832978">
+              <Link href="/sellers">
                 <Button className="w-full sm:w-auto px-8 py-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl text-lg shadow-lg shadow-green-500/30">
+                  <ShoppingBag className="mr-2 h-6 w-6" />
+                  Enter the Marketplace
+                </Button>
+              </Link>
+              <Link href="https://wa.me/+233209832978">
+                <Button variant="outline" className="w-full sm:w-auto px-8 py-6 rounded-xl text-lg border-2 border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20">
                   <Bot className="mr-2 h-6 w-6" />
                   Ask our AI Bot
                 </Button>
               </Link>
-              <Button variant="outline" className="w-full sm:w-auto px-8 py-6 rounded-xl text-lg border-2" onClick={() => document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth' })}>
-                Explore Catalog
-              </Button>
             </div>
           </div>
           <motion.div
@@ -76,109 +54,111 @@ export default function ForBuyersPage() {
           >
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-tr from-green-500/20 to-yellow-500/20 blur-2xl rounded-3xl" />
-              <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 p-2">
-                <Image src="/img7.png" alt="Marketplace Preview" width={600} height={400} className="rounded-2xl object-cover" />
+              <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 p-2 overflow-hidden">
+                <Image src="/img7.png" alt="Marketplace Preview" width={600} height={400} className="rounded-2xl object-cover hover:scale-105 transition-transform duration-700" />
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Trending Products Grid */}
-      <section id="trending" className="w-full py-16 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
-        <div className="flex justify-between items-end mb-10">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold font-headline text-gray-900 dark:text-white mb-2">
-              Trending Products
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400">Hand-picked items from top sellers across the country.</p>
-          </div>
-          <Link href="/sellers" className="hidden sm:flex items-center gap-2 text-green-600 font-bold hover:underline">
-            View All <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-gray-200 dark:bg-gray-800 rounded-2xl h-80 animate-pulse" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {trendingProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Featured Sellers */}
-      <section className="w-full py-16 px-4 sm:px-6 md:px-8 bg-gray-100 dark:bg-gray-800/30">
+      {/* Core Benefits Section */}
+      <section className="w-full py-20 px-4 sm:px-6 md:px-8 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-gray-900 dark:text-white mb-4">
-              Featured Verified Shops
+              Why Shop with MarketChat?
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
-              Trusted local businesses with high ratings and exceptional service.
+            <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+              We've redesigned online shopping to fit the way you already communicate.
             </p>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-gray-200 dark:bg-gray-800 rounded-2xl h-64 animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredSellers.map((seller, index) => (
-                <SellerCard key={seller.id} seller={seller as any} index={index} />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <motion.div 
+              whileHover={{ y: -10 }}
+              className="p-8 rounded-3xl bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900/40 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-green-500 text-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/20">
+                <Smartphone className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">No Apps to Download</h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Save your phone storage. Browse our web catalog and chat directly on WhatsApp—no extra apps required.
+              </p>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ y: -10 }}
+              className="p-8 rounded-3xl bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-100 dark:border-yellow-900/40 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-yellow-500 text-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-yellow-500/20">
+                <CreditCard className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Pay via MoMo</h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Secure and familiar payments. Use MTN Mobile Money or Telecel Cash to pay verified sellers directly.
+              </p>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ y: -10 }}
+              className="p-8 rounded-3xl bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-blue-500 text-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20">
+                <MessageCircle className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Chat on WhatsApp</h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Real-time support. Negotiate, ask questions, and get product photos directly from sellers in your favorite chat app.
+              </p>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* How it Works Section */}
       <section className="w-full py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div>
+          <div className="order-2 md:order-1">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-gray-900 dark:text-white mb-6">
-              How MarketChat Works
+              Three Steps to Your Next Purchase
             </h2>
             <div className="space-y-8">
               <div className="flex gap-4">
                 <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-lg shadow-green-500/30">1</div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1">Browse and Discover</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Explore the web catalog or chat with our AI bot to find specific items you need.</p>
+                  <h3 className="text-xl font-bold mb-1">Browse or Ask AI</h3>
+                  <p className="text-gray-600 dark:text-gray-400">Explore our directory of verified shops or tell our AI bot exactly what you're looking for.</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-lg shadow-green-500/30">2</div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1">Chat to Buy</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Click "Chat to Buy" on any product to immediately open a WhatsApp conversation with the verified seller.</p>
+                  <h3 className="text-xl font-bold mb-1">Connect on WhatsApp</h3>
+                  <p className="text-gray-600 dark:text-gray-400">Instantly connect with the seller. No middleman—just direct conversation to confirm details.</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-lg shadow-green-500/30">3</div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1">Secure Transaction</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Negotiate, confirm details, and arrange payment directly with the seller in a trusted environment.</p>
+                  <h3 className="text-xl font-bold mb-1">Receive Your Item</h3>
+                  <p className="text-gray-600 dark:text-gray-400">Finalize the delivery and payment details in the chat. Safe, fast, and local.</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="bg-green-50 dark:bg-green-950/20 p-8 rounded-3xl border border-green-100 dark:border-green-900/40">
+          
+          <div className="order-1 md:order-2 bg-green-50 dark:bg-green-950/20 p-8 rounded-3xl border border-green-100 dark:border-green-900/40 relative">
+            <div className="absolute -top-6 -right-6 bg-yellow-400 text-gray-900 font-bold px-4 py-2 rounded-xl rotate-12 shadow-lg">
+              Smart Choice!
+            </div>
             <div className="flex items-center gap-3 mb-6">
               <ShieldCheck className="h-10 w-10 text-green-600" />
-              <h3 className="text-2xl font-bold">Buyer Protection</h3>
+              <h3 className="text-2xl font-bold">Safe & Verified</h3>
             </div>
             <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-              We verify every seller on our platform to ensure you're dealing with legitimate businesses. Our AI shopping assistant also monitors interactions to maintain a safe and reliable marketplace.
+              Every seller on MarketChat is verified. We ensure you're chatting with real businesses so you can shop with confidence.
             </p>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -187,31 +167,33 @@ export default function ForBuyersPage() {
               </li>
               <li className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                Transparent Seller Ratings
+                Direct-to-Seller Communication
               </li>
               <li className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                Direct Communication with Sellers
+                Community Trusted Shops
               </li>
             </ul>
           </div>
         </div>
       </section>
 
-      {/* Call to Action */}
+      {/* Final Call to Action */}
       <section className="w-full py-16 px-4 sm:px-6 md:px-8 mb-16">
         <div className="max-w-5xl mx-auto bg-green-600 rounded-3xl p-8 md:p-12 text-center text-white relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 relative z-10">Can't find what you're looking for?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 relative z-10">Ready to start shopping?</h2>
           <p className="text-green-50 text-lg mb-8 max-w-2xl mx-auto relative z-10">
-            Our AI shopping assistant can search across thousands of products from local sellers to find exactly what you need in seconds.
+            Browse our verified shops and discover unique products across Ghana today.
           </p>
-          <Link href="https://wa.me/+233209832978">
-            <Button className="bg-white text-green-600 hover:bg-green-50 font-bold px-10 py-6 rounded-xl text-xl relative z-10">
-              <MessageCircle className="mr-2 h-6 w-6" />
-              Start Chatting with AI
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <Link href="/sellers">
+              <Button className="w-full sm:w-auto bg-white text-green-600 hover:bg-green-50 font-bold px-10 py-6 rounded-xl text-xl shadow-xl">
+                <ShoppingBag className="mr-2 h-6 w-6" />
+                Enter the Marketplace
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
