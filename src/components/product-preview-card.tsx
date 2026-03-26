@@ -1,17 +1,17 @@
 "use client"
 
-import Image from "next/image"
-import { motion } from "framer-motion"
-import Link from "next/link"
+import { TwilioMediaDisplay } from "./TwilioMediaDisplay";
+import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface ProductPreviewCardProps {
   product: {
-    id: string
-    imageUrl: string
-    price: string
-    description: string
-  }
-  sellerId: string
+    id: string;
+    imageUrl: string;
+    price: string;
+    description: string;
+  };
+  sellerId: string;
 }
 
 export function ProductPreviewCard({ product, sellerId }: ProductPreviewCardProps) {
@@ -22,11 +22,12 @@ export function ProductPreviewCard({ product, sellerId }: ProductPreviewCardProp
         whileHover={{ scale: 1.05 }}
         transition={{ duration: 0.2 }}
       >
-        <Image
-          src={product.imageUrl || "/img1.jpg"}
+        <TwilioMediaDisplay
+          mediaUrl={product.imageUrl || "/img1.jpg"}
           alt={product.description}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          width={200}
+          height={200}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
           <p className="text-white text-[10px] font-medium line-clamp-1">{product.description}</p>

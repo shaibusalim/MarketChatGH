@@ -21,25 +21,40 @@ export async function GET(request: Request) {
     }
     const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
     
-    // Construct the correct Twilio media URL
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages/${messageSid}/Media/${mediaSid}/Content`;
+    // Use the more standard and reliable direct Media resource URL
+    // First try the direct media URL, if it fails we might have to try the message-nested one
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Media/${mediaSid}`;
     
-    
+    // Fallback URL in case direct access fails (some media is strictly scoped)
+    const fallbackUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages/${messageSid}/Media/${mediaSid}`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
-    const mediaResponse = await fetch(twilioUrl, {
+    
+    let mediaResponse = await fetch(twilioUrl, {
       headers: {
         'Authorization': authHeader,
         'Accept': '*/*',
       },
       signal: controller.signal,
     });
+
+    // If 404, try the fallback URL
+    if (mediaResponse.status === 404) {
+      console.log(`Twilio direct media 404, trying fallback for message ${messageSid}`);
+      mediaResponse = await fetch(fallbackUrl, {
+        headers: {
+          'Authorization': authHeader,
+          'Accept': '*/*',
+        },
+        signal: controller.signal,
+      });
+    }
+
     clearTimeout(timeout);
 
     if (!mediaResponse.ok) {
-     
-      throw new Error(`Twilio API responded with ${mediaResponse.status}`);
+      throw new Error(`Twilio API responded with ${mediaResponse.status} for media ${mediaSid}`);
     }
 
     const imageBuffer = await mediaResponse.arrayBuffer();

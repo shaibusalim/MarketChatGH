@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { TwilioMediaDisplay } from "./TwilioMediaDisplay";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +8,6 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-  CardDescription,
   CardTitle,
 } from "@/components/ui/card";
 import { MessageCircle } from "lucide-react";
@@ -42,17 +41,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Card className="flex flex-col h-full overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 group border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl">
         <CardHeader className="p-0 relative overflow-hidden">
           <div className="relative w-full aspect-square group-hover:scale-105 transition-transform duration-500">
-            <Image
-              src={imageUrl}
+            <TwilioMediaDisplay
+              mediaUrl={imageUrl}
               alt={description}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover"
-              unoptimized={
-                imageUrl.startsWith('/api/twilio-media') || 
-                imageUrl.includes('media-api') || 
-                imageUrl.includes('twilio')
-              }
+              width={400}
+              height={400}
+              className="w-full h-full object-cover"
             />
           </div>
           <div className="absolute top-3 right-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm">
