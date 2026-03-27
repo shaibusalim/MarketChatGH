@@ -5,32 +5,57 @@ import admin from "firebase-admin";
 import { answerComplexQuery } from "@/ai/flows/answer-complex-queries";
 
 export async function POST(req: NextRequest) {
+  console.log("[WhatsApp] Webhook received POST request at", new Date().toISOString());
   const twiml = new TwilioMessagingResponse();
 
   try {
-    const formData = await req.formData();
-    const body = (formData.get("Body") as string)?.trim() || "";
-    const from = (formData.get("From") as string) || "";
-    const messageSid = (formData.get("MessageSid") as string) || "";
-    const numMedia = parseInt((formData.get("NumMedia") as string) || "0", 10);
-    const mediaUrl = (formData.get("MediaUrl0") as string) || "";
+    const rawBody = await req.text();
+    console.log("[WhatsApp] Raw request body:", rawBody);
+    
+    const params = new URLSearchParams(rawBody);
+    const body = params.get("Body")?.trim() || "";
+    const from = params.get("From") || "";
+    const To = params.get("To") || "";
+    const messageSid = params.get("MessageSid") || "";
+    const numMedia = parseInt(params.get("NumMedia") || "0", 10);
+    const mediaUrl = params.get("MediaUrl0") || "";
 
-    const sellerId = from.replace("whatsapp:+", "");
-    if (!sellerId || sellerId.trim() === "") {
-      console.error("Invalid sellerId", { from });
-      twiml.message("⚠️ Invalid phone number format. Please contact support.");
-      return new Response(twiml.toString(), {
-        headers: { "Content-Type": "text/xml" },
-      });
+    console.log("[WhatsApp] Processing request from:", from, "to:", To);
+    
+    // Normalize phone number to match various possible formats in DB
+    const cleanFrom = from.replace("whatsapp:+", "");
+    
+    // Generate potential formats to check in DB
+    const phoneFormats = new Set<string>();
+    phoneFormats.add(cleanFrom); // international format without + (e.g. 23324...)
+    phoneFormats.add("+" + cleanFrom); // international with + (e.g. +23324...)
+    
+    if (cleanFrom.startsWith("233") && cleanFrom.length > 10) {
+      phoneFormats.add("0" + cleanFrom.slice(3)); // local format (e.g. 024...)
+    } else if (cleanFrom.startsWith("0") && cleanFrom.length === 10) {
+      phoneFormats.add("233" + cleanFrom.slice(1)); // international no +
+      phoneFormats.add("+233" + cleanFrom.slice(1)); // international with +
     }
 
-    console.log("Processing message", { sellerId, body, numMedia, mediaUrl, messageSid });
+    console.log("[WhatsApp] Checking phone formats in DB:", Array.from(phoneFormats));
 
-    // Identify seller by phone number
-    const sellersSnapshot = await adminFirestore.collection("sellers").where("phone", "==", sellerId).limit(1).get();
+    // Identify seller by phone number - Try all potential formats
+    let sellersSnapshot = null;
+    for (const phone of phoneFormats) {
+      const snap = await adminFirestore.collection("sellers")
+        .where("phone", "==", phone)
+        .limit(1)
+        .get();
+      
+      if (!snap.empty) {
+        sellersSnapshot = snap;
+        console.log("[WhatsApp] Matched seller with phone format:", phone);
+        break;
+      }
+    }
     
-    if (sellersSnapshot.empty) {
-      console.warn("Seller not registered", { sellerId });
+    if (!sellersSnapshot || sellersSnapshot.empty) {
+      console.warn("[WhatsApp] Seller not registered", { formats: Array.from(phoneFormats) });
       twiml.message(
         "⚠️ You are not a registered seller. Please contact the admin to be onboarded or sign up on our website."
       );
@@ -41,10 +66,10 @@ export async function POST(req: NextRequest) {
 
     const sellerDoc = sellersSnapshot.docs[0];
     const sellerData = sellerDoc.data();
-    const actualSellerId = sellerDoc.id; // Use the actual doc ID for product linking
+    const actualSellerId = sellerDoc.id;
 
     if (!sellerData.name || !sellerData.location) {
-      console.warn("Seller profile incomplete", { sellerId });
+      console.warn("Seller profile incomplete", { actualSellerId });
       twiml.message(
         "⚠️ Your profile is incomplete. Please complete your registration on our website."
       );

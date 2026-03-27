@@ -12,7 +12,7 @@ import Link from "next/link"
 import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay"
 import { useFormStatus } from "react-dom"
 import { toast } from "react-hot-toast"
-import { updateProductStatus, toggleSellerActiveStatus } from "@/app/admin/actions" // Import Server Actions
+import { updateProductStatus, toggleSellerActiveStatus, approveSeller } from "@/app/admin/actions" // Import Server Actions
 import { Product, Seller } from "@/lib/types"
 
 interface AdminSellersTableProps {
@@ -160,181 +160,106 @@ export function AdminSellersTable({
   onDataRefresh,
 }: AdminSellersTableProps) {
   return (
-    <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md rounded-xl border border-gray-100 dark:border-gray-700">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg text-blue-600 dark:text-blue-400">
-          <User className="h-5 w-5" /> Sellers ({sellers.length} of {total})
-        </CardTitle>
+    <Card className="bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl shadow-2xl rounded-3xl border border-white/50 dark:border-gray-800/50 overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-gray-100 dark:border-gray-800 p-6">
+        <div>
+          <CardTitle className="text-xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+            <User className="h-5 w-5 text-blue-600" /> Seller Directory
+          </CardTitle>
+          <p className="text-xs text-gray-500 font-medium">{total} total registered partners</p>
+        </div>
+        <div className="flex items-center gap-2">
+           <Badge variant="outline" className="bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-none font-bold text-[10px]">
+             {sellers.length} LOADED
+           </Badge>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {sellers.length > 0 ? (
-          <>
-            <Accordion type="single" collapsible className="w-full">
-              {sellers.map((seller) => (
-                <AccordionItem
-                  value={seller.id}
-                  key={seller.id}
-                  className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-all duration-200"
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
+            {sellers.map((seller) => (
+              <div key={seller.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-all duration-300">
+                <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center text-gray-500 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                      <User className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-gray-900 dark:text-white tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors uppercase text-sm">
+                        {seller.name}
+                      </h4>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <Badge className={`${seller.active ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"} border-none text-[10px] font-bold`}>
+                          {seller.active ? "ACTIVE" : "INACTIVE"}
+                        </Badge>
+                        <Badge className={`${seller.isApproved ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"} border-none text-[10px] font-bold`}>
+                          {seller.isApproved ? "VERIFIED" : "PENDING"}
+                        </Badge>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest ml-1">{seller.location}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex -space-x-2 mr-4">
+                       {seller.products.slice(0, 3).map((p, i) => (
+                         <div key={p.id} className="h-8 w-8 rounded-xl border-2 border-white dark:border-gray-900 bg-gray-100 overflow-hidden shadow-sm">
+                           <TwilioMediaDisplay mediaUrl={p.imageUrl} alt="" width={32} height={32} className="object-cover w-full h-full" />
+                         </div>
+                       ))}
+                       {seller.products.length > 3 && (
+                         <div className="h-8 w-8 rounded-xl border-2 border-white dark:border-gray-900 bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+                           +{seller.products.length - 3}
+                         </div>
+                       )}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                       {!seller.isApproved && (
+                         <ApproveSellerButton sellerId={seller.id} onSuccess={onDataRefresh} />
+                       )}
+                       <ToggleSellerButton sellerId={seller.id} active={seller.active} onSuccess={onDataRefresh} />
+                       <Button asChild variant="outline" className="rounded-xl border-gray-200 dark:border-gray-800 text-xs font-bold hover:bg-white transition-all shadow-sm">
+                         <Link href={`/admin/sellers/${seller.id}`}>Manage</Link>
+                       </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Pagination */}
+            <div className="p-6 bg-gray-50/30 dark:bg-gray-900/40 flex items-center justify-between">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Page {page} of {totalPages}</p>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={page <= 1} 
+                  onClick={() => onPageChange(page - 1)}
+                  className="rounded-xl border-gray-200 dark:border-gray-800 text-[10px] font-bold uppercase tracking-widest"
                 >
-                  <AccordionTrigger className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-3 text-sm">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <strong className="text-sm">{seller.name}</strong>
-                        <Badge
-                          variant="outline"
-                          className={`${
-                            seller.active
-                              ? "bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-600"
-                              : "bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-600"
-                          } text-xs`}
-                        >
-                          {seller.active ? "Active" : "Inactive"}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className={`${
-                            seller.isApproved
-                              ? "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 border-blue-200 dark:border-blue-600"
-                              : "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400 border-yellow-200 dark:border-yellow-600"
-                          } text-xs`}
-                        >
-                          {seller.isApproved ? "Approved" : "Pending"}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-300">
-                        ID: {seller.id} • {seller.location} • {seller.products.length} products
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
-                      {!seller.isApproved && (
-                        <ApproveSellerButton sellerId={seller.id} onSuccess={onDataRefresh} />
-                      )}
-                      <ToggleSellerButton sellerId={seller.id} active={seller.active} onSuccess={onDataRefresh} />
-                      <Button asChild variant="outline" size="sm" className="text-xs">
-                        <Link href={`/seller/dashboard/${seller.id}`}>
-                          Manage Shop
-                        </Link>
-                      </Button>
-                      <Link
-                        href={`/admin/sellers/${seller.id}`}
-                        className="text-blue-600 dark:text-blue-400 text-xs hover:underline"
-                      >
-                        View Details
-                      </Link>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-gray-50 dark:bg-gray-700/50">
-                            <TableHead className="w-16 text-xs">Image</TableHead>
-                            <TableHead className="text-xs">Description</TableHead>
-                            <TableHead className="text-xs">Price</TableHead>
-                            <TableHead className="text-xs">Status</TableHead>
-                            <TableHead className="text-xs">Stock</TableHead>
-                            <TableHead className="text-xs">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {seller.products.map((product) => (
-                            <TableRow
-                              key={product.id}
-                              className="hover:bg-blue-50/30 dark:hover:bg-blue-900/30 transition-all duration-200"
-                            >
-                              <TableCell>
-                                <div className="relative w-12 h-12 rounded-md overflow-hidden group">
-                                  <TwilioMediaDisplay
-                                    mediaUrl={product.imageUrl}
-                                    alt={product.description}
-                                    width={48}
-                                    height={48}
-                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
-                                  />
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-xs max-w-[120px] truncate">{product.description}</TableCell>
-                              <TableCell className="text-xs text-green-600 dark:text-green-400 font-medium">
-                                ₵{product.price}
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs capitalize bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-600"
-                                >
-                                  {product.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className={`text-xs ${
-                                    product.isAvailable
-                                      ? "bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-600"
-                                      : "bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400 border-red-200 dark:border-red-600"
-                                  }`}
-                                >
-                                  {product.stockStatus}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="space-y-2">
-                                <ProductActionButton
-                                  productId={product.id}
-                                  action="markAvailable"
-                                  onSuccess={onDataRefresh}
-                                >
-                                  In Stock
-                                </ProductActionButton>
-                                <ProductActionButton
-                                  productId={product.id}
-                                  action="markOutOfStock"
-                                  onSuccess={onDataRefresh}
-                                >
-                                  Out of Stock
-                                </ProductActionButton>
-                                <ProductActionButton productId={product.id} action="delete" onSuccess={onDataRefresh}>
-                                  Delete
-                                </ProductActionButton>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-            {/* Pagination Controls */}
-            <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
-              <Button
-                variant="outline"
-                disabled={page <= 1}
-                onClick={() => onPageChange(page - 1)}
-                className="text-xs py-2 px-4 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Previous
-              </Button>
-              <span className="text-xs text-gray-600 dark:text-gray-300">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                disabled={page >= totalPages}
-                onClick={() => onPageChange(page + 1)}
-                className="text-xs py-2 px-4 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Next
-              </Button>
+                  Prev
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={page >= totalPages} 
+                  onClick={() => onPageChange(page + 1)}
+                  className="rounded-xl border-gray-200 dark:border-gray-800 text-[10px] font-bold uppercase tracking-widest"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
-          </>
+          </div>
         ) : (
-          <div className="text-center py-8 bg-gray-50/50 dark:bg-gray-700/50 rounded-lg">
-            <Package className="h-12 w-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">No Sellers Found</h2>
-            <p className="text-xs text-gray-600 dark:text-gray-300 mt-2 max-w-md mx-auto">
-              Once sellers start adding products, they will appear here.
-            </p>
+          <div className="text-center py-24">
+             <div className="h-20 w-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Package className="h-10 w-10 text-gray-300" />
+             </div>
+             <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight italic">Ecosystem Empty</h3>
+             <p className="text-xs text-gray-500 font-medium mt-1">No sellers have joined the platform yet.</p>
           </div>
         )}
       </CardContent>

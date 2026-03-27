@@ -31,7 +31,7 @@ if (!admin.apps.length) {
       credential: admin.credential.cert(serviceAccount),
       projectId: serviceAccount.projectId,
       databaseURL: `https://${serviceAccount.projectId}.firebaseio.com`,
-      storageBucket: `${serviceAccount.projectId}.appspot.com`
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${serviceAccount.projectId}.appspot.com`
     });
   } catch (error: any) {
     console.error('Firebase admin initialization error:', error.message);

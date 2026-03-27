@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useFormStatus } from "react-dom"
-import { Loader2 } from "lucide-react"
+import { Loader2, Search } from "lucide-react"
 
 interface AdminSellerSearchProps {
   searchQuery: string
@@ -42,17 +42,22 @@ export function AdminSellerSearch({ searchQuery, onSearch }: AdminSellerSearchPr
   }
 
   return (
-    <Card className="mb-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md rounded-xl border border-gray-100 dark:border-gray-700">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Search Sellers</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-          <Input name="q" placeholder="Search by name or ID..." defaultValue={searchQuery} className="flex-1" />
-          <input type="hidden" name="page" value="1" />
-          <SearchButton />
-        </form>
-      </CardContent>
-    </Card>
+    <div className="relative group">
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="relative flex-1">
+          <Input 
+            name="q" 
+            placeholder="Search partners..." 
+            defaultValue={searchQuery} 
+            className="rounded-2xl border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 h-11 text-xs font-bold focus:ring-blue-500 transition-all pl-10" 
+          />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+             <Search className="h-4 w-4" />
+          </div>
+        </div>
+        <input type="hidden" name="page" value="1" />
+        <SearchButton />
+      </form>
+    </div>
   )
 }

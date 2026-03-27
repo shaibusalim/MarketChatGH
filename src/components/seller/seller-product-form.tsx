@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { ImageUpload } from "@/components/admin/image-upload"
+import { Switch } from "@/components/ui/switch"
 import { addProduct, updateProductStatus } from "@/app/admin/actions"
 import { toast } from "react-hot-toast"
 import { Loader2 } from "lucide-react"
@@ -31,6 +32,7 @@ const productSchema = z.object({
   description: z.string().min(3, "Description must be at least 3 characters"),
   price: z.string().min(1, "Price is required"),
   imageUrl: z.string().min(1, "Image is required"),
+  isAvailable: z.boolean().default(true),
 })
 
 type ProductFormValues = z.infer<typeof productSchema>
@@ -45,6 +47,7 @@ interface SellerProductFormProps {
     description: string
     price: string
     imageUrl: string
+    isAvailable: boolean
   }
 }
 
@@ -63,6 +66,7 @@ export function SellerProductForm({
       description: product?.description || "",
       price: product?.price || "",
       imageUrl: product?.imageUrl || "",
+      isAvailable: product?.isAvailable ?? true,
     },
   })
 
@@ -74,6 +78,7 @@ export function SellerProductForm({
       formData.append("description", values.description)
       formData.append("price", values.price)
       formData.append("imageUrl", values.imageUrl)
+      formData.append("isAvailable", String(values.isAvailable))
 
       let result
       if (product) {
@@ -147,14 +152,21 @@ export function SellerProductForm({
 
             <FormField
               control={form.control}
-              name="price"
+              name="isAvailable"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price (e.g. GH₵ 50 or 50 GHS)</FormLabel>
+                <FormItem className="flex items-center justify-between rounded-2xl border border-gray-100 p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-sm font-bold">Stock Status</FormLabel>
+                    <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
+                      {field.value ? "Item is in stock and visible" : "Item is out of stock"}
+                    </div>
+                  </div>
                   <FormControl>
-                    <Input placeholder="Price" {...field} />
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />

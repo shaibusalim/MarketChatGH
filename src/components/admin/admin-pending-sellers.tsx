@@ -1,5 +1,6 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -25,7 +26,15 @@ export function AdminPendingSellers({ onDataRefresh }: { onDataRefresh: () => vo
     setIsLoading(true)
     try {
       const response = await fetch("/api/sellers?status=pending")
-      if (!response.ok) throw new Error("Failed to fetch pending sellers")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error("[AdminPendingSellers] Fetch failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        })
+        throw new Error(errorData.error || "Failed to fetch pending sellers")
+      }
       const data = await response.json()
       setPendingSellers(data.sellers || [])
     } catch (error) {
@@ -55,48 +64,58 @@ export function AdminPendingSellers({ onDataRefresh }: { onDataRefresh: () => vo
     }
   }
 
-  if (isLoading) return null // Hide if loading or handle loading state
-
-  if (pendingSellers.length === 0) return null
+  if (isLoading || pendingSellers.length === 0) return null
 
   return (
-    <Card className="mb-8 border-yellow-200 bg-yellow-50/30 dark:bg-yellow-900/10 dark:border-yellow-900/50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
-          <Clock className="h-5 w-5" /> Pending Approvals ({pendingSellers.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {pendingSellers.map((seller) => (
-            <div 
-              key={seller.id} 
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-yellow-100 dark:border-yellow-900/30 shadow-sm gap-4"
-            >
-              <div>
-                <h4 className="font-bold text-gray-900 dark:text-white">{seller.name}</h4>
-                <p className="text-sm text-gray-500">{seller.email} • {seller.phone}</p>
-                <p className="text-xs text-gray-400">{seller.location}</p>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-10"
+    >
+      <Card className="overflow-hidden bg-orange-50/50 dark:bg-orange-900/10 backdrop-blur-xl border-orange-200/50 dark:border-orange-800/30 rounded-3xl shadow-xl shadow-orange-500/5">
+        <div className="bg-orange-500 h-1.5 w-full" />
+        <CardHeader className="p-6 pb-2">
+          <CardTitle className="text-xl font-black text-orange-800 dark:text-orange-400 tracking-tight flex items-center gap-3">
+             <div className="h-8 w-8 rounded-xl bg-orange-500 flex items-center justify-center text-white">
+                <Clock className="h-5 w-5" />
+             </div>
+             Pending Approval Queue ({pendingSellers.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pendingSellers.map((seller) => (
+              <div 
+                key={seller.id} 
+                className="bg-white/80 dark:bg-gray-900/80 p-5 rounded-2xl border border-orange-100 dark:border-orange-900/40 shadow-sm hover:shadow-md transition-all duration-300 group"
+              >
+                <div className="mb-4">
+                  <h4 className="font-black text-gray-900 dark:text-white uppercase text-xs tracking-widest">{seller.name}</h4>
+                  <p className="text-[10px] text-gray-400 font-bold mt-1 mb-2">{seller.email}</p>
+                  <p className="text-[10px] text-orange-600 dark:text-orange-400 font-black flex items-center gap-1 uppercase">
+                    <Clock className="h-3 w-3" /> Waiting for review
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleAction(seller.id, true)}
+                    className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] py-1.5 h-8 uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20"
+                  >
+                    Approve
+                  </Button>
+                  <Button 
+                    onClick={() => handleAction(seller.id, false)}
+                    variant="outline"
+                    className="flex-1 rounded-xl border-red-100 text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-900/20 font-bold text-[10px] py-1.5 h-8 uppercase tracking-widest transition-all"
+                  >
+                    Reject
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button 
-                  onClick={() => handleAction(seller.id, true)}
-                  className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600 text-white text-xs py-1 h-8"
-                >
-                  <UserCheck className="h-3 w-3 mr-1" /> Approve
-                </Button>
-                <Button 
-                  onClick={() => handleAction(seller.id, false)}
-                  variant="outline"
-                  className="flex-1 sm:flex-none border-red-200 text-red-600 hover:bg-red-50 text-xs py-1 h-8"
-                >
-                  <UserX className="h-3 w-3 mr-1" /> Reject
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }

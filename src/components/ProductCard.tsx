@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Eye } from "lucide-react";
 
 interface ProductCardProps {
   product: {
@@ -25,9 +25,26 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { imageUrl, price, description, sellerId, id } = product;
 
-  const handleChatToBuy = (e: React.MouseEvent) => {
+  const handleChatToBuy = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Log lead
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: id,
+          sellerId: sellerId,
+          productDescription: description,
+          productPrice: price,
+        }),
+      });
+    } catch (err) {
+      console.error("[ProductCard] Error tracking lead:", err);
+    }
+
     const productUrl = `${window.location.origin}/${sellerId}/product/${id}`;
     const message = `Hi, I found this on MarketChatGH: ${productUrl}. I'm interested in buying your "${description}" for ${price}. Is it still available?`;
     const whatsappUrl = `https://wa.me/${sellerId}?text=${encodeURIComponent(
@@ -37,8 +54,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/${sellerId}/product/${id}`} className="block h-full">
-      <Card className="flex flex-col h-full overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 group border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl">
+    <Card className="flex flex-col h-full overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 group border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl">
+      <Link href={`/${sellerId}/product/${id}`} className="block flex-grow">
         <CardHeader className="p-0 relative overflow-hidden">
           <div className="relative w-full aspect-square group-hover:scale-105 transition-transform duration-500">
             <TwilioMediaDisplay
@@ -58,16 +75,26 @@ export default function ProductCard({ product }: ProductCardProps) {
             {description}
           </CardTitle>
         </CardContent>
-        <CardFooter className="p-4 pt-0">
-          <Button 
-            onClick={handleChatToBuy} 
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-500/20 py-6"
-          >
-            <MessageCircle className="mr-2 h-5 w-5" />
-            Chat to Buy
-          </Button>
-        </CardFooter>
-      </Card>
-    </Link>
+      </Link>
+      <CardFooter className="p-4 pt-0 flex gap-2">
+        <Button 
+          asChild
+          variant="outline"
+          className="flex-1 border-gray-200 dark:border-gray-700 font-bold rounded-xl py-6 hover:bg-gray-50 dark:hover:bg-gray-800"
+        >
+          <Link href={`/${sellerId}/product/${id}`}>
+            <Eye className="mr-2 h-5 w-5" />
+            View
+          </Link>
+        </Button>
+        <Button 
+          onClick={handleChatToBuy} 
+          className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-500/20 py-6"
+        >
+          <MessageCircle className="mr-2 h-5 w-5" />
+          Buy
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

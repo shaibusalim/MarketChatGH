@@ -24,6 +24,7 @@ import Link from "next/link"
 import ProductCard from "@/components/ProductCard"
 import { SellerReviewsDisplay } from "@/components/seller-review-display"
 import { toast } from "react-hot-toast"
+import { motion } from "framer-motion"
 
 interface Product {
   id: string

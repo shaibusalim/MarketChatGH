@@ -8,6 +8,7 @@ import { AdminStatsCards } from "@/components/admin/admin-stats-cards"
 import { AdminOnboardSellerForm } from "@/components/admin/admin-onboard-seller-form"
 import { AdminProductsChart } from "@/components/admin/admin-products-chart"
 import { AdminSellerSearch } from "@/components/admin/admin-seller-search"
+import { AdminActivityLog } from "@/components/admin/admin-activity-log"
 import { AdminSellersTable } from "@/components/admin/admin-sellers-table"
 import { AdminPendingSellers } from "@/components/admin/admin-pending-sellers"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
@@ -162,63 +163,54 @@ function AdminDashboardContent() {
 	}
 
 	return (
-		<main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 dark:from-gray-900 dark:to-blue-900 transition-colors duration-300">
+		<main className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] transition-colors duration-500">
 			<AdminSidebar isMobileMenuOpen={isSidebarOpen} setIsMobileMenuOpen={setIsSidebarOpen} />
 
 			<div className="flex min-h-screen">
-				<div className="flex-1 md:ml-64 pt-16 md:pt-0 px-4 sm:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto">
+				<div className="flex-1 md:ml-64 pt-16 md:pt-0 px-6 sm:px-10 py-8 max-w-[1600px] mx-auto">
+					{/* Professional Header */}
+					<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+						<div>
+							<h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">
+								Dashboard <span className="text-blue-600 dark:text-blue-400">Overview</span>
+							</h1>
+							<p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Manage your marketplace ecosystem and seller performance.</p>
+						</div>
+						<div className="flex items-center gap-3">
+							<Button 
+								variant="outline" 
+								className="rounded-xl border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all font-bold text-xs px-5"
+								onClick={handleDataRefresh}
+							>
+								Export Report
+							</Button>
+							<Button 
+								className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 transition-all font-bold text-xs px-5"
+								onClick={handleDataRefresh}
+							>
+								Sync Data
+							</Button>
+						</div>
+					</div>
+
 					<AdminPendingSellers onDataRefresh={handleDataRefresh} />
+
 					<AdminStatsCards
 						totalSellers={total}
 						activeSellers={activeSellers}
 						totalProducts={totalProducts}
 					/>
-					{isLoading && (
-						<Card className="mb-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md rounded-xl border border-gray-100 dark:border-gray-700">
-							<CardContent className="text-center py-8">
-								<div className="animate-pulse">
-									<Loader2 className="h-8 w-8 mx-auto text-blue-600 dark:text-blue-400 animate-spin mb-2" />
-									<p className="text-sm text-gray-600 dark:text-gray-300">Loading sellers...</p>
-								</div>
-							</CardContent>
-						</Card>
-					)}
-					{error && (
-						<Card className="mb-6 bg-red-50/90 dark:bg-red-900/50 shadow-md rounded-xl border border-red-200 dark:border-red-600">
-							<CardContent className="text-center py-8">
-								<p className="text-sm text-red-700 dark:text-red-400">Error: {error}</p>
-								<Button
-									variant="outline"
-									onClick={handleDataRefresh}
-									className="mt-4 text-sm border-red-300 dark:border-red-600 hover:bg-red-100 dark:hover:bg-red-800/50 bg-transparent"
-								>
-									Retry
-								</Button>
-							</CardContent>
-						</Card>
-					)}
-					{!isLoading && !error && (
-						<>
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-								<AdminOnboardSellerForm onSuccess={handleDataRefresh} />
-								<AdminSellerSearch searchQuery={searchQuery} onSearch={handleSearch} />
-							</div>
+
+					<div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+						<div className="xl:col-span-2 space-y-8">
 							{isChartLoading ? (
-								<Card className="mb-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md rounded-xl border border-gray-100 dark:border-gray-700">
-									<CardContent className="text-center py-8">
-										<Loader2 className="h-6 w-6 mx-auto text-blue-600 dark:text-blue-400 animate-spin" />
-										<p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Loading Chart...</p>
-									</CardContent>
-								</Card>
-							) : chartError ? (
-								<Card className="mb-6 bg-red-50/90 dark:bg-red-900/50 shadow-md rounded-xl border border-red-200 dark:border-red-600">
-									<CardContent className="text-center py-8">
-										<p className="text-sm text-red-700 dark:text-red-400">Chart Error: {chartError}</p>
-									</CardContent>
+								<Card className="h-[400px] flex items-center justify-center bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border-none shadow-xl rounded-3xl">
+									<Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
 								</Card>
 							) : (
 								<AdminProductsChart sellers={chartSellers} />
 							)}
+
 							<AdminSellersTable
 								sellers={sellers}
 								total={total}
@@ -227,7 +219,31 @@ function AdminDashboardContent() {
 								onPageChange={handlePageChange}
 								onDataRefresh={handleDataRefresh}
 							/>
-						</>
+						</div>
+
+						<div className="space-y-8">
+							<Card className="bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl shadow-2xl rounded-3xl border border-white/50 dark:border-gray-800/50 overflow-hidden">
+								<CardContent className="p-0">
+									<div className="p-6 border-b border-gray-100 dark:border-gray-800">
+										<h3 className="font-black text-gray-900 dark:text-white tracking-tight">Quick Search</h3>
+									</div>
+									<div className="p-6">
+										<AdminSellerSearch searchQuery={searchQuery} onSearch={handleSearch} />
+									</div>
+								</CardContent>
+							</Card>
+
+							<AdminOnboardSellerForm onSuccess={handleDataRefresh} />
+							
+							<AdminActivityLog />
+						</div>
+					</div>
+
+					{isLoading && (
+						<div className="fixed bottom-8 right-8 bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
+							<Loader2 className="h-4 w-4 animate-spin" />
+							<span className="text-xs font-bold">Refreshing workspace...</span>
+						</div>
 					)}
 				</div>
 			</div>

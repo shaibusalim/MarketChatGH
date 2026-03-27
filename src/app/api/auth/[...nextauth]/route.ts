@@ -8,10 +8,16 @@ import { NextRequest } from 'next/server';
 
 async function auth(req: NextRequest, res: any) {
   if (req.method === 'POST') {
-    const ip = req.ip ?? '127.0.0.1';
-    const { success } = await ratelimit.limit(ip);
-    if (!success) {
-      return new Response('Too many requests', { status: 429 });
+    try {
+      const forwarded = req.headers.get('x-forwarded-for');
+      const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1';
+      const { success } = await ratelimit.limit(ip);
+      if (!success) {
+        return new Response('Too many requests', { status: 429 });
+      }
+    } catch (error) {
+      console.error('[Auth] Rate limit service error (failing open):', error);
+      // In case of rate limit failure (e.g. Redis DNS issue), we allow the request to proceed (fail-open)
     }
   }
 
@@ -50,6 +56,7 @@ async function auth(req: NextRequest, res: any) {
                   email: admin.email,
                   isAdmin: true,
                   role: 'admin',
+                  isApproved: true,
                 };
               }
             }

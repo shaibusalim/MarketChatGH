@@ -44,15 +44,20 @@ export function AdminOnboardSellerForm({ onSuccess }: AdminOnboardSellerFormProp
   }
 
   return (
-    <Card className="mb-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md rounded-xl border border-gray-100 dark:border-gray-700">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Onboard New Seller</CardTitle>
+    <Card className="overflow-hidden bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl shadow-2xl rounded-3xl border border-white/50 dark:border-gray-800/50 group">
+      <CardHeader className="p-6 border-b border-gray-100 dark:border-gray-800">
+        <CardTitle className="text-xl font-black text-gray-900 dark:text-white tracking-tight italic">Partner Onboarding</CardTitle>
       </CardHeader>
-      <CardContent>
-        <form action={handleSubmit} className="grid grid-cols-1 gap-4">
-          <Input name="sellerId" required placeholder="Phone Number (e.g. +233501234567)" className="w-full" />
-          <Input name="name" required placeholder="Seller Name" className="w-full" />
-          <Input name="location" required placeholder="Location" className="w-full" />
+      <CardContent className="p-6">
+        <form action={handleSubmit} className="grid grid-cols-1 gap-5">
+          <div className="space-y-4">
+            <div className="relative group/field">
+               <Input name="sellerId" required placeholder="Phone Number" className="rounded-2xl border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 h-12 text-sm font-bold focus:ring-blue-500 transition-all" />
+               <p className="text-[8px] text-gray-400 font-bold mt-1 uppercase tracking-widest ml-2">Unique identifier (e.g. +233...)</p>
+            </div>
+            <Input name="name" required placeholder="Business Name" className="rounded-2xl border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 h-12 text-sm font-bold focus:ring-blue-500 transition-all" />
+            <Input name="location" required placeholder="Physical Location" className="rounded-2xl border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 h-12 text-sm font-bold focus:ring-blue-500 transition-all" />
+          </div>
           <SubmitButton />
         </form>
       </CardContent>

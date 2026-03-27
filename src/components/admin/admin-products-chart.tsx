@@ -1,115 +1,83 @@
-"use client"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { motion, useAnimation, useInView, cubicBezier } from "framer-motion"
-import { useEffect, useRef } from "react"
-import { Product, Seller } from "@/lib/types"
+import { motion, useInView } from "framer-motion"
+import { useRef } from "react"
+import { Seller } from "@/lib/types"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts"
 
 interface AdminProductsChartProps {
   sellers: Seller[]
 }
 
 export function AdminProductsChart({ sellers }: AdminProductsChartProps) {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true })
-  const controls = useAnimation()
+  const chartRef = useRef<HTMLDivElement>(null)
+  const isInView = useInView(chartRef, { once: true })
 
-  useEffect(() => {
-    if (isInView) {
-      controls.start("visible")
-    }
-  }, [isInView, controls])
-
-  const chartData = sellers
-  const maxProducts = Math.max(...chartData.map((s) => s.products.length), 1)
-  const barWidth = 40
-  const spacing = 20
-  const chartWidth = chartData.length * (barWidth + spacing) + 60
+  const data = sellers.map((seller) => ({
+    name: seller.name || "Unknown",
+    products: seller.products.length,
+    active: seller.active,
+  }))
 
   return (
     <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={controls}
-      variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.4 } },
-      }}
+      ref={chartRef}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="mb-8"
     >
-      <Card className="mb-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md rounded-xl border border-gray-100 dark:border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Products per Seller</CardTitle>
+      <Card className="bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl shadow-2xl rounded-3xl border border-white/50 dark:border-gray-800/50 overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
+          <div>
+            <CardTitle className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Product Distribution</CardTitle>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Inventory overview across sellers</p>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="h-48 overflow-x-auto">
-            {chartData.length > 0 ? (
-              <svg
-                width={chartWidth}
-                height="200"
-                viewBox={`0 0 ${chartWidth} 200`}
-                preserveAspectRatio="xMinYMid meet"
-              >
-                {chartData.map((seller, index) => {
-                  const maxHeight = 150
-                  const productCount = seller.products.length
-                  const barHeight = productCount > 0 ? (productCount / maxProducts) * maxHeight : 0
-                  const x = index * (barWidth + spacing) + 30
-                  const displayName = seller.name && seller.name.length > 10 ? `${seller.name.slice(0, 7)}...` : seller.name || 'Unknown'
-
-                  const barVariants = {
-                    hidden: { height: 0, y: 200 },
-                    visible: {
-                      height: barHeight,
-                      y: 200 - barHeight,
-                      transition: {
-                        duration: 0.5,
-                        ease: cubicBezier(0.42, 0, 0.58, 1.0),
-                        delay: index * 0.05,
-                      },
-                    },
-                  }
-                  return (
-                    <g key={seller.id}>
-                      <motion.rect
-                        x={x}
-                        width={barWidth}
-                        fill={seller.active ? "#10b981" : "#ef4444"}
-                        className="transition-all duration-300 hover:opacity-80 cursor-pointer"
-                        variants={barVariants}
-                        initial="hidden"
-                        animate={controls}
-                      />
-                      <motion.text
-                        x={x + barWidth / 2}
-                        textAnchor="middle"
-                        fill="#1f2937"
-                        className="text-xs font-semibold dark:fill-white pointer-events-none"
-                        initial={{ opacity: 0, y: 200 }}
-                        animate={{
-                          opacity: 1,
-                          y: 195 - barHeight,
-                          transition: { delay: index * 0.05 + 0.3 },
-                        }}
-                      >
-                        {productCount}
-                      </motion.text>
-                      <text
-                        x={x + barWidth / 2}
-                        y={198}
-                        textAnchor="middle"
-                        fill="#6b7280"
-                        className="text-[10px] dark:fill-gray-300 pointer-events-none"
-                        transform={`rotate(-45, ${x + barWidth / 2}, 198)`}
-                      >
-                        {displayName}
-                      </text>
-                    </g>
-                  )
-                })}
-              </svg>
+          <div className="h-[300px] w-full mt-4">
+            {data.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#88888820" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "#888", fontSize: 10 }}
+                    interval={0}
+                    angle={-15}
+                    textAnchor="end"
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={{ 
+                      backgroundColor: "rgba(255, 255, 255, 0.8)", 
+                      backdropFilter: "blur(8px)",
+                      borderRadius: "16px",
+                      border: "none",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
+                    }}
+                    cursor={{ fill: "#88888810" }}
+                  />
+                  <Bar dataKey="products" radius={[8, 8, 0, 0]} barSize={35}>
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.active ? "#3b82f6" : "#ef4444"} fillOpacity={entry.active ? 0.8 : 0.6} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                No data to display chart.
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm italic">
+                No data available for chart.
               </div>
             )}
           </div>

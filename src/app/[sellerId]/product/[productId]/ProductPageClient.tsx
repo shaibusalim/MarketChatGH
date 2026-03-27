@@ -1,0 +1,130 @@
+"use client"
+
+import { useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay";
+import { Star, MapPin, MessageCircle } from "lucide-react";
+import Link from "next/link";
+
+interface ProductPageClientProps {
+  product: any;
+  seller: any;
+  sellerId: string;
+}
+
+export function ProductPageClient({ product, seller, sellerId }: ProductPageClientProps) {
+  useEffect(() => {
+    // Track product view
+    const trackView = async () => {
+      try {
+        await fetch(`/api/products/${product.id}/view`, { method: "POST" });
+      } catch (err) {
+        console.error("[ProductPage] Error tracking view:", err);
+      }
+    };
+    trackView();
+  }, [product.id]);
+
+  const handleTrackLead = async () => {
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          sellerId: sellerId,
+          productDescription: product.description,
+          productPrice: product.price,
+        }),
+      });
+    } catch (err) {
+      console.error("[ProductPage] Error tracking lead:", err);
+    }
+  };
+
+  const whatsappMessage = `Hi, I found this on MarketChatGH: I'm interested in buying your "${product.description}" for ${product.price}. Is it still available?`;
+  const whatsappUrl = `https://wa.me/${sellerId}?text=${encodeURIComponent(whatsappMessage)}`;
+
+  return (
+    <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <Card className="shadow-md border border-gray-100">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {product.description}
+          </CardTitle>
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <MapPin className="w-4 h-4" />
+            Sold by <strong>{seller.name}</strong> ({seller.location})
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Product Image */}
+          <div className="relative w-full lg:w-1/2">
+            <div className="aspect-square relative rounded-md overflow-hidden">
+              <TwilioMediaDisplay
+                mediaUrl={product.imageUrl}
+                alt={product.description}
+                width={400}
+                height={400}
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="absolute top-4 left-4 flex flex-col gap-2">
+              {!product.isAvailable && (
+                <Badge className="bg-red-500 text-white">Out of Stock</Badge>
+              )}
+              {product.status === "new" && (
+                <Badge className="bg-green-500 text-white">New</Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Product Details */}
+          <div className="flex-1 space-y-6">
+            <div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Price</h3>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">₵{product.price}</p>
+            </div>
+
+            <div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Status</h3>
+              <p className="text-gray-600">{product.status}</p>
+            </div>
+
+            <div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Stock</h3>
+              <p className="text-gray-600">{product.stockStatus}</p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Star className="w-5 h-5 text-yellow-500 fill-current" />
+              <span className="text-gray-600">4.8 (Based on recent reviews)</span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button asChild className="flex-1 bg-green-500 hover:bg-green-600 text-white py-6 rounded-xl font-bold shadow-lg shadow-green-500/20">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleTrackLead}
+                  className="flex items-center justify-center"
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  Chat to Buy
+                </a>
+              </Button>
+              <Button asChild variant="outline" className="flex-1 py-6 rounded-xl border-2">
+                <Link href={`/${sellerId}`} className="flex items-center justify-center">
+                  Back to Store
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}

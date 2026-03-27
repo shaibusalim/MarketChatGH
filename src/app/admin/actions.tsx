@@ -60,25 +60,57 @@ export async function updateProductStatus(formData: FormData) {
     const productRef = adminFirestore.collection("products").doc(productId)
 
     if (action === "markAvailable") {
-      await productRef.update({ isAvailable: true, stockStatus: "In Stock" })
+      await productRef.update({ isAvailable: true, stockStatus: "available" })
+      const productDoc = await productRef.get()
+      const sellerId = productDoc.data()?.sellerId
+      if (sellerId) {
+        revalidatePath(`/${sellerId}`)
+        revalidatePath(`/seller/dashboard/${sellerId}`)
+      }
       revalidatePath("/admin")
-      return { success: true, message: "Product marked as In Stock." }
+      return { success: true, message: "Product is now In Stock." }
     } else if (action === "markOutOfStock") {
-      await productRef.update({ isAvailable: false, stockStatus: "Out of Stock" })
+      await productRef.update({ isAvailable: false, stockStatus: "out_of_stock" })
+      const productDoc = await productRef.get()
+      const sellerId = productDoc.data()?.sellerId
+      if (sellerId) {
+        revalidatePath(`/${sellerId}`)
+        revalidatePath(`/seller/dashboard/${sellerId}`)
+      }
       revalidatePath("/admin")
-      return { success: true, message: "Product marked as Out of Stock." }
+      return { success: true, message: "Product is now Out of Stock." }
     } else if (action === "delete") {
+      const productDoc = await productRef.get()
+      const sellerId = productDoc.data()?.sellerId
       await productRef.delete()
+      if (sellerId) {
+        revalidatePath(`/${sellerId}`)
+        revalidatePath(`/seller/dashboard/${sellerId}`)
+      }
       revalidatePath("/admin")
       return { success: true, message: "Product deleted successfully." }
     } else if (action === "update") {
       const price = formData.get("price") as string
       const description = formData.get("description") as string
+      const imageUrl = formData.get("imageUrl") as string
+      const isAvailable = formData.get("isAvailable") === "true"
+      
       const updates: any = {}
       if (price) updates.price = price
       if (description) updates.description = description
+      if (imageUrl) updates.imageUrl = imageUrl
+      updates.isAvailable = isAvailable
+      updates.stockStatus = isAvailable ? "available" : "out_of_stock"
       
       await productRef.update(updates)
+      
+      const productDoc = await productRef.get()
+      const productData = productDoc.data()
+      if (productData?.sellerId) {
+        revalidatePath(`/${productData.sellerId}`)
+        revalidatePath(`/seller/dashboard/${productData.sellerId}`)
+      }
+      
       revalidatePath("/admin")
       return { success: true, message: "Product updated successfully." }
     } else {
@@ -114,6 +146,8 @@ export async function addProduct(formData: FormData) {
       createdAt: new Date().toISOString(),
     })
 
+    revalidatePath(`/${sellerId}`)
+    revalidatePath(`/seller/dashboard/${sellerId}`)
     revalidatePath("/admin")
     return { success: true, message: "Product added successfully!" }
   } catch (error) {
@@ -166,5 +200,41 @@ export async function toggleSellerActiveStatus(formData: FormData) {
   } catch (error) {
     console.error(`Error toggling seller status for ${sellerId}:`, error)
     return { success: false, message: `Failed to update seller status: ${(error as Error).message}` }
+  }
+}
+
+export async function updateSellerProfile(formData: FormData) {
+  await simulateDelay(500)
+
+  const sellerId = formData.get("sellerId") as string
+  const name = formData.get("name") as string
+  const location = formData.get("location") as string
+  const phone = formData.get("phone") as string
+
+  if (!sellerId) {
+    return { success: false, message: "Seller ID is required." }
+  }
+
+  try {
+    const updates: any = {}
+    if (name) {
+      updates.name = name
+      updates.slug = generateSlug(name)
+    }
+    if (location) updates.location = location
+    if (phone) updates.phone = phone
+    
+    const profileImageUrl = formData.get("profileImageUrl") as string
+    if (profileImageUrl) updates.profileImageUrl = profileImageUrl
+
+    await adminFirestore.collection("sellers").doc(sellerId).update(updates)
+
+    revalidatePath("/admin")
+    revalidatePath(`/seller/dashboard/${sellerId}`)
+    revalidatePath(`/${sellerId}`) // Also revalidate the public store page
+    return { success: true, message: "Shop profile updated successfully!" }
+  } catch (error) {
+    console.error(`Error updating seller profile for ${sellerId}:`, error)
+    return { success: false, message: `Failed to update profile: ${(error as Error).message}` }
   }
 }

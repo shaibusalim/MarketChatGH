@@ -216,7 +216,11 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ sellers, total }, { status: 200 })
   } catch (error) {
-   
-    return NextResponse.json({ error: "Failed to fetch sellers", details: (error as Error).message }, { status: 500 })
+    console.error(`[API] GET /api/sellers failed:`, error)
+    return NextResponse.json({ 
+      error: "Failed to fetch sellers", 
+      details: (error as Error).message,
+      stack: process.env.NODE_ENV === 'development' ? (error as Error).stack : undefined
+    }, { status: 500 })
   }
 }
