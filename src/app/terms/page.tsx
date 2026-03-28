@@ -140,11 +140,14 @@ export default function TermsPage() {
 
       {/* Footer Minimal */}
       <footer className="py-12 border-t border-gray-100 dark:border-gray-800 text-center">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4">
-          <div className="bg-gradient-to-br from-red-500 via-yellow-400 to-green-500 p-1 rounded-lg">
-            <Image src="/logo.png" alt="Logo" width={20} height={20} />
-          </div>
-          <span className="font-headline font-bold text-gray-900 dark:text-white">MarketChat GH</span>
+        <Link href="/" className="flex items-center group">
+          <Image 
+            src="/marketchat_logo.svg" 
+            alt="MarketChat Logo" 
+            width={200} 
+            height={64} 
+            className="h-16 w-auto object-contain scale-[1.5] mx-auto" 
+          />
         </Link>
         <p className="text-gray-400 text-xs">© 2026 MarketChat GH. All rights reserved.</p>
       </footer>

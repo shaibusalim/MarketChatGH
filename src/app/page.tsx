@@ -75,17 +75,15 @@ function HomeComponent() {
         {/* Footer */}
         <footer className="w-full py-8 px-4 sm:px-6 md:px-8 border-t border-gray-100 dark:border-gray-800 mt-auto bg-gradient-to-t from-gray-100/50 to-transparent dark:from-gray-800/50">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="flex items-center gap-3"
-            >
-              <div className="bg-gradient-to-br from-red-500 via-yellow-400 to-green-500 p-2 rounded-lg">
-                <Image src="/logo.png" alt="MarketChat GH Logo" width={24} height={24} className="object-contain" />
-              </div>
-              <span className="font-headline text-lg font-bold text-gray-900 dark:text-white">MarketChat</span>
-            </motion.div>
+            <Link href="/" className="flex items-center group">
+              <Image 
+                src="/marketchat_logo.svg" 
+                alt="MarketChat Logo" 
+                width={200} 
+                height={64} 
+                className="h-16 w-auto object-contain scale-[1.5] origin-left" 
+              />
+            </Link>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 mt-8 md:mt-0 text-sm text-gray-500 dark:text-gray-400 w-full md:w-auto">
               <div className="flex flex-col space-y-3">
                 <span className="font-semibold text-gray-900 dark:text-white mb-1">Company</span>

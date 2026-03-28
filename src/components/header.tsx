@@ -40,18 +40,22 @@ export function Header() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.2 }}
       className={cn(
-        "w-full px-4 lg:px-8 h-16 flex items-center justify-between fixed top-0 left-0 z-50 transition-all duration-300",
-        scrolled 
-          ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md h-20" 
+        "w-full px-4 lg:px-8 h-24 flex items-center justify-between fixed top-0 left-0 z-50 transition-all duration-300",
+        scrolled
+          ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md h-28"
           : "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm"
       )}
     >
       <div className="flex items-center gap-8">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="bg-gradient-to-br from-red-500 via-yellow-400 to-green-500 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-            <Image src="/logo.png" alt="MarketChat GH Logo" width={28} height={28} className="object-contain" />
-          </div>
-          <span className="font-headline text-2xl font-bold text-gray-900 dark:text-white">MarketChat</span>
+        <Link href="/" className="flex items-center group">
+          <Image
+            src="/marketchat_logo.svg"
+            alt="MarketChat Logo"
+            width={320}
+            height={96}
+            className="h-20 w-auto object-contain scale-[1.8] origin-left"
+            priority
+          />
         </Link>
 
         <nav className="hidden md:flex gap-1 items-center">
@@ -98,18 +102,18 @@ export function Header() {
               exit={{ width: 0, opacity: 0 }}
               className="hidden sm:block overflow-hidden"
             >
-              <Input 
-                placeholder="Search products..." 
+              <Input
+                placeholder="Search products..."
                 className="h-9 w-full bg-gray-100 dark:bg-gray-800 border-none focus-visible:ring-1 focus-visible:ring-green-500"
                 autoFocus
               />
             </motion.div>
           )}
         </AnimatePresence>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
+
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setIsSearchOpen(!isSearchOpen)}
           className="text-gray-700 dark:text-gray-300"
         >
@@ -184,7 +188,7 @@ export function Header() {
                   <span className="font-medium">For Sellers</span>
                 </Link>
               </div>
-              
+
               <div className="w-full h-px bg-gray-100 dark:bg-gray-800 my-2" />
 
               <Link
@@ -209,8 +213,8 @@ export function Header() {
                 Contact
               </Link>
               {session ? (
-                <Link 
-                  href={(session.user as any).role === 'admin' ? '/admin' : `/seller/dashboard/${(session.user as any).id}`} 
+                <Link
+                  href={(session.user as any).role === 'admin' ? '/admin' : `/seller/dashboard/${(session.user as any).id}`}
                   className="w-full pt-4"
                 >
                   <Button

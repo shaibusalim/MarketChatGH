@@ -14,9 +14,31 @@ export const metadata: Metadata = {
     title: "MarketChat GH",
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/logo.png",
-  }
+    icon: "/marketchat_favicon.ico",
+    apple: "/marketchat_logo_clean.svg",
+  },
+  openGraph: {
+    title: 'MarketChat GH',
+    description: 'Your WhatsApp E-commerce solution for Ghana.',
+    url: 'https://marketchatgh.com',
+    siteName: 'MarketChat GH',
+    images: [
+      {
+        url: '/logo.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'MarketChat GH Logo',
+      },
+    ],
+    locale: 'en_GH',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MarketChat GH',
+    description: 'Your WhatsApp E-commerce solution for Ghana.',
+    images: ['/logo.jpg'],
+  },
 };
 
 export const viewport: Viewport = {
