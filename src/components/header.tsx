@@ -51,9 +51,9 @@ export function Header() {
           <Image
             src="/marketchat_logo.svg"
             alt="MarketChat Logo"
-            width={320}
-            height={96}
-            className="h-20 w-auto object-contain scale-[1.8] origin-left"
+            width={240}
+            height={52}
+            className="h-16 w-auto object-contain scale-[1.5] origin-left"
             priority
           />
         </Link>

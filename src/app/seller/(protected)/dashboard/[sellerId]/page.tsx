@@ -201,11 +201,15 @@ export default function SellerDashboardPage() {
   const sidebarItems = (
     <>
       <div className="p-8">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <ShoppingBag className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white uppercase italic">MarketChat</span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/marketchat_logo.svg"
+            alt="MarketChat Logo"
+            width={240}
+            height={72}
+            className="h-16 w-auto object-contain scale-[1.4] origin-left"
+            priority
+          />
         </Link>
       </div>
 
@@ -250,11 +254,15 @@ export default function SellerDashboardPage() {
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-gray-900 dark:text-gray-100 transition-colors duration-500">
       {/* Mobile Header */}
       <header className="lg:hidden h-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 fixed top-0 left-0 right-0 z-40 px-6 flex items-center justify-between shadow-sm">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-             <ShoppingBag className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-black tracking-tighter uppercase italic">MarketChat</span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/marketchat_logo.svg"
+            alt="MarketChat Logo"
+            width={180}
+            height={54}
+            className="h-10 w-auto object-contain scale-[1.6] origin-left"
+            priority
+          />
         </Link>
         <Sheet>
           <SheetTrigger asChild>
