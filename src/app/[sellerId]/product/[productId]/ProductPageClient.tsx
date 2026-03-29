@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay";
-import { Star, MapPin, MessageCircle } from "lucide-react";
+import { Star, MapPin, MessageCircle, Ban } from "lucide-react";
 import Link from "next/link";
 
 interface ProductPageClientProps {
@@ -71,12 +71,14 @@ export function ProductPageClient({ product, seller, sellerId }: ProductPageClie
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="absolute top-4 left-4 flex flex-col gap-2">
-              {!product.isAvailable && (
-                <Badge className="bg-red-500 text-white">Out of Stock</Badge>
+            <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+              {product.isAvailable ? (
+                <Badge className="bg-emerald-500 text-white font-black px-3 py-1 shadow-lg border-none uppercase tracking-widest">In Stock</Badge>
+              ) : (
+                <Badge className="bg-red-500 text-white font-black px-3 py-1 shadow-lg border-none uppercase tracking-widest animate-pulse">Out of Stock</Badge>
               )}
               {product.status === "new" && (
-                <Badge className="bg-green-500 text-white">New</Badge>
+                <Badge className="bg-blue-500 text-white font-black px-3 py-1 shadow-lg border-none uppercase tracking-widest">New</Badge>
               )}
             </div>
           </div>
@@ -94,8 +96,13 @@ export function ProductPageClient({ product, seller, sellerId }: ProductPageClie
             </div>
 
             <div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Stock</h3>
-              <p className="text-gray-600">{product.stockStatus}</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Stock Status</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <div className={`w-3 h-3 rounded-full ${product.isAvailable ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}></div>
+                <p className={`font-bold uppercase tracking-wider ${product.isAvailable ? "text-emerald-600" : "text-red-600"}`}>
+                  {product.isAvailable ? "Available" : "Sold Out"}
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center gap-4">
@@ -104,17 +111,32 @@ export function ProductPageClient({ product, seller, sellerId }: ProductPageClie
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild className="flex-1 bg-green-500 hover:bg-green-600 text-white py-6 rounded-xl font-bold shadow-lg shadow-green-500/20">
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={handleTrackLead}
-                  className="flex items-center justify-center"
-                >
-                  <MessageCircle className="w-5 h-5 mr-2" />
-                  Chat to Buy
-                </a>
+              <Button 
+                asChild={product.isAvailable}
+                disabled={!product.isAvailable}
+                className={`flex-1 py-6 rounded-xl font-bold shadow-lg transition-all ${
+                  product.isAvailable 
+                  ? "bg-green-500 hover:bg-green-600 text-white shadow-green-500/20" 
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-none"
+                }`}
+              >
+                {product.isAvailable ? (
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleTrackLead}
+                    className="flex items-center justify-center"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    Chat to Buy
+                  </a>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <Ban className="w-5 h-5 mr-2" />
+                    Sold Out
+                  </div>
+                )}
               </Button>
               <Button asChild variant="outline" className="flex-1 py-6 rounded-xl border-2">
                 <Link href={`/${sellerId}`} className="flex items-center justify-center">

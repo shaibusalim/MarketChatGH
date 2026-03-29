@@ -10,7 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { MessageCircle, Eye } from "lucide-react";
+import { MessageCircle, Eye, ShoppingCart, Ban } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductCardProps {
   product: {
@@ -19,15 +20,20 @@ interface ProductCardProps {
     price: string;
     description: string;
     sellerId: string;
+    isAvailable?: boolean;
   };
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { imageUrl, price, description, sellerId, id } = product;
+  const { imageUrl, price, description, sellerId, id, isAvailable = true } = product;
 
   const handleChatToBuy = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (!isAvailable) return;
     
     // Log lead
     try {
@@ -54,10 +60,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 group border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl">
+    <Card className={`flex flex-col h-full overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 group border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl ${!isAvailable ? "opacity-75" : ""}`}>
       <Link href={`/${sellerId}/product/${id}`} className="block flex-grow">
         <CardHeader className="p-0 relative overflow-hidden">
-          <div className="relative w-full aspect-square group-hover:scale-105 transition-transform duration-500">
+          <div className={`relative w-full aspect-square group-hover:scale-105 transition-transform duration-500 ${!isAvailable ? "grayscale" : ""}`}>
             <TwilioMediaDisplay
               mediaUrl={imageUrl}
               alt={description}
@@ -65,10 +71,22 @@ export default function ProductCard({ product }: ProductCardProps) {
               height={400}
               className="w-full h-full object-cover"
             />
+            {!isAvailable && (
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center">
+                <Badge className="bg-red-500/90 text-white font-black text-xs px-4 py-2 rounded-xl shadow-lg border-none animate-pulse">
+                  SOLD OUT
+                </Badge>
+              </div>
+            )}
           </div>
-          <div className="absolute top-3 right-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm">
-            <span className="text-green-600 dark:text-green-400 font-bold text-sm">{price}</span>
+          <div className="absolute top-3 right-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm z-10">
+            <span className="text-blue-600 dark:text-blue-400 font-bold text-sm">₵{price}</span>
           </div>
+          {isAvailable && (
+            <div className="absolute top-3 left-3 bg-emerald-500/90 backdrop-blur-md px-3 py-1 rounded-sm shadow-sm z-10">
+              <span className="text-white font-black text-[8px] uppercase tracking-widest">IN STOCK</span>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="p-4 flex-grow">
           <CardTitle className="text-base font-headline font-bold mb-2 leading-tight line-clamp-2 group-hover:text-green-600 transition-colors">
@@ -89,10 +107,24 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Button>
         <Button 
           onClick={handleChatToBuy} 
-          className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-500/20 py-6"
+          disabled={!isAvailable}
+          className={`flex-1 font-bold rounded-xl shadow-lg py-6 ${
+            isAvailable 
+            ? "bg-green-500 hover:bg-green-600 text-white shadow-green-500/20" 
+            : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-none"
+          }`}
         >
-          <MessageCircle className="mr-2 h-5 w-5" />
-          Buy
+          {isAvailable ? (
+            <>
+              <MessageCircle className="mr-2 h-5 w-5" />
+              Buy
+            </>
+          ) : (
+            <>
+              <Ban className="mr-2 h-5 w-5" />
+              Sold Out
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>

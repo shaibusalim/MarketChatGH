@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -69,6 +69,29 @@ export function SellerProductForm({
       isAvailable: product?.isAvailable ?? true,
     },
   })
+
+  // Reset form when product prop changes for editing
+  useEffect(() => {
+    if (product) {
+      // Sanitize price if it contains text like "GHS 100" or "*¶ PRICE: Ghc 2700"
+      const rawPrice = product.price || ""
+      const sanitizedPrice = rawPrice.replace(/[^\d.]/g, '') || rawPrice
+
+      form.reset({
+        description: product.description,
+        price: sanitizedPrice,
+        imageUrl: product.imageUrl,
+        isAvailable: product.isAvailable,
+      })
+    } else {
+      form.reset({
+        description: "",
+        price: "",
+        imageUrl: "",
+        isAvailable: true,
+      })
+    }
+  }, [product, form])
 
   const onSubmit = async (values: ProductFormValues) => {
     setIsSubmitting(true)
@@ -142,6 +165,24 @@ export function SellerProductForm({
                     <Textarea
                       placeholder="What are you selling?"
                       className="min-h-[100px] resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Price (GHS)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="e.g. 150"
                       {...field}
                     />
                   </FormControl>

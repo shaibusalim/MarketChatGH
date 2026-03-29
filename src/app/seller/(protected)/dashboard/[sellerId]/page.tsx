@@ -27,7 +27,8 @@ import {
   ExternalLink,
   TrendingUp,
   CheckCircle2,
-  XCircle
+  XCircle,
+  AlertTriangle
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -181,7 +182,17 @@ export default function SellerDashboardPage() {
     setIsFormOpen(true)
   }
 
-  const filteredProducts = products.filter(p => 
+  const filteredProducts = products.map(p => {
+    // If description contains the price, try to clean it up for the title display
+    // but keep the original for the edit form
+    let cleanDescription = p.description
+    if (p.description.includes("PRICE:")) {
+      cleanDescription = p.description.split("PRICE:")[0].trim()
+      // Remove trailing characters like * or ¶
+      cleanDescription = cleanDescription.replace(/[*¶]$/, "").trim()
+    }
+    return { ...p, displayDescription: cleanDescription || p.description }
+  }).filter(p => 
     p.description.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -386,64 +397,84 @@ export default function SellerDashboardPage() {
                     <div className="divide-y divide-gray-50 dark:divide-white/5">
                       {filteredProducts.map((product, idx) => (
                         <motion.div 
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
                           transition={{ delay: idx * 0.05 }}
                           key={product.id} 
-                          className="group p-6 md:p-8 hover:bg-white/50 dark:hover:bg-blue-600/5 transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-6"
+                          className="group p-4 sm:p-6 md:p-8 hover:bg-white/50 dark:hover:bg-blue-600/5 transition-all duration-300 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6"
                         >
-                          <div className="flex items-center gap-6 flex-1 w-full">
-                            <div className="h-20 w-20 rounded-3xl overflow-hidden shadow-2xl relative flex-shrink-0 group-hover:scale-105 transition-transform duration-500 bg-gray-100 flex items-center justify-center">
+                          <div className="flex items-start gap-4 sm:gap-6 flex-1 min-w-0 w-full group-hover:scale-[1.01] transition-transform duration-500">
+                            <div className="h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl relative flex-shrink-0 bg-gray-100 flex items-center justify-center border border-gray-100 dark:border-gray-800">
                               <TwilioMediaDisplay 
                                 mediaUrl={product.imageUrl} 
                                 alt={product.description} 
-                                width={80}
-                                height={80}
-                                className="w-full h-full object-cover"
+                                width={112}
+                                height={112}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                               />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-lg font-black text-gray-900 dark:text-white tracking-tighter truncate uppercase italic">
-                                {product.description}
-                              </h4>
-                              <div className="flex flex-wrap items-center gap-4 mt-2">
-                                <span className="text-xl font-black text-blue-600 dark:text-blue-400 tracking-tighter italic">₵{product.price}</span>
-                                <div className="flex items-center gap-2">
-                                  <Eye className="h-3 w-3 text-gray-400" />
-                                  <span className="text-[10px] font-bold text-gray-500 uppercase">{product.views || 0} views</span>
+                            
+                            <div className="flex-1 min-w-0 overflow-hidden pt-1">
+                              <div className="space-y-2">
+                                <h4 className="text-lg sm:text-2xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic leading-tight whitespace-normal break-words underline decoration-blue-500/30">
+                                  {product.displayDescription || product.description}
+                                </h4>
+                                
+                                <div className="flex flex-wrap items-center gap-4">
+                                  <div className="bg-blue-600 dark:bg-blue-500 px-4 py-1 rounded-xl shadow-lg shadow-blue-500/20 transform -skew-x-12">
+                                     <span className="text-lg sm:text-2xl font-black text-white tracking-tighter italic block skew-x-12">
+                                       ₵{product.price}
+                                     </span>
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <Badge className={`border-none text-[8px] font-black tracking-widest px-3 py-1.5 shadow-sm transform hover:scale-105 transition-transform ${product.isAvailable ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}>
+                                      {product.isAvailable ? "IN STOCK" : "OUT OF STOCK"}
+                                    </Badge>
+                                    <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full shadow-inner border border-gray-200 dark:border-white/5">
+                                      <Eye className="h-3 w-3 text-gray-400" />
+                                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{product.views || 0} views</span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <Badge className={`border-none text-[8px] font-black tracking-widest ${product.isAvailable ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
-                                  {product.isAvailable ? "In Stock" : "Out of Stock"}
-                                </Badge>
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-6 w-full sm:w-auto shrink-0 bg-gray-50/50 dark:bg-gray-800/30 p-2 rounded-2xl border border-white/50 dark:border-white/5">
-                            <div className="flex items-center gap-3 pr-4 border-r border-gray-200 dark:border-gray-700">
-                               <span className="text-[8px] font-black uppercase tracking-widest text-gray-400">Stock</span>
+                          <div className="flex items-center gap-4 w-full lg:w-auto shrink-0 bg-white/50 dark:bg-gray-800/40 p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-gray-200/50 dark:border-white/5 shadow-lg backdrop-blur-xl relative z-10 self-stretch sm:self-auto justify-between sm:justify-start">
+                            <div className="flex items-center gap-4 pr-4 sm:pr-6 border-r border-gray-100 dark:border-gray-700">
+                               <div className="flex flex-col">
+                                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</span>
+                                 <span className={`text-[12px] font-black uppercase tracking-tighter italic ${product.isAvailable ? "text-emerald-500" : "text-red-500"}`}>
+                                   {product.isAvailable ? "Live" : "Ended"}
+                                 </span>
+                               </div>
                                <Switch 
                                  checked={product.isAvailable}
                                  onCheckedChange={() => handleToggleStatus(product.id, product.isAvailable)}
-                                 className="data-[state=checked]:bg-emerald-500"
+                                 className="data-[state=checked]:bg-emerald-500 shadow-lg scale-110"
                                />
                             </div>
-                            <div className="flex gap-2">
+                            
+                            <div className="flex gap-2 sm:gap-3">
                               <Button 
                                 variant="outline" 
                                 size="icon" 
-                                className="h-10 w-10 rounded-xl border-white/50 dark:border-white/10 text-blue-600 dark:text-blue-400 shadow-sm hover:scale-110 transition-transform"
+                                className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border-gray-200 dark:border-gray-700 text-blue-600 dark:text-blue-400 shadow-md hover:bg-blue-600 hover:text-white hover:scale-110 transition-all duration-300 group/btn"
                                 onClick={() => handleEditProduct(product)}
+                                title="Edit Product"
                               >
-                                <Settings className="h-4 w-4" />
+                                <Settings className="h-5 w-5 group-hover/btn:rotate-90 transition-transform duration-500" />
                               </Button>
                               <Button 
                                 variant="outline" 
                                 size="icon" 
-                                className="h-10 w-10 rounded-xl border-white/50 dark:border-white/10 text-red-500 shadow-sm hover:scale-110 transition-transform"
+                                className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border-gray-200 dark:border-gray-700 text-red-500 shadow-md hover:bg-red-600 hover:text-white hover:scale-110 transition-all duration-300 group/btn"
                                 onClick={() => handleDeleteProduct(product.id)}
+                                title="Delete Product"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-5 w-5 group-hover/btn:animate-bounce" />
                               </Button>
                             </div>
                           </div>
