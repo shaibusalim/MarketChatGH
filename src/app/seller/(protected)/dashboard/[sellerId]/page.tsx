@@ -35,6 +35,13 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select"
+import { 
   Sheet, 
   SheetContent, 
   SheetTrigger,
@@ -93,6 +100,7 @@ export default function SellerDashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined)
+  const [activityDateFilter, setActivityDateFilter] = useState("7")
   const [searchQuery, setSearchQuery] = useState("")
   const [leads, setLeads] = useState<Lead[]>([])
   const [activeTab, setActiveTab] = useState("catalog")
@@ -106,17 +114,19 @@ export default function SellerDashboardPage() {
     const targetUid = uid || sellerInfo?.id || sellerId;
     if (!targetUid) return;
     
-    console.log(`[Dashboard] Fetching leads for: ${targetUid}`);
     try {
-      const response = await fetch(`/api/leads?sellerId=${targetUid}&t=${Date.now()}`)
+      const response = await fetch(`/api/leads?sellerId=${targetUid}&days=${activityDateFilter}&t=${Date.now()}`)
       if (response.ok) {
         const data = await response.json()
-        setLeads(data.leads || [])
+        const fetchedLeads = data.leads || []
+        // Client-side sort to guarantee correct order even if backend ordering is missing/stale
+        fetchedLeads.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        setLeads(fetchedLeads)
       }
     } catch (error) {
       console.error("[Leads] Fetch error:", error)
     }
-  }, [sellerId, sellerInfo?.id])
+  }, [sellerId, sellerInfo?.id, activityDateFilter])
 
   const fetchSellerData = useCallback(async (isInitial = false) => {
     if (!sellerId) return
@@ -515,10 +525,28 @@ export default function SellerDashboardPage() {
 
           <TabsContent value="leads">
             <Card className="bg-white/70 dark:bg-gray-900/60 backdrop-blur-3xl border-white/50 dark:border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
-               <CardHeader className="p-8">
-                  <CardTitle className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white italic">Customer Interactions</CardTitle>
-                  <p className="text-xs text-gray-500 font-bold tracking-widest uppercase mt-1">Real-time leads from your shop</p>
-               </CardHeader>
+                <CardHeader className="p-8">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                      <CardTitle className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white italic">Customer Interactions</CardTitle>
+                      <p className="text-xs text-gray-500 font-bold tracking-widest uppercase mt-1">Activity logs for your shop</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Filter:</span>
+                      <Select value={activityDateFilter} onValueChange={setActivityDateFilter}>
+                        <SelectTrigger className="w-[160px] bg-white dark:bg-gray-800 border-gray-100 dark:border-white/10 rounded-xl font-bold text-xs">
+                          <SelectValue placeholder="Select range" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-white/10 shadow-2xl">
+                          <SelectItem value="1" className="text-xs font-bold">Today</SelectItem>
+                          <SelectItem value="7" className="text-xs font-bold">Last 7 Days</SelectItem>
+                          <SelectItem value="30" className="text-xs font-bold">Last 30 Days</SelectItem>
+                          <SelectItem value="all" className="text-xs font-bold">All Time</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardHeader>
                <CardContent className="p-0">
                   <ScrollArea className="h-[600px]">
                     {leads.length === 0 ? (
