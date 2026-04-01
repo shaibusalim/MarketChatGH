@@ -107,6 +107,7 @@ const getSellerAndProducts = async (
         status: data.status ?? "unknown",
         stockStatus: data.stockStatus ?? "unknown",
         isAvailable: data.isAvailable ?? false,
+        views: data.views ?? 0,
       }
     })
 

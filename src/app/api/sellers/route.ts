@@ -18,6 +18,7 @@ interface Product {
   status: string
   stockStatus: string
   isAvailable: boolean
+  views?: number
 }
 
 interface Seller {

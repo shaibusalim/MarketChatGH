@@ -102,15 +102,37 @@ export default function SellerDashboardPage() {
     outOfStock: 0
   })
 
-  const fetchSellerData = useCallback(async () => {
+  const fetchLeads = useCallback(async (uid?: string) => {
+    const targetUid = uid || sellerInfo?.id || sellerId;
+    if (!targetUid) return;
+    
+    console.log(`[Dashboard] Fetching leads for: ${targetUid}`);
+    try {
+      const response = await fetch(`/api/leads?sellerId=${targetUid}&t=${Date.now()}`)
+      if (response.ok) {
+        const data = await response.json()
+        setLeads(data.leads || [])
+      }
+    } catch (error) {
+      console.error("[Leads] Fetch error:", error)
+    }
+  }, [sellerId, sellerInfo?.id])
+
+  const fetchSellerData = useCallback(async (isInitial = false) => {
     if (!sellerId) return
-    setIsLoading(true)
+    if (isInitial) setIsLoading(true)
+    
     try {
       const response = await fetch(`/api/sellers/${sellerId}?t=${Date.now()}`)
       if (!response.ok) throw new Error("Failed to fetch shop data")
       const data = await response.json()
       setProducts(data.products || [])
       setSellerInfo(data.seller)
+      
+      // Also fetch leads with the confirmed UID
+      if (data.seller?.id) {
+        fetchLeads(data.seller.id);
+      }
       
       const active = data.products.filter((p: Product) => p.isAvailable).length
       setStats({
@@ -120,29 +142,23 @@ export default function SellerDashboardPage() {
       })
     } catch (error) {
       console.error(error)
-      toast.error("Could not load your shop data")
+      if (isInitial) toast.error("Could not load your shop data")
     } finally {
-      setIsLoading(false)
+      if (isInitial) setIsLoading(false)
     }
-  }, [sellerId])
-
-  const fetchLeads = useCallback(async () => {
-    if (!sellerId) return
-    try {
-      const response = await fetch(`/api/leads?sellerId=${sellerId}&t=${Date.now()}`)
-      if (response.ok) {
-        const data = await response.json()
-        setLeads(data.leads || [])
-      }
-    } catch (error) {
-      console.error("[Leads] Fetch error:", error)
-    }
-  }, [sellerId])
+  }, [sellerId, fetchLeads])
 
   useEffect(() => {
-    fetchSellerData()
-    fetchLeads()
-  }, [fetchSellerData, fetchLeads])
+    // Initial fetch with loader
+    fetchSellerData(true)
+
+    // Poll for updates every 10 seconds for real-time feel (without loader)
+    const pollInterval = setInterval(() => {
+      fetchSellerData(false)
+    }, 10000)
+
+    return () => clearInterval(pollInterval)
+  }, [fetchSellerData])
 
   const handleToggleStatus = async (productId: string, currentAvailable: boolean) => {
     const formData = new FormData()

@@ -39,12 +39,32 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const leadsSnapshot = await adminFirestore
-      .collection("leads")
-      .where("sellerId", "==", sellerId)
-      .orderBy("createdAt", "desc")
-      .limit(50)
-      .get();
+    console.log(`[API Leads] Fetching leads for sellerId: ${sellerId}`);
+    
+    let leadsSnapshot;
+    try {
+      // Primary attempt: Ordered query
+      leadsSnapshot = await adminFirestore
+        .collection("leads")
+        .where("sellerId", "==", sellerId)
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .get();
+    } catch (e: any) {
+      // Fallback: If orderBy fails (missing index), return unordered results
+      if (e.message?.includes("index")) {
+        console.warn("[API Leads] Firestore index missing for orderBy, falling back to unordered query.");
+        leadsSnapshot = await adminFirestore
+          .collection("leads")
+          .where("sellerId", "==", sellerId)
+          .limit(50)
+          .get();
+      } else {
+        throw e; // Reroute other errors
+      }
+    }
+
+    console.log(`[API Leads] Found ${leadsSnapshot.size} leads`);
 
     const leads = leadsSnapshot.docs.map(doc => ({
       id: doc.id,
@@ -54,6 +74,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ leads });
   } catch (error) {
     console.error("[API Leads] Error fetching leads:", error);
-    return NextResponse.json({ error: "Failed to fetch leads" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch leads", details: (error as Error).message }, { status: 500 });
   }
 }
