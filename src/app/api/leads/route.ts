@@ -4,20 +4,24 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { productId, sellerId, productDescription, productPrice } = body;
+    const { productId, sellerId, productDescription, productPrice, type, sellerName } = body;
 
-    if (!productId || !sellerId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!sellerId) {
+      return NextResponse.json({ error: "Missing sellerId" }, { status: 400 });
     }
 
-    await adminFirestore.collection("leads").add({
-      productId,
+    const leadData: any = {
       sellerId,
-      productDescription,
-      productPrice,
-      type: "chat_to_buy",
+      type: type || "chat_to_buy",
       createdAt: new Date().toISOString(),
-    });
+    };
+
+    if (productId) leadData.productId = productId;
+    if (productDescription) leadData.productDescription = productDescription;
+    if (productPrice) leadData.productPrice = productPrice;
+    if (sellerName) leadData.sellerName = sellerName;
+
+    await adminFirestore.collection("leads").add(leadData);
 
     return NextResponse.json({ success: true });
   } catch (error) {

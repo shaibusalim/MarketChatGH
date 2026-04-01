@@ -332,43 +332,116 @@ export function InteractiveElements() {
         </div>
       </section>
 
-      {/* Why MarketChat Section */}
+      {/* Why MarketChat Section - Bento Grid */}
       <section
         id="features"
-        className="relative w-full py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto bg-gradient-to-b from-transparent to-gray-100/50 dark:to-gray-800/50"
+        className="relative w-full py-20 sm:py-24 px-4 max-w-7xl mx-auto"
       >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-headline mb-3 text-gray-900 dark:text-white">
-            Why MarketChat?
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-headline mb-4 text-gray-900 dark:text-white">
+            Designed for <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">Speed & Trust</span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
-            Discover the power of seamless, AI-driven commerce tailored for Ghana.
+            A state-of-the-art AI infrastructure connecting buyers to verified local sellers instantly.
           </p>
         </motion.div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          <FeatureCard
-            icon={<Bot className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
-            title="AI-Powered"
-            description="Smart recommendations and automated support for a personalized shopping experience."
-            delay={0.2}
-          />
-          <FeatureCard
-            icon={<Smartphone className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
-            title="WhatsApp Integration"
-            description="Shop directly through your favorite messaging app, making commerce effortless."
-            delay={0.4}
-          />
-          <FeatureCard
-            icon={<Store className="h-6 w-6 sm:h-8 sm:w-8 text-white" />}
-            title="Local Focus"
-            description="Support Ghanaian businesses and find unique products with ease."
-            delay={0.6}
-          />
+
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-auto md:auto-rows-[300px]">
+          {/* Large Card 1 */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="md:col-span-2 group relative overflow-hidden rounded-3xl bg-white/5 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-white/10 p-8 flex flex-col justify-end transition-colors hover:bg-white/10 dark:hover:bg-gray-800/60 shadow-sm"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            {/* Abstract visual for AI matching */}
+            <div className="absolute top-8 right-8 w-48 h-48 sm:w-64 sm:h-64 opacity-50 flex items-center justify-center">
+               <div className="absolute w-full h-full border border-green-500/30 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+               <div className="absolute w-3/4 h-3/4 border border-green-500/40 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite_500ms]"></div>
+               <Bot className="absolute h-16 w-16 text-green-500/80 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
+            </div>
+
+            <div className="relative z-10 w-full sm:w-2/3 md:mt-24">
+              <div className="inline-flex items-center rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-sm font-medium text-green-600 dark:text-green-400 mb-4">
+                Smart Engine
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Hyper-Local AI Matching</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
+                Our proprietary AI understands Ghanaian context and nuance, instantly finding exact matches from verified sellers in your city.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Square Card 2 */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="group relative overflow-hidden rounded-3xl bg-white/5 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-white/10 p-8 flex flex-col items-center justify-center transition-all hover:border-green-500/30 shadow-sm min-h-[300px]"
+          >
+            <div className="relative w-24 h-24 mb-6">
+               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#25D366] to-[#128C7E] shadow-[0_0_40px_rgba(37,211,102,0.4)] group-hover:shadow-[0_0_60px_rgba(37,211,102,0.6)] transition-shadow duration-500 flex items-center justify-center">
+                 <Smartphone className="h-12 w-12 text-white" />
+               </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">Native WhatsApp</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm text-center">
+              No apps to download. Everything happens where you already chat.
+            </p>
+          </motion.div>
+
+          {/* Square Card 3 */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="group relative overflow-hidden rounded-3xl bg-white/5 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-white/10 p-8 flex flex-col justify-end transition-colors hover:bg-white/10 dark:hover:bg-gray-800/60 shadow-sm min-h-[300px]"
+          >
+            <div className="flex-1 flex items-start justify-start">
+              <span className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-gray-900 to-gray-400 dark:from-white dark:to-gray-600 drop-shadow-sm">
+                100%
+              </span>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Verified Sellers</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">Every merchant is manually vetted to ensure quality and trust.</p>
+            </div>
+          </motion.div>
+
+          {/* Large Card 4 */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="md:col-span-2 group relative overflow-hidden rounded-3xl bg-white/5 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-white/10 p-8 flex flex-col sm:flex-row items-center gap-8 transition-colors hover:bg-white/10 dark:hover:bg-gray-800/60 shadow-sm min-h-[300px]"
+          >
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1 text-sm font-medium text-yellow-600 dark:text-yellow-500 mb-4">
+                <Store className="h-4 w-4" /> Direct Commerce
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Zero Middlemen</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
+                Connect and negotiate directly with sellers. We don't hold your money or slow down your transaction.
+              </p>
+            </div>
+            <div className="relative w-full sm:w-1/2 h-full flex items-center justify-center min-h-[150px]">
+               <div className="flex gap-4 items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
+                 <div className="h-16 w-16 rounded-full bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 flex items-center justify-center shadow-lg"><User className="h-8 w-8 text-gray-500" /></div>
+                 <div className="h-1 w-16 sm:w-24 bg-gradient-to-r from-gray-200 to-green-500 dark:from-gray-700 dark:to-green-500 relative rounded-full">
+                    <motion.div animate={{ x: [0, 48, 80] }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute -top-1 left-0 w-3 h-3 rounded-full bg-green-500 shadow-[0_0_12px_#22c55e]" />
+                 </div>
+                 <div className="h-16 w-16 rounded-full bg-white dark:bg-gray-800 border-2 border-green-200 dark:border-green-500/30 flex items-center justify-center shadow-lg"><Store className="h-8 w-8 text-green-500" /></div>
+               </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 

@@ -22,6 +22,7 @@ interface Product {
 interface Seller {
   name: string;
   location: string;
+  phone?: string;
 }
 
 interface ProductPageProps {
@@ -63,6 +64,7 @@ async function getProductAndSeller(slugOrId: string, productId: string): Promise
     const seller: Seller = {
       name: sellerData.name ?? "Unnamed Seller",
       location: sellerData.location ?? "Unknown",
+      phone: sellerData.phone ?? "",
     };
 
     return { product, seller, sellerId: actualSellerId };

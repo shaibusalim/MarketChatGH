@@ -20,12 +20,13 @@ interface ProductCardProps {
     price: string;
     description: string;
     sellerId: string;
+    sellerPhone?: string; // Added to support direct WhatsApp links
     isAvailable?: boolean;
   };
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { imageUrl, price, description, sellerId, id, isAvailable = true } = product;
+  const { imageUrl, price, description, sellerId, id, isAvailable = true, sellerPhone } = product;
 
   const handleChatToBuy = async (e: React.MouseEvent) => {
     if (e) {
@@ -45,15 +46,25 @@ export default function ProductCard({ product }: ProductCardProps) {
           sellerId: sellerId,
           productDescription: description,
           productPrice: price,
+          type: "chat_to_buy" // Explicitly mark as lead
         }),
       });
     } catch (err) {
       console.error("[ProductCard] Error tracking lead:", err);
     }
 
+    // Format phone number: remove non-digits, and replace leading 0 with 233 if needed
+    let cleanPhone = (sellerPhone || sellerId || "").replace(/\D/g, "");
+    if (cleanPhone.startsWith("0")) {
+      cleanPhone = "233" + cleanPhone.substring(1);
+    } else if (cleanPhone.length < 10) {
+      // Fallback if it's too short (maybe it is missing country code but doesn't start with 0)
+      if (!cleanPhone.startsWith("233")) cleanPhone = "233" + cleanPhone;
+    }
+
     const productUrl = `${window.location.origin}/${sellerId}/product/${id}`;
     const message = `Hi, I found this on MarketChatGH: ${productUrl}. I'm interested in buying your "${description}" for ${price}. Is it still available?`;
-    const whatsappUrl = `https://wa.me/${sellerId}?text=${encodeURIComponent(
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
       message
     )}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");

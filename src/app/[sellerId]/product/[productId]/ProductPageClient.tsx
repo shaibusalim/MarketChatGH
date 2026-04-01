@@ -16,16 +16,30 @@ interface ProductPageClientProps {
 
 export function ProductPageClient({ product, seller, sellerId }: ProductPageClientProps) {
   useEffect(() => {
-    // Track product view
+    // Track product view (for counter and activity log)
     const trackView = async () => {
       try {
-        await fetch(`/api/products/${product.id}/view`, { method: "POST" });
+        // 1. Increment product view counter
+        fetch(`/api/products/${product.id}/view`, { method: "POST" }).catch(() => {});
+        
+        // 2. Log activity in leads collection
+        await fetch("/api/leads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productId: product.id,
+            sellerId: sellerId,
+            productDescription: product.description,
+            productPrice: product.price,
+            type: "product_view"
+          }),
+        });
       } catch (err) {
         console.error("[ProductPage] Error tracking view:", err);
       }
     };
     trackView();
-  }, [product.id]);
+  }, [product.id, sellerId, product.description, product.price]);
 
   const handleTrackLead = async () => {
     try {
@@ -37,6 +51,7 @@ export function ProductPageClient({ product, seller, sellerId }: ProductPageClie
           sellerId: sellerId,
           productDescription: product.description,
           productPrice: product.price,
+          type: "chat_to_buy"
         }),
       });
     } catch (err) {
@@ -44,8 +59,17 @@ export function ProductPageClient({ product, seller, sellerId }: ProductPageClie
     }
   };
 
-  const whatsappMessage = `Hi, I found this on MarketChatGH: I'm interested in buying your "${product.description}" for ${product.price}. Is it still available?`;
-  const whatsappUrl = `https://wa.me/${sellerId}?text=${encodeURIComponent(whatsappMessage)}`;
+  // Format phone: remove non-digits, replace 0 with 233
+  let cleanPhone = (seller.phone || sellerId || "").replace(/\D/g, "");
+  if (cleanPhone.startsWith("0")) {
+    cleanPhone = "233" + cleanPhone.substring(1);
+  } else if (cleanPhone.length > 0 && cleanPhone.length < 10 && !cleanPhone.startsWith("233")) {
+    cleanPhone = "233" + cleanPhone;
+  }
+
+  const productUrl = typeof window !== 'undefined' ? `${window.location.origin}/${sellerId}/product/${product.id}` : "";
+  const whatsappMessage = `Hi, I found this on MarketChatGH: ${productUrl}. I'm interested in buying your "${product.description}" for ${product.price}. Is it still available?`;
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">

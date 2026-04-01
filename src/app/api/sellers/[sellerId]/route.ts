@@ -23,6 +23,7 @@ interface SellerInfo {
   name: string
   location: string
   active: boolean
+  phone?: string // Added to support WhatsApp links
   rating?: number // Added for seller ratings
   reviewCount?: number // Added for seller review count
 }
@@ -62,6 +63,7 @@ const getSellerAndProducts = async (
         name: data?.name ?? "Unnamed Seller",
         location: data?.location ?? "Unknown",
         active: data?.active ?? true,
+        phone: data?.phone ?? "", // Pass phone number to client
         rating: data?.rating ?? 0, // Retrieve rating
         reviewCount: data?.reviewCount ?? 0, // Retrieve review count
       }

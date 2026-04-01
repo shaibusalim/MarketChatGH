@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "react-hot-toast";
 import AuthProvider from "@/components/auth-provider";
 import { Chatbot } from '@/components/Chatbot';
+import { NoiseOverlay } from "@/components/noise-overlay";
 
 export const metadata: Metadata = {
   title: 'MarketChat GH',
@@ -66,6 +67,7 @@ export default function RootLayout({
         </AuthProvider>
         <Toaster />
         <Chatbot />
+        <NoiseOverlay />
       </body>
     </html>
   );

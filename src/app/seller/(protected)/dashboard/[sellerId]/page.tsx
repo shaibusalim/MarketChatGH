@@ -28,7 +28,9 @@ import {
   TrendingUp,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  MessageCircle,
+  Store
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -512,23 +514,55 @@ export default function SellerDashboardPage() {
                       </div>
                     ) : (
                       <div className="divide-y divide-gray-50 dark:divide-white/5">
-                        {leads.map((lead, idx) => (
-                          <div key={lead.id} className="p-8 flex items-center justify-between group hover:bg-emerald-500/5 transition-all">
-                             <div className="flex items-center gap-6">
-                                <div className="h-12 w-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600">
-                                   <MousePointerClick className="h-6 w-6" />
-                                </div>
-                                <div>
-                                   <p className="text-sm font-black uppercase tracking-tight text-gray-900 dark:text-white">Customer clicked "Chat to Buy"</p>
-                                   <p className="text-xs text-gray-500 font-bold mt-1">Product: <span className="text-emerald-600">{lead.productDescription}</span> • {lead.productPrice}</p>
-                                </div>
-                             </div>
-                             <div className="text-right">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(lead.createdAt).toLocaleDateString()}</p>
-                                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mt-1">{new Date(lead.createdAt).toLocaleTimeString()}</p>
-                             </div>
-                          </div>
-                        ))}
+                        {leads.map((lead, idx) => {
+                          const isLead = lead.type === "chat_to_buy";
+                          const isView = lead.type === "product_view";
+                          const isVisit = lead.type === "store_visit";
+                          
+                          let Icon = MousePointerClick;
+                          let iconColor = "text-emerald-600";
+                          let bgColor = "bg-emerald-100 dark:bg-emerald-900/40";
+                          let label = "Customer Interaction";
+                          let detail = lead.productDescription ? `Product: ${lead.productDescription}` : "General interaction";
+
+                          if (isLead) {
+                            Icon = MessageCircle;
+                            iconColor = "text-green-600";
+                            bgColor = "bg-green-100 dark:bg-green-900/40";
+                            label = "WhatsApp Lead: Clicked 'Chat to Buy'";
+                          } else if (isView) {
+                            Icon = Eye;
+                            iconColor = "text-blue-600";
+                            bgColor = "bg-blue-100 dark:bg-blue-900/40";
+                            label = "Product Viewed";
+                          } else if (isVisit) {
+                            Icon = Store;
+                            iconColor = "text-purple-600";
+                            bgColor = "bg-purple-100 dark:bg-purple-900/40";
+                            label = "Store Visited";
+                            detail = "A customer visited your shop front";
+                          }
+
+                          return (
+                            <div key={lead.id} className="p-8 flex items-center justify-between group hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-all border-b border-gray-50 dark:border-white/5 last:border-0">
+                               <div className="flex items-center gap-6">
+                                  <div className={`h-12 w-12 rounded-xl ${bgColor} flex items-center justify-center ${iconColor} shadow-sm group-hover:scale-110 transition-transform`}>
+                                     <Icon className="h-6 w-6" />
+                                  </div>
+                                  <div>
+                                     <p className="text-sm font-black uppercase tracking-tight text-gray-900 dark:text-white">{label}</p>
+                                     <p className="text-xs text-gray-500 font-bold mt-1">
+                                       {detail} {lead.productPrice && `• ${lead.productPrice}`}
+                                     </p>
+                                  </div>
+                               </div>
+                               <div className="text-right">
+                                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(lead.createdAt).toLocaleDateString()}</p>
+                                  <p className={`text-[10px] font-black ${iconColor} uppercase tracking-widest mt-1`}>{new Date(lead.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                               </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </ScrollArea>

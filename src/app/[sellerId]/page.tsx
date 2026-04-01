@@ -42,6 +42,7 @@ interface SellerInfo {
   name: string
   location: string
   active: boolean
+  phone?: string
   rating?: number
   reviewCount?: number
 }
@@ -149,6 +150,33 @@ export default function SellerPage() {
     router,
     hasFetched,
   ])
+
+  useEffect(() => {
+    // Track store visit
+    const trackVisit = async () => {
+      // Use the actual seller UID if we have it, otherwise fallback to the slug/ID from params
+      const targetSellerId = seller?.id || sellerId;
+      if (!targetSellerId) return;
+
+      try {
+        await fetch("/api/leads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sellerId: targetSellerId,
+            type: "store_visit",
+            sellerName: seller?.name || "Unknown Shop"
+          }),
+        });
+      } catch (err) {
+        console.error("[SellerPage] Error tracking visit:", err);
+      }
+    };
+
+    if (seller) {
+      trackVisit();
+    }
+  }, [sellerId, seller]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentProductSearchQuery(e.target.value)
@@ -357,7 +385,7 @@ export default function SellerPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <ProductCard product={product} />
+                  <ProductCard product={{ ...product, sellerPhone: seller.phone }} />
                 </motion.div>
               ))}
             </div>
