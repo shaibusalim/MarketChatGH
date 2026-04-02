@@ -28,46 +28,33 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { imageUrl, price, description, sellerId, id, isAvailable = true, sellerPhone } = product;
 
-  const handleChatToBuy = async (e: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
+  // Pre-calculate WhatsApp details for native <a> compatibility on iOS
+  let cleanPhone = (sellerPhone || sellerId || "").replace(/\D/g, "");
+  if (cleanPhone.startsWith("0")) {
+    cleanPhone = "233" + cleanPhone.substring(1);
+  } else if (cleanPhone.length < 10 && cleanPhone.length > 0) {
+    if (!cleanPhone.startsWith("233")) cleanPhone = "233" + cleanPhone;
+  }
+
+  const productUrl = typeof window !== "undefined" ? `${window.location.origin}/${sellerId}/product/${id}` : "";
+  const message = `Hi, I found this on MarketChatGH: ${productUrl}. I'm interested in buying your "${description}" for ${price}. Is it still available?`;
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+
+  const handleChatToBuy = () => {
     if (!isAvailable) return;
     
-    // Log lead
-    try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: id,
-          sellerId: sellerId,
-          productDescription: description,
-          productPrice: price,
-          type: "chat_to_buy" // Explicitly mark as lead
-        }),
-      });
-    } catch (err) {
-      console.error("[ProductCard] Error tracking lead:", err);
-    }
-
-    // Format phone number: remove non-digits, and replace leading 0 with 233 if needed
-    let cleanPhone = (sellerPhone || sellerId || "").replace(/\D/g, "");
-    if (cleanPhone.startsWith("0")) {
-      cleanPhone = "233" + cleanPhone.substring(1);
-    } else if (cleanPhone.length < 10) {
-      // Fallback if it's too short (maybe it is missing country code but doesn't start with 0)
-      if (!cleanPhone.startsWith("233")) cleanPhone = "233" + cleanPhone;
-    }
-
-    const productUrl = `${window.location.origin}/${sellerId}/product/${id}`;
-    const message = `Hi, I found this on MarketChatGH: ${productUrl}. I'm interested in buying your "${description}" for ${price}. Is it still available?`;
-    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-      message
-    )}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    // Track lead in background (don't await to avoid blocking transition/popup on mobile)
+    fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: id,
+        sellerId: sellerId,
+        productDescription: description,
+        productPrice: price,
+        type: "chat_to_buy"
+      }),
+    }).catch(err => console.error("[ProductCard] Error tracking lead:", err));
   };
 
   return (
@@ -117,6 +104,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </Link>
         </Button>
         <Button 
+          asChild={isAvailable}
           onClick={handleChatToBuy} 
           disabled={!isAvailable}
           className={`flex-1 font-bold rounded-xl shadow-lg py-6 ${
@@ -126,10 +114,10 @@ export default function ProductCard({ product }: ProductCardProps) {
           }`}
         >
           {isAvailable ? (
-            <>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full h-full">
               <MessageCircle className="mr-2 h-5 w-5" />
               Buy
-            </>
+            </a>
           ) : (
             <>
               <Ban className="mr-2 h-5 w-5" />

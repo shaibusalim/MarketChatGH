@@ -41,22 +41,18 @@ export function ProductPageClient({ product, seller, sellerId }: ProductPageClie
     trackView();
   }, [product.id, sellerId, product.description, product.price]);
 
-  const handleTrackLead = async () => {
-    try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: product.id,
-          sellerId: sellerId,
-          productDescription: product.description,
-          productPrice: product.price,
-          type: "chat_to_buy"
-        }),
-      });
-    } catch (err) {
-      console.error("[ProductPage] Error tracking lead:", err);
-    }
+  const handleTrackLead = () => {
+    fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: product.id,
+        sellerId: sellerId,
+        productDescription: product.description,
+        productPrice: product.price,
+        type: "chat_to_buy"
+      }),
+    }).catch(err => console.error("[ProductPage] Error tracking lead:", err));
   };
 
   // Format phone: remove non-digits, replace 0 with 233
