@@ -66,14 +66,14 @@ function ProductsComponent() {
         </div>
         <nav className="flex-grow px-4 space-y-2">
           <a
-            href="/admin"
+            href="/mcgh-admin-control"
             className="flex items-center gap-3 p-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             <User className="h-5 w-5" />
             Sellers
           </a>
           <a
-            href="/admin/products"
+            href="/mcgh-admin-control/products"
             className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold"
           >
             <Package className="h-5 w-5" />
@@ -111,7 +111,7 @@ function ProductsComponent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form action="/admin/products" method="GET" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <form action="/mcgh-admin-control/products" method="GET" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <input
                   name="q"
                   placeholder="Search by description or seller ID..."
@@ -262,7 +262,7 @@ function ProductsComponent() {
                       disabled={pageNumber <= 1}
                       asChild
                     >
-                      <a href={`/admin/products?q=${encodeURIComponent(q)}&filter=${filter}&sort=${sort}&page=${pageNumber - 1}`}>
+                      <a href={`/mcgh-admin-control/products?q=${encodeURIComponent(q)}&filter=${filter}&sort=${sort}&page=${pageNumber - 1}`}>
                         Previous
                       </a>
                     </Button>
@@ -274,7 +274,7 @@ function ProductsComponent() {
                       disabled={pageNumber >= totalPages}
                       asChild
                     >
-                      <a href={`/admin/products?q=${encodeURIComponent(q)}&filter=${filter}&sort=${sort}&page=${pageNumber + 1}&startAfter=${lastDocId}`}>
+                      <a href={`/mcgh-admin-control/products?q=${encodeURIComponent(q)}&filter=${filter}&sort=${sort}&page=${pageNumber + 1}&startAfter=${lastDocId}`}>
                         Next
                       </a>
                     </Button>

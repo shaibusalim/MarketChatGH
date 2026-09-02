@@ -124,7 +124,7 @@ export function Header() {
 
         <div className="hidden md:block">
           {mounted && session ? (
-            <Link href={(session.user as any).role === 'admin' ? '/admin' : `/seller/dashboard/${(session.user as any).id}`}>
+            <Link href={(session.user as any).role === 'admin' ? '/mcgh-admin-control' : `/seller/dashboard/${(session.user as any).id}`}>
               <motion.button
                 whileHover={{ scale: 1.05, boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)" }}
                 whileTap={{ scale: 0.95 }}
@@ -214,7 +214,7 @@ export function Header() {
               </Link>
               {session ? (
                 <Link
-                  href={(session.user as any).role === 'admin' ? '/admin' : `/seller/dashboard/${(session.user as any).id}`}
+                  href={(session.user as any).role === 'admin' ? '/mcgh-admin-control' : `/seller/dashboard/${(session.user as any).id}`}
                   className="w-full pt-4"
                 >
                   <Button

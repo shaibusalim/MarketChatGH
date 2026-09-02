@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -30,7 +30,8 @@ import {
   XCircle,
   AlertTriangle,
   MessageCircle,
-  Store
+  Store,
+  UserCog
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -52,9 +53,10 @@ import { signOut } from "next-auth/react"
 import { toast } from "react-hot-toast"
 import Image from "next/image"
 import Link from "next/link"
-import { updateProductStatus } from "@/app/admin/actions"
+import { updateProductStatus } from "@/app/mcgh-admin-control/(protected)/actions"
 import { SellerProductForm } from "@/components/seller/seller-product-form"
 import { SellerSettingsForm } from "@/components/seller/seller-settings-form"
+import { SellerAccountSettingsForm } from "@/components/seller/seller-account-settings-form"
 import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -88,17 +90,37 @@ interface SellerData {
   profileImageUrl?: string
 }
 
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 export default function SellerDashboardPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const params = useParams()
   const sellerId = params.sellerId as string
+  const didRedirectRef = useRef(false)
+
+  useEffect(() => {
+    if (status === 'loading') return
+    if (didRedirectRef.current) return
+    if (!session || !session.user) {
+      didRedirectRef.current = true
+      router.replace('/seller/signin')
+      return
+    }
+    const user = session.user as any
+    const isAdminUser = Boolean(user.isAdmin || user.role === 'admin')
+    if (isAdminUser) {
+      didRedirectRef.current = true
+      router.replace('/mcgh-admin-control')
+    }
+  }, [status, session, router])
+
   const [products, setProducts] = useState<Product[]>([])
   const [sellerInfo, setSellerInfo] = useState<SellerData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined)
   const [activityDateFilter, setActivityDateFilter] = useState("7")
   const [searchQuery, setSearchQuery] = useState("")
@@ -170,6 +192,16 @@ export default function SellerDashboardPage() {
     return () => clearInterval(pollInterval)
   }, [fetchSellerData])
 
+  // Re-fetch leads immediately whenever the date filter changes
+  useEffect(() => {
+    // Skip on first render (initial fetch covers it)
+    const targetUid = sellerInfo?.id || sellerId;
+    if (targetUid) {
+      fetchLeads(targetUid);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activityDateFilter])
+
   const handleToggleStatus = async (productId: string, currentAvailable: boolean) => {
     const formData = new FormData()
     formData.append("productId", productId)
@@ -224,7 +256,7 @@ export default function SellerDashboardPage() {
     p.description.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const isAdmin = (session?.user as any)?.role === "admin"
+  const isAdmin = Boolean((session?.user as any)?.role === "admin" || (session?.user as any)?.isAdmin === true)
 
   const sidebarItems = (
     <>
@@ -254,6 +286,13 @@ export default function SellerDashboardPage() {
           className="w-full justify-start gap-3 h-12 rounded-2xl text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold tracking-tight"
         >
           <Settings className="h-5 w-5" /> Shop Profile
+        </Button>
+        <Button 
+          variant="ghost" 
+          onClick={() => setIsAccountSettingsOpen(true)}
+          className="w-full justify-start gap-3 h-12 rounded-2xl text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold tracking-tight"
+        >
+          <UserCog className="h-5 w-5" /> User Settings
         </Button>
       </nav>
 
@@ -679,6 +718,18 @@ export default function SellerDashboardPage() {
             phone: sellerInfo.phone,
             profileImageUrl: sellerInfo.profileImageUrl,
           }}
+        />
+      )}
+
+      {sellerInfo && (
+        <SellerAccountSettingsForm
+          isOpen={isAccountSettingsOpen}
+          onClose={() => setIsAccountSettingsOpen(false)}
+          onSuccess={() => {
+            toast.success("Account settings updated.")
+          }}
+          sellerId={sellerInfo.id || sellerId}
+          currentEmail={(session?.user as any)?.email || ""}
         />
       )}
     </div>

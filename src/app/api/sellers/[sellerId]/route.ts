@@ -24,8 +24,11 @@ interface SellerInfo {
   location: string
   active: boolean
   phone?: string // Added to support WhatsApp links
+  email?: string // Added for admin user management
   rating?: number // Added for seller ratings
   reviewCount?: number // Added for seller review count
+  isApproved?: boolean // Added for admin management
+  profileImageUrl?: string // Added for seller profile
 }
 
 interface SellerResponse {
@@ -64,8 +67,11 @@ const getSellerAndProducts = async (
         location: data?.location ?? "Unknown",
         active: data?.active ?? true,
         phone: data?.phone ?? "", // Pass phone number to client
+        email: data?.email ?? undefined, // Pass login email for admin management
         rating: data?.rating ?? 0, // Retrieve rating
         reviewCount: data?.reviewCount ?? 0, // Retrieve review count
+        isApproved: data?.isApproved ?? true,
+        profileImageUrl: data?.profileImageUrl ?? undefined,
       }
     }
 

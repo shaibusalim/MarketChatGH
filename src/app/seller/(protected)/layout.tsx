@@ -15,7 +15,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
     if (status === "loading") return
     
     if (!session) {
-      router.push("/admin/signin")
+      router.push("/mcgh-admin-control/signin")
       return
     }
 
@@ -28,7 +28,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
       if (user.role === "seller") {
         router.push(`/seller/dashboard/${user.id}`)
       } else {
-        router.push("/admin/signin")
+        router.push("/mcgh-admin-control/signin")
       }
     }
   }, [session, status, router, sellerIdFromUrl])

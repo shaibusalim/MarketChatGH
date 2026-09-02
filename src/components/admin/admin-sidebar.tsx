@@ -70,7 +70,7 @@ export function AdminSidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: AdminSid
           </div>
           <nav className="flex-1 space-y-2">
             <Link
-              href="/admin"
+              href="/mcgh-admin-control"
               className="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-black text-xs uppercase tracking-widest"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -78,7 +78,7 @@ export function AdminSidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: AdminSid
               Sellers
             </Link>
             <Link
-              href="/admin/products"
+              href="/mcgh-admin-control/products"
               className="flex items-center gap-3 p-4 rounded-2xl text-gray-500 dark:text-gray-400 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-800/50"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -86,7 +86,7 @@ export function AdminSidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: AdminSid
               Products
             </Link>
             <Link
-              href="/admin/blog"
+              href="/mcgh-admin-control/blog"
               className="flex items-center gap-3 p-4 rounded-2xl text-gray-500 dark:text-gray-400 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-800/50"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -111,7 +111,7 @@ export function AdminSidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: AdminSid
       <aside className="hidden md:block fixed top-0 left-0 h-full w-64 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-2xl border-r border-gray-200/50 dark:border-gray-800/50 z-40 transition-all duration-300">
         <div className="flex flex-col h-full p-6">
           <div className="flex items-center justify-between mb-10">
-            <Link href="/admin" className="flex items-center gap-3 group">
+            <Link href="/mcgh-admin-control" className="flex items-center gap-3 group">
               <div className="bg-blue-600 dark:bg-blue-500 p-2 rounded-xl shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-200">
                 <Shield className="h-6 w-6 text-white" />
               </div>
@@ -124,21 +124,21 @@ export function AdminSidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: AdminSid
 
           <nav className="flex-1 space-y-1.5">
             <Link
-              href="/admin"
+              href="/mcgh-admin-control"
               className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold text-sm transition-all duration-200 shadow-sm shadow-blue-100/50 dark:shadow-none"
             >
               <User className="h-5 w-5" />
               Sellers
             </Link>
             <Link
-              href="/admin/products"
+              href="/mcgh-admin-control/products"
               className="flex items-center gap-3 p-3 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white transition-all duration-200 text-sm"
             >
               <Package className="h-5 w-5" />
               Products
             </Link>
             <Link
-              href="/admin/blog"
+              href="/mcgh-admin-control/blog"
               className="flex items-center gap-3 p-3 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white transition-all duration-200 text-sm"
             >
               <Newspaper className="h-5 w-5" />

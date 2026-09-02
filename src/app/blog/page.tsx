@@ -1,6 +1,8 @@
 import { adminFirestore } from "@/lib/firebase-admin";
 import { BlogPostCard } from "@/components/blog-post-card";
 
+export const dynamic = 'force-dynamic';
+
 async function getBlogPosts() {
   const blogPostsSnapshot = await adminFirestore
     .collection("blogPosts")

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminFirestore } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
-  console.log("[API] POST /admin/onboard-seller route accessed");
+  console.log("[API] POST /mcgh-admin-control/onboard-seller route accessed");
   try {
     const data = await req.formData();
     const sellerId = (data.get("sellerId") as string)?.trim();
@@ -29,11 +29,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Seller onboarded successfully" }, {
       status: 200,
       headers: {
-        Location: "/admin",
+        Location: "/mcgh-admin-control",
       },
     });
   } catch (error) {
-    console.error("[API] Error in POST /admin/onboard-seller:", error);
+    console.error("[API] Error in POST /mcgh-admin-control/onboard-seller:", error);
     return NextResponse.json(
       { error: "Failed to onboard seller", details: (error as Error).message },
       { status: 500 }

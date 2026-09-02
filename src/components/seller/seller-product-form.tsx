@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { ImageUpload } from "@/components/admin/image-upload"
 import { Switch } from "@/components/ui/switch"
-import { addProduct, updateProductStatus } from "@/app/admin/actions"
+import { addProduct, updateProductStatus } from "@/app/mcgh-admin-control/(protected)/actions"
 import { toast } from "react-hot-toast"
 import { Loader2 } from "lucide-react"
 

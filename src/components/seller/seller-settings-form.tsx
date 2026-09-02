@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ImageUpload } from "@/components/admin/image-upload"
-import { updateSellerProfile } from "@/app/admin/actions"
+import { updateSellerProfile } from "@/app/mcgh-admin-control/(protected)/actions"
 import { toast } from "react-hot-toast"
 import { Loader2, Store } from "lucide-react"
 

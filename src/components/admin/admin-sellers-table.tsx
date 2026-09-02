@@ -12,7 +12,7 @@ import Link from "next/link"
 import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay"
 import { useFormStatus } from "react-dom"
 import { toast } from "react-hot-toast"
-import { updateProductStatus, toggleSellerActiveStatus, approveSeller } from "@/app/admin/actions" // Import Server Actions
+import { updateProductStatus, toggleSellerActiveStatus, approveSeller } from "@/app/mcgh-admin-control/(protected)/actions" // Import Server Actions
 import { Product, Seller } from "@/lib/types"
 
 interface AdminSellersTableProps {

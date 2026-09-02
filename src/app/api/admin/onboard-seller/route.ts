@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Seller onboarded successfully" }, {
       status: 200,
       headers: {
-        Location: "/admin",
+        Location: "/mcgh-admin-control",
       },
     });
   } catch (error) {

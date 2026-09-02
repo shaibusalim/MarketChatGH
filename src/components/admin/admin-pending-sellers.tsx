@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { UserCheck, UserX, Loader2, Clock } from "lucide-react"
 import { toast } from "react-hot-toast"
-import { approveSeller } from "@/app/admin/actions"
+import { approveSeller } from "@/app/mcgh-admin-control/(protected)/actions"
 
 interface Seller {
   id: string

@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Suspense, useState, useEffect, useCallback } from "react"
+import { Suspense, useState, useEffect, useCallback, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { AdminStatsCards } from "@/components/admin/admin-stats-cards"
@@ -40,6 +40,7 @@ function AdminDashboardContent() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 	const { data: session, status } = useSession()
+	const didRedirectRef = useRef(false)
 
 	const [sellers, setSellers] = useState<Seller[]>([])
 	const [chartSellers, setChartSellers] = useState<Seller[]>([])
@@ -57,10 +58,15 @@ function AdminDashboardContent() {
 
 	useEffect(() => {
 		if (status === 'loading') return
-		if (!session || !session.user?.isAdmin) {
-			router.push('/admin/signin')
+		if (didRedirectRef.current) return
+		const user = session?.user as any
+		const isAdmin = Boolean(user?.isAdmin || user?.role === 'admin')
+		if (!session || !isAdmin) {
+			didRedirectRef.current = true
+			// Don't reveal admin endpoint. 404 — there's nothing here.
+			router.replace('/404')
 		}
-	}, [status, session, router, searchParams, searchQuery])
+	}, [status, session, router])
 
 	const fetchSellers = useCallback(async () => {
 		setIsLoading(true)
@@ -150,12 +156,12 @@ function AdminDashboardContent() {
 	const handleSearch = (newQuery: string) => {
 		setSearchQuery(newQuery || '')
 		setPage(1)
-		router.push(`/admin?q=${encodeURIComponent(newQuery || '')}&page=1`)
+		router.push(`/mcgh-admin-control?q=${encodeURIComponent(newQuery || '')}&page=1`)
 	}
 
 	const handlePageChange = (newPage: number) => {
 		setPage(newPage)
-		router.push(`/admin?q=${encodeURIComponent(searchQuery || '')}&page=${newPage}`)
+		router.push(`/mcgh-admin-control?q=${encodeURIComponent(searchQuery || '')}&page=${newPage}`)
 	}
 
 	const handleDataRefresh = () => {

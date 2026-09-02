@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useFormStatus } from "react-dom"
 import { toast } from "react-hot-toast"
 import { Loader2 } from "lucide-react"
-import { createBlogPost, updateBlogPost } from "@/app/admin/blog/actions"
+import { createBlogPost, updateBlogPost } from "@/app/mcgh-admin-control/(protected)/blog/actions"
 import { useState, useEffect } from "react"
 import { ImageUpload } from "./image-upload"
 

@@ -38,7 +38,7 @@ export async function createBlogPost(formData: FormData) {
 
     await adminFirestore.collection("blogPosts").add(newPost)
 
-    revalidatePath("/admin/blog") // Revalidate the blog admin page
+    revalidatePath("/mcgh-admin-control/blog") // Revalidate the blog admin page
     revalidatePath("/") // Revalidate the home page where blog section is
     return { success: true, message: "Blog post created successfully!" }
   } catch (error) {
@@ -70,7 +70,7 @@ export async function updateBlogPost(formData: FormData) {
 
     await adminFirestore.collection("blogPosts").doc(id).update(updatedPost)
 
-    revalidatePath("/admin/blog") // Revalidate the blog admin page
+    revalidatePath("/mcgh-admin-control/blog") // Revalidate the blog admin page
     revalidatePath("/") // Revalidate the home page where blog section is
     revalidatePath(`/blog/${id}`) // Revalidate the specific blog post page
     return { success: true, message: "Blog post updated successfully!" }
@@ -92,7 +92,7 @@ export async function deleteBlogPost(formData: FormData) {
   try {
     await adminFirestore.collection("blogPosts").doc(id).delete()
 
-    revalidatePath("/admin/blog") // Revalidate the blog admin page
+    revalidatePath("/mcgh-admin-control/blog") // Revalidate the blog admin page
     revalidatePath("/") // Revalidate the home page where blog section is
     revalidatePath(`/blog/${id}`) // Revalidate the specific blog post page
     return { success: true, message: "Blog post deleted successfully!" }

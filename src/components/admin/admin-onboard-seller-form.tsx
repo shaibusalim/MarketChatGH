@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { useFormStatus } from "react-dom"
 import { toast } from "react-hot-toast"
 import { Loader2 } from "lucide-react"
-import { onboardSeller } from "@/app/admin/actions"
+import { onboardSeller } from "@/app/mcgh-admin-control/(protected)/actions"
 
 interface AdminOnboardSellerFormProps {
   onSuccess: () => void

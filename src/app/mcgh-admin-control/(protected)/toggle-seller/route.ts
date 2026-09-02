@@ -1,4 +1,4 @@
-// src/app/admin/toggle-seller/route.ts
+// src/app/mcgh-admin-control/toggle-seller/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { adminFirestore } from "@/lib/firebase-admin";
 import { getServerSession } from 'next-auth'
@@ -20,5 +20,5 @@ export async function POST(req: NextRequest) {
 		await adminFirestore.collection("sellers").doc(sellerId).update({ active });
 	}
 
-	return new NextResponse(null, { status: 302, headers: { Location: "/admin" } });
+	return new NextResponse(null, { status: 302, headers: { Location: "/mcgh-admin-control" } });
 }

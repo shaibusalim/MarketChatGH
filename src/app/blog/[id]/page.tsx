@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { LikeButton } from "@/components/LikeButton";
 import { CommentsSection } from "@/components/CommentsSection";
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Ensure data is always fresh
 
 interface BlogPost {

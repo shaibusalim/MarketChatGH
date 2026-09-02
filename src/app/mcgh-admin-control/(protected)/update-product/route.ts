@@ -1,4 +1,4 @@
-// src/app/admin/update-product/route.ts
+// src/app/mcgh-admin-control/update-product/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { adminFirestore } from "@/lib/firebase-admin";
 import { getServerSession } from 'next-auth'
@@ -34,5 +34,5 @@ export async function POST(req: NextRequest) {
 		await productRef.delete();
 	}
 
-	return new NextResponse(null, { status: 302, headers: { Location: "/admin" } });
+	return new NextResponse(null, { status: 302, headers: { Location: "/mcgh-admin-control" } });
 }

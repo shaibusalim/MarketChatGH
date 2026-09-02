@@ -1,8 +1,9 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter, useSearchParams, useParams } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
@@ -52,10 +53,16 @@ interface SellerData {
   products: Product[]
 }
 
+const FORBIDDEN_SELLER_IDS = new Set(['admin', 'mcgh-admin-control']);
+const isForbiddenSellerId = (id: string) =>
+  FORBIDDEN_SELLER_IDS.has(id) || id.startsWith('admin/') || id.startsWith('mcgh-admin-control/');
+
 export default function SellerPage() {
   const { sellerId } = useParams() as { sellerId: string }
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session, status: sessionStatus } = useSession()
+  const didRedirectRef = useRef(false)
 
   const [seller, setSeller] = useState<SellerInfo | null>(null)
   const [products, setProducts] = useState<Product[]>([])
@@ -72,17 +79,53 @@ export default function SellerPage() {
     searchParams.get("productStatus") || "all",
   )
 
+  // Short-circuit flag: if the sellerId is a reserved admin path, NEVER make
+  // Firestore API calls. Render "Not Found" immediately. This guards against
+  // the forbidden-sellerId useEffect winning the race AFTER the first fetch.
+  const forbiddenId = isForbiddenSellerId(sellerId)
+
   const baseUrl = undefined
 
-  // Prevent /admin from being treated as a sellerId
+  // Reserved admin paths should not be handled by this catch-all route —
+  // replace with root so user doesn't loop back here via /404 catch-all.
   useEffect(() => {
-    if (sellerId === 'admin' || sellerId.startsWith('admin/')) {
-      router.replace('/404')
+    if (forbiddenId && !didRedirectRef.current) {
+      didRedirectRef.current = true
+      window.location.href = '/'
     }
-  }, [sellerId, router])
+  }, [forbiddenId])
+
+  // Admin user landed here: if we found a real seller, redirect to admin/manage.
+  // If the seller load came back null, redirect to admin home.
+  useEffect(() => {
+    if (sessionStatus === 'loading') return
+    if (didRedirectRef.current) return
+    if (forbiddenId) return
+    if (session?.user) {
+      const user = session.user as any
+      const isAdminUser = Boolean(user.isAdmin || user.role === 'admin')
+      if (isAdminUser) {
+        if (hasFetched && !seller) {
+          didRedirectRef.current = true
+          router.replace('/mcgh-admin-control')
+        } else if (seller) {
+          didRedirectRef.current = true
+          router.replace(`/mcgh-admin-control/sellers/${sellerId}`)
+        }
+      }
+    }
+  }, [sessionStatus, session, hasFetched, seller, sellerId, router, forbiddenId])
 
   const fetchSellerData = useCallback(
     async (query: string, status: string) => {
+      // Never hit Firestore for reserved admin-path IDs that happen to slip through.
+      if (forbiddenId) {
+        setIsLoading(false)
+        setHasFetched(true)
+        setSeller(null)
+        setProducts([])
+        return
+      }
       setIsLoading(true)
       setError(null)
       try {
@@ -96,7 +139,7 @@ export default function SellerPage() {
 
         const response = await fetch(url.toString())
         if (!response.ok) {
-          const errorData = await response.json()
+          const errorData = await response.json().catch(() => ({ details: null }))
           throw new Error(errorData.details || `Failed to fetch seller data (Status: ${response.status})`)
         }
         const data: SellerData = await response.json()
@@ -105,17 +148,30 @@ export default function SellerPage() {
         setFetchedProductSearchQuery(query)
         setFetchedProductFilterStatus(status)
       } catch (err) {
-        setError((err as Error).message)
-        toast.error("Failed to load seller data: " + (err as Error).message, { duration: 5000 })
+        const msg = (err as Error).message || String(err)
+        // RESOURCE_EXHAUSTED (Firebase quota exceeded) — present as a gentle
+        // "temporarily unavailable" screen instead of a full red error.
+        if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('Quota exceeded') || msg.includes('quota exceeded')) {
+          setError(`__QUOTA_EXCEEDED__:${msg}`)
+        } else {
+          setError(msg)
+          toast.error("Failed to load seller data: " + msg, { duration: 5000 })
+        }
       } finally {
         setIsLoading(false)
         setHasFetched(true)
       }
     },
-    [sellerId, baseUrl],
+    [sellerId, baseUrl, forbiddenId],
   )
 
   useEffect(() => {
+    // For reserved-IDs: skip fetch entirely. Mark fetched so admin guard can run.
+    if (forbiddenId) {
+      setIsLoading(false)
+      setHasFetched(true)
+      return
+    }
     const handler = setTimeout(() => {
       const shouldFetch =
         !hasFetched ||
@@ -149,6 +205,8 @@ export default function SellerPage() {
     fetchSellerData,
     router,
     hasFetched,
+    searchParams,
+    forbiddenId,
   ])
 
   useEffect(() => {
@@ -195,13 +253,33 @@ export default function SellerPage() {
     )
   }
 
+  const IS_QUOTA_ERROR = Boolean(error && (error.startsWith('__QUOTA_EXCEEDED__:') || error.includes('RESOURCE_EXHAUSTED') || error.includes('Quota exceeded') || error.includes('quota exceeded')))
+
+  if (IS_QUOTA_ERROR) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-amber-50 dark:bg-amber-950 p-4 text-center">
+        <AlertCircle className="h-16 w-16 text-amber-600 dark:text-amber-400 mb-6" />
+        <h2 className="text-2xl font-bold text-amber-800 dark:text-amber-200 mb-3">Temporarily Unavailable</h2>
+        <p className="text-amber-700 dark:text-amber-300 mb-6 max-w-md leading-relaxed">
+          Our systems are processing a high number of requests right now. Please wait a moment and try again.
+        </p>
+        <Button
+          onClick={() => fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)}
+          className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-6 rounded-lg"
+        >
+          Refresh
+        </Button>
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-red-50 dark:bg-red-950 p-4 text-center">
         <AlertCircle className="h-16 w-16 text-red-600 dark:text-red-400 mb-6" />
         <h2 className="text-2xl font-bold text-red-800 dark:text-red-200 mb-3">Something went wrong!</h2>
         <p className="text-red-700 dark:text-red-300 mb-6">
-          An error occurred while loading this seller's store. Please try again.
+          An error occurred while loading this seller&apos;s store. Please try again.
         </p>
         <Button
           onClick={() => fetchSellerData(currentProductSearchQuery, currentProductFilterStatus)}

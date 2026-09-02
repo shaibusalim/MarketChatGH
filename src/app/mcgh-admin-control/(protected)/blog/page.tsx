@@ -8,7 +8,7 @@ import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { AdminBlogPostForm } from "@/components/admin/admin-blog-post-form"
-import { deleteBlogPost } from "@/app/admin/blog/actions"
+import { deleteBlogPost } from "@/app/mcgh-admin-control/(protected)/blog/actions"
 import Image from "next/image"
 import Link from "next/link"
 
