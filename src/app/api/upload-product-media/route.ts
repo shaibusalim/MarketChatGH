@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
 import { adminFirestore, adminStorage } from '@/lib/firebase-admin';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth.config';
@@ -18,7 +19,6 @@ const VIDEO_EXTENSIONS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
-    // NOTE: authOptions must be passed, otherwise the session callbacks (id/role) are not applied.
     const session = await getServerSession(authOptions);
     const user = session?.user as { id?: string; isAdmin?: boolean } | undefined;
     if (!user?.id) {
@@ -48,25 +48,52 @@ export async function POST(req: NextRequest) {
       return new NextResponse(null, { status: 403, statusText: 'Forbidden' });
     }
 
-    const bucket = adminStorage.bucket();
     const updates: { imageUrl?: string; videoUrl?: string } = {};
 
+    // 1. Process Image Upload
     if (image) {
       const ext = IMAGE_EXTENSIONS[image.type];
       if (!ext) {
         return new NextResponse(null, { status: 400, statusText: 'Invalid image format. Use JPEG, PNG, WebP or GIF.' });
       }
-      if (image.size > 4 * 1024 * 1024) {
-        return new NextResponse(null, { status: 400, statusText: 'Image size exceeds 4MB.' });
+      if (image.size > 4.5 * 1024 * 1024) {
+        return new NextResponse(null, { status: 400, statusText: 'Image size exceeds 4.5MB.' });
       }
-      const imageFile = bucket.file(`products/${productId}/image_${Date.now()}.${ext}`);
-      await imageFile.save(Buffer.from(await image.arrayBuffer()), {
-        metadata: { contentType: image.type },
-      });
-      const [imageUrl] = await imageFile.getSignedUrl({ action: 'read', expires: '03-01-2500' });
-      updates.imageUrl = imageUrl;
+
+      const filename = `products/${productId}/image_${Date.now()}.${ext}`;
+
+      // A. Try Vercel Blob first
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        try {
+          const blob = await put(filename, image, {
+            access: 'public',
+            contentType: image.type,
+          });
+          if (blob?.url) {
+            updates.imageUrl = blob.url;
+          }
+        } catch (blobErr) {
+          console.warn('[Product Media API] Blob upload failed, trying Firebase Storage:', blobErr);
+        }
+      }
+
+      // B. Fallback to Firebase Storage if Blob wasn't used/failed
+      if (!updates.imageUrl) {
+        try {
+          const bucket = adminStorage.bucket();
+          const imageFile = bucket.file(filename);
+          await imageFile.save(Buffer.from(await image.arrayBuffer()), {
+            metadata: { contentType: image.type },
+          });
+          const [imageUrl] = await imageFile.getSignedUrl({ action: 'read', expires: '03-01-2500' });
+          updates.imageUrl = imageUrl;
+        } catch (storageErr) {
+          console.error('[Product Media API] Storage upload failed:', storageErr);
+        }
+      }
     }
 
+    // 2. Process Video Upload
     if (video) {
       const ext = VIDEO_EXTENSIONS[video.type];
       if (!ext) {
@@ -75,15 +102,43 @@ export async function POST(req: NextRequest) {
       if (video.size > 100 * 1024 * 1024) {
         return new NextResponse(null, { status: 400, statusText: 'Video size exceeds 100MB.' });
       }
-      const videoFile = bucket.file(`products/${productId}/video_${Date.now()}.${ext}`);
-      await videoFile.save(Buffer.from(await video.arrayBuffer()), {
-        metadata: { contentType: video.type },
-      });
-      const [videoUrl] = await videoFile.getSignedUrl({ action: 'read', expires: '03-01-2500' });
-      updates.videoUrl = videoUrl;
+
+      const filename = `products/${productId}/video_${Date.now()}.${ext}`;
+
+      // A. Try Vercel Blob
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        try {
+          const blob = await put(filename, video, {
+            access: 'public',
+            contentType: video.type,
+          });
+          if (blob?.url) {
+            updates.videoUrl = blob.url;
+          }
+        } catch (blobErr) {
+          console.warn('[Product Media API] Blob video upload failed, trying Firebase Storage:', blobErr);
+        }
+      }
+
+      // B. Fallback to Firebase Storage
+      if (!updates.videoUrl) {
+        try {
+          const bucket = adminStorage.bucket();
+          const videoFile = bucket.file(filename);
+          await videoFile.save(Buffer.from(await video.arrayBuffer()), {
+            metadata: { contentType: video.type },
+          });
+          const [videoUrl] = await videoFile.getSignedUrl({ action: 'read', expires: '03-01-2500' });
+          updates.videoUrl = videoUrl;
+        } catch (storageErr) {
+          console.error('[Product Media API] Video Storage upload failed:', storageErr);
+        }
+      }
     }
 
-    await productRef.set(updates, { merge: true });
+    if (Object.keys(updates).length > 0) {
+      await productRef.set(updates, { merge: true });
+    }
 
     return new NextResponse(null, { status: 200, headers: { Location: '/seller' } });
   } catch (error) {
