@@ -111,13 +111,19 @@ export async function updateProductStatus(formData: FormData) {
       revalidatePath("/mcgh-admin-control")
       return { success: true, message: "Product deleted successfully." }
     } else if (action === "update") {
+      const title = (formData.get("title") || formData.get("name")) as string | null
       const price = formData.get("price") as string
+      const compareAtPrice = formData.get("compareAtPrice") as string | null
+      const category = formData.get("category") as string | null
       const description = formData.get("description") as string
       const imageUrl = formData.get("imageUrl") as string
       const isAvailable = formData.get("isAvailable") === "true"
       
       const updates: any = {}
+      if (title !== null && title !== undefined && title.trim()) updates.title = title.trim()
       if (price) updates.price = price
+      if (compareAtPrice !== null && compareAtPrice !== undefined) updates.compareAtPrice = compareAtPrice.trim() || null
+      if (category !== null && category !== undefined) updates.category = category.trim() || "General"
       if (description) updates.description = description
       if (imageUrl) updates.imageUrl = imageUrl
       updates.isAvailable = isAvailable
@@ -147,18 +153,24 @@ export async function addProduct(formData: FormData) {
   await simulateDelay(500)
 
   const sellerId = formData.get("sellerId") as string
+  const title = (formData.get("title") || formData.get("name")) as string | null
   const price = formData.get("price") as string
+  const compareAtPrice = formData.get("compareAtPrice") as string | null
+  const category = (formData.get("category") as string) || "General"
   const description = formData.get("description") as string
   const imageUrl = formData.get("imageUrl") as string
 
   if (!sellerId || !price || !description || !imageUrl) {
-    return { success: false, message: "All fields are required." }
+    return { success: false, message: "All required fields must be filled." }
   }
 
   try {
     await adminFirestore.collection("products").add({
       sellerId,
+      title: title ? title.trim() : (description ? description.split("\n")[0].substring(0, 80) : "Product"),
       price,
+      compareAtPrice: compareAtPrice ? compareAtPrice.trim() : null,
+      category: category ? category.trim() : "General",
       description,
       imageUrl,
       isAvailable: true,
@@ -483,5 +495,26 @@ export async function changeAccountEmail(formData: FormData) {
   } catch (error) {
     console.error(`[changeAccountEmail] Error for ${collection}/${userId}:`, error)
     return { success: false, message: `Failed to update email: ${(error as Error).message}` }
+  }
+}
+
+
+export async function quickToggleProductStock(productId: string, isAvailable: boolean) {
+  try {
+    const productRef = adminFirestore.collection("products").doc(productId);
+    await productRef.update({
+      isAvailable,
+      stockStatus: isAvailable ? "available" : "out_of_stock",
+    });
+    const productDoc = await productRef.get();
+    const sellerId = productDoc.data()?.sellerId;
+    if (sellerId) {
+      revalidatePath(`/${sellerId}`);
+      revalidatePath(`/seller/dashboard/${sellerId}`);
+    }
+    return { success: true };
+  } catch (err) {
+    console.error("Error toggling product stock:", err);
+    return { success: false, message: (err as Error).message };
   }
 }

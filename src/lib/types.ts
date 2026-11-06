@@ -1,13 +1,20 @@
 export interface Product {
   id: string
+  title?: string
+  name?: string
   imageUrl: string
+  images?: string[]
   price: string
+  compareAtPrice?: string
   description: string
+  category?: string
   sellerId: string
   createdAt: string
   status: string
   stockStatus: string
   isAvailable: boolean
+  views?: number
+  isFeatured?: boolean
 }
 
 export interface Seller {
@@ -19,4 +26,9 @@ export interface Seller {
   active: boolean
   isApproved?: boolean
   products: Product[]
+  bio?: string
+  bannerUrl?: string
+  profileImageUrl?: string
+  rating?: number
+  reviewCount?: number
 }

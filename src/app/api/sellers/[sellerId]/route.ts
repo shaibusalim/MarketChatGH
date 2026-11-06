@@ -8,14 +8,20 @@ export const runtime = "nodejs"
 // --- Types ---
 interface Product {
   id: string
+  title?: string
+  name?: string
   imageUrl: string
+  images?: string[]
   price: string
+  compareAtPrice?: string | null
   description: string
+  category?: string
   sellerId: string
   createdAt: string
   status: string
   stockStatus: string
   isAvailable: boolean
+  views?: number
 }
 
 interface SellerInfo {
@@ -29,6 +35,8 @@ interface SellerInfo {
   reviewCount?: number // Added for seller review count
   isApproved?: boolean // Added for admin management
   profileImageUrl?: string // Added for seller profile
+  bio?: string
+  bannerUrl?: string
 }
 
 interface SellerResponse {
@@ -36,11 +44,52 @@ interface SellerResponse {
   products: Product[]
 }
 
+/**
+ * Smart automatic category inference for existing products in the DB
+ * that were created before the category field was introduced.
+ */
+function inferCategory(text: string, existingCategory?: string): string {
+  if (existingCategory && existingCategory.trim() && existingCategory.trim().toLowerCase() !== "general") {
+    return existingCategory.trim()
+  }
+
+  const t = text.toLowerCase()
+  if (/computer|laptop|macbook|dell|hp\b|lenovo|thinkpad|monitor|keyboard|mouse|pc\b|desktop|processor|ram\b|intel|ssd\b/i.test(t)) {
+    return "Computers"
+  }
+  if (/phone|iphone|samsung|android|charger|cable|earbud|airpod|headphone|speaker|bluetooth|tablet|ipad|smartwatch|gadget|camera|power\s*bank/i.test(t)) {
+    return "Electronics"
+  }
+  if (/shoe|sneaker|heel|boot|sandal|slippers|crocs|air force|jordan|loafer|slide|footwear/i.test(t)) {
+    return "Shoes"
+  }
+  if (/bag|backpack|handbag|purse|tote|wallet|clutch|suitcase|duffle/i.test(t)) {
+    return "Bags"
+  }
+  if (/book|novel|textbook|guide|bible|story|study|stationery|pen|pencil|notebook/i.test(t)) {
+    return "Books"
+  }
+  if (/dress|shirt|t-shirt|top|trouser|pant|jean|hoodie|jacket|skirt|suit|cloth|wear|jersey|underwear|short/i.test(t)) {
+    return "Clothing & Fashion"
+  }
+  if (/perfume|cologne|makeup|lipstick|lotion|cream|soap|hair|wig|skincare|cosmetic|fragrance/i.test(t)) {
+    return "Beauty & Care"
+  }
+  if (/food|snack|drink|beverage|rice|oil|spice|grocer|biscuit|chocolate|candy/i.test(t)) {
+    return "Groceries & Food"
+  }
+  if (/watch|jewelry|jewellery|ring|necklace|bracelet|chain|earring|gold|silver/i.test(t)) {
+    return "Jewelry & Watches"
+  }
+  return "General"
+}
+
 // --- Firestore query ---
 const getSellerAndProducts = async (
   slugOrId: string,
   productQ = "",
   productStatus = "all",
+  productCategory = "all",
 ): Promise<SellerResponse> => {
  
   try {
@@ -60,7 +109,6 @@ const getSellerAndProducts = async (
 
     if (sellerDoc.exists) {
       const data = sellerDoc.data()
-      console.log(`[API] Seller data:`, data)
       seller = {
         id: sellerDoc.id,
         name: data?.name ?? "Unnamed Seller",
@@ -72,6 +120,8 @@ const getSellerAndProducts = async (
         reviewCount: data?.reviewCount ?? 0, // Retrieve review count
         isApproved: data?.isApproved ?? true,
         profileImageUrl: data?.profileImageUrl ?? undefined,
+        bio: data?.bio ?? undefined,
+        bannerUrl: data?.bannerUrl ?? undefined,
       }
     }
 
@@ -90,26 +140,25 @@ const getSellerAndProducts = async (
     }
 
     const productsSnapshot = await productsQuery.get()
-   
 
     const products: Product[] = productsSnapshot.docs.map((doc) => {
       const data = doc.data()
       const imageUrl = data.imageUrl ?? "/img1.jpg"
-      if (!data.imageUrl) {
-        console.warn(`[API] Product ${doc.id} missing imageUrl, using fallback. Data:`, {
-          id: doc.id,
-          description: data.description?.substring(0, 50),
-          sellerId: data.sellerId,
-          hasMediaReference: !!data.mediaReference,
-        })
-      }
+      const title = data.title || data.name || (data.description ? data.description.split("\n")[0] : "Product")
+      const category = inferCategory((data.title || "") + " " + (data.description || ""), data.category)
+
       return {
         id: doc.id,
+        title,
+        name: title,
         imageUrl,
+        images: Array.isArray(data.images) && data.images.length > 0 ? data.images : [imageUrl],
         price: data.price ?? "Price not specified",
-        description: data.description ?? "No description",
+        compareAtPrice: data.compareAtPrice ?? null,
+        description: data.description ?? "",
+        category,
         sellerId: data.sellerId ?? "",
-        createdAt: data.createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
+        createdAt: data.createdAt?.toDate?.().toISOString() ?? (typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString()),
         status: data.status ?? "unknown",
         stockStatus: data.stockStatus ?? "unknown",
         isAvailable: data.isAvailable ?? false,
@@ -117,7 +166,12 @@ const getSellerAndProducts = async (
       }
     })
 
-    return { seller, products }
+    // If a specific category was requested via query param and it's not 'all'
+    const filteredProducts = productCategory !== "all" 
+      ? products.filter(p => p.category?.toLowerCase() === productCategory.toLowerCase())
+      : products
+
+    return { seller, products: filteredProducts }
   } catch (error) {
     console.error("Error in getSellerAndProducts:", error);
     throw error;
@@ -131,10 +185,9 @@ export async function GET(request: Request, props: { params: Promise<{ sellerId:
     const { searchParams } = new URL(request.url)
     const productQ = searchParams.get("productQ") || ""
     const productStatus = searchParams.get("productStatus") || "all"
+    const productCategory = searchParams.get("category") || "all"
 
-   
-
-    const response = await getSellerAndProducts(sellerId, productQ, productStatus)
+    const response = await getSellerAndProducts(sellerId, productQ, productStatus, productCategory)
     return NextResponse.json(response, { status: 200 })
   } catch (error) {
     console.error("[API] Error in GET /api/sellers/[sellerId]:", error)

@@ -62,6 +62,10 @@ import { motion, AnimatePresence } from "framer-motion"
 
 interface Product {
   id: string
+  title?: string
+  name?: string
+  category?: string
+  compareAtPrice?: string | null
   imageUrl: string
   price: string
   description: string
@@ -69,6 +73,7 @@ interface Product {
   stockStatus: string
   isAvailable: boolean
   views?: number
+  displayDescription?: string
 }
 
 interface Lead {
@@ -124,6 +129,7 @@ export default function SellerDashboardPage() {
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined)
   const [activityDateFilter, setActivityDateFilter] = useState("7")
   const [searchQuery, setSearchQuery] = useState("")
+  const [dashboardCategoryFilter, setDashboardCategoryFilter] = useState("all")
   const [leads, setLeads] = useState<Lead[]>([])
   const [activeTab, setActiveTab] = useState("catalog")
   const [stats, setStats] = useState({
@@ -242,19 +248,31 @@ export default function SellerDashboardPage() {
     setIsFormOpen(true)
   }
 
+  const dashboardCategories = [
+    "all",
+    ...Array.from(new Set(products.map(p => p.category?.trim()).filter(Boolean) as string[]))
+  ];
+
   const filteredProducts = products.map(p => {
-    // If description contains the price, try to clean it up for the title display
-    // but keep the original for the edit form
     let cleanDescription = p.description
     if (p.description.includes("PRICE:")) {
       cleanDescription = p.description.split("PRICE:")[0].trim()
-      // Remove trailing characters like * or ¶
       cleanDescription = cleanDescription.replace(/[*¶]$/, "").trim()
     }
     return { ...p, displayDescription: cleanDescription || p.description }
-  }).filter(p => 
-    p.description.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  }).filter(p => {
+    const q = searchQuery.toLowerCase()
+    const matchesSearch = !q || 
+      (p.title && p.title.toLowerCase().includes(q)) ||
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q)) ||
+      (p.category && p.category.toLowerCase().includes(q))
+    
+    const matchesCategory = dashboardCategoryFilter === "all" || 
+      (p.category && p.category.toLowerCase() === dashboardCategoryFilter.toLowerCase())
+
+    return matchesSearch && matchesCategory
+  })
 
   const isAdmin = Boolean((session?.user as any)?.role === "admin" || (session?.user as any)?.isAdmin === true)
 
@@ -440,17 +458,30 @@ export default function SellerDashboardPage() {
                     <CardTitle className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white italic">Merchant Catalog</CardTitle>
                     <p className="text-xs text-gray-500 font-bold tracking-widest uppercase mt-1">Managing {filteredProducts.length} items</p>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="relative group flex-1 md:w-80">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="relative group flex-1 md:w-64">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                       <input 
                         type="text" 
                         placeholder="Search items..." 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-12 pr-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500/50 outline-none transition-all shadow-inner"
+                        className="w-full pl-12 pr-6 py-3.5 bg-gray-50 dark:bg-gray-800/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500/50 outline-none transition-all shadow-inner"
                       />
                     </div>
+                    {dashboardCategories.length > 2 && (
+                      <Select value={dashboardCategoryFilter} onValueChange={setDashboardCategoryFilter}>
+                        <SelectTrigger className="w-40 h-[46px] rounded-2xl bg-gray-50 dark:bg-gray-800/50 border-none text-xs font-bold">
+                          <SelectValue placeholder="Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {dashboardCategories.filter(c => c !== "all").map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -493,7 +524,7 @@ export default function SellerDashboardPage() {
                             <div className="flex-1 min-w-0 overflow-hidden pt-1">
                               <div className="space-y-2">
                                 <h4 className="text-lg sm:text-2xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic leading-tight whitespace-normal break-words underline decoration-blue-500/30">
-                                  {product.displayDescription || product.description}
+                                  {product.title || product.name || product.displayDescription || product.description}
                                 </h4>
                                 
                                 <div className="flex flex-wrap items-center gap-4">
@@ -507,6 +538,11 @@ export default function SellerDashboardPage() {
                                     <Badge className={`border-none text-[8px] font-black tracking-widest px-3 py-1.5 shadow-sm transform hover:scale-105 transition-transform ${product.isAvailable ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}>
                                       {product.isAvailable ? "IN STOCK" : "OUT OF STOCK"}
                                     </Badge>
+                                    {product.category && (
+                                      <Badge className="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-none text-[8px] font-black tracking-widest px-2.5 py-1">
+                                        {product.category}
+                                      </Badge>
+                                    )}
                                     <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full shadow-inner border border-gray-200 dark:border-white/5">
                                       <Eye className="h-3 w-3 text-gray-400" />
                                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{product.views || 0} views</span>

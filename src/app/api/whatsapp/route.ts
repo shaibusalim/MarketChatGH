@@ -3,6 +3,7 @@ import { TwilioMessagingResponse } from "@/lib/twilio";
 import { adminFirestore, adminStorage } from "@/lib/firebase-admin";
 import admin from "firebase-admin";
 import { answerComplexQuery } from "@/ai/flows/answer-complex-queries";
+import { parseProductCaption } from "@/ai/flows/parse-product-from-whatsapp";
 
 export async function POST(req: NextRequest) {
   console.log("[WhatsApp] Webhook received POST request at", new Date().toISOString());
@@ -80,9 +81,9 @@ export async function POST(req: NextRequest) {
 
     if (numMedia > 0) {
       if (!body) {
-        console.warn("Media received without caption", { sellerId, messageSid });
+        console.warn("Media received without caption", { actualSellerId, messageSid });
         twiml.message(
-          "⚠️ Please include a description and price with your product image."
+          "⚠️ Please include a product name, price, and description with your product image."
         );
         return new Response(twiml.toString(), {
           headers: { "Content-Type": "text/xml" },
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
 
       // Validate media URL
       if (!mediaUrl) {
-        console.error("Media URL is missing", { sellerId, messageSid, numMedia });
+        console.error("Media URL is missing", { actualSellerId, messageSid, numMedia });
         twiml.message(
           "⚠️ Unable to process image. Please try uploading again."
         );
@@ -100,18 +101,14 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      const lines = body.split("\n").map((line) => line.trim()).filter(Boolean);
-      const priceLine = lines.find(
-        (line) =>
-          line.toLowerCase().includes("price") ||
-          line.includes("₵") ||
-          line.toLowerCase().includes("ghc")
-      );
-      const descriptionLines = lines.filter((line) => line !== priceLine);
-      const description = descriptionLines.join("\n") || "No description provided";
-      const price = priceLine || "Price not specified";
+      // Use AI to extract structured product data (title, category, clean price, compareAtPrice, description)
+      const parsedProduct = await parseProductCaption(body);
+      const title = parsedProduct.title || "Product";
+      const category = parsedProduct.category || "General";
+      const price = parsedProduct.price || "Price not specified";
+      const compareAtPrice = parsedProduct.compareAtPrice || null;
+      const description = parsedProduct.description || body;
 
-      // Use mediaUrl directly from Twilio - it's already a valid image URL
       // FIX: Download from Twilio and upload to Firebase Storage to ensure persistence
       let imageUrl = mediaUrl;
       try {
@@ -120,13 +117,6 @@ export async function POST(req: NextRequest) {
         const authToken = process.env.TWILIO_AUTH_TOKEN;
 
         if (accountSid && authToken) {
-          // Construct the API URL for the media
-          // The MediaUrl0 from form data is usually the public redirect URL or the API resource URL
-          // If it is a direct URL, we might need to authenticate.
-
-          const mediaId = mediaUrl.split('/').pop(); // Extract media SID if possible
-          // If mediaUrl is like https://api.twilio.com/...
-
           const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
 
           const response = await fetch(mediaUrl, {
@@ -139,7 +129,7 @@ export async function POST(req: NextRequest) {
             const buffer = await response.arrayBuffer();
             const contentType = response.headers.get('content-type') || 'image/jpeg';
             const ext = contentType.split('/')[1] || 'jpg';
-            const filename = `products/${sellerId}/${messageSid}_${Date.now()}.${ext}`;
+            const filename = `products/${actualSellerId}/${messageSid}_${Date.now()}.${ext}`;
             const bucket = adminStorage.bucket();
             const file = bucket.file(filename);
 
@@ -149,8 +139,6 @@ export async function POST(req: NextRequest) {
               }
             });
 
-            // Make the file publicly accessible or sign it (long expiration)
-            // Here we generate a long-lived signed URL
             const [signedUrl] = await file.getSignedUrl({
               action: 'read',
               expires: '03-01-2500',
@@ -164,7 +152,6 @@ export async function POST(req: NextRequest) {
         }
       } catch (uploadError) {
         console.error("Error uploading media to Firebase:", uploadError);
-        // Fallback to original URL if upload fails, though it might broken later
       }
 
       const mediaReference = {
@@ -172,19 +159,17 @@ export async function POST(req: NextRequest) {
         originalUrl: mediaUrl,
       };
 
-      const existingProducts = await adminFirestore
-        .collection("products")
-        .where("sellerId", "==", actualSellerId)
-        .limit(1)
-        .get();
-
       try {
         await adminFirestore.collection("products").add({
           sellerId: actualSellerId,
+          title,
+          name: title,
+          category,
+          price,
+          compareAtPrice,
+          description,
           imageUrl,
           mediaReference,
-          price,
-          description,
           status: "available",
           stockStatus: "in stock",
           isAvailable: true,
@@ -199,14 +184,19 @@ export async function POST(req: NextRequest) {
       }
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin;
-      if (existingProducts.empty) {
-        const storeUrl = `${baseUrl}/${sellerData.slug || actualSellerId}`;
-        twiml.message(
-          `✅ Product added successfully!\n\n🛍️ View your store: ${storeUrl}`
-        );
-      } else {
-        twiml.message("✅ Product added successfully!");
+      const storeUrl = `${baseUrl}/${sellerData.slug || actualSellerId}`;
+
+      let replyMsg = `✅ *Product Added Successfully!*\n\n` +
+        `📦 *Item:* ${title}\n` +
+        `🏷️ *Category:* ${category}\n` +
+        `💰 *Price:* GH₵${price}`;
+
+      if (compareAtPrice) {
+        replyMsg += ` _(Was GH₵${compareAtPrice})_`;
       }
+
+      replyMsg += `\n\n🛍️ *View in your store:*\n${storeUrl}`;
+      twiml.message(replyMsg);
     } else if (body) {
       try {
         const aiResult = await answerComplexQuery({ query: body });
@@ -218,7 +208,7 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      console.warn("Empty message received", { sellerId, messageSid });
+      console.warn("Empty message received", { actualSellerId, messageSid });
       twiml.message("⚠️ Please provide a message or product details.");
     }
   } catch (error) {
