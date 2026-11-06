@@ -89,6 +89,14 @@ function inferCategory(text: string, existingCategory?: string): string {
   return "General"
 }
 
+// --- Memory Cache to protect against Google Cloud Firestore Spark Tier limits (50k daily reads) ---
+interface CacheEntry {
+  data: SellerResponse
+  timestamp: number
+}
+const sellerStoreCache = new Map<string, CacheEntry>()
+const CACHE_TTL_MS = 60 * 1000 // 60 seconds
+
 // --- Firestore query ---
 const getSellerAndProducts = async (
   slugOrId: string,
@@ -96,7 +104,14 @@ const getSellerAndProducts = async (
   productStatus = "all",
   productCategory = "all",
 ): Promise<SellerResponse> => {
- 
+  const cacheKey = `${slugOrId}:${productQ}:${productStatus}:${productCategory}`
+  const cached = sellerStoreCache.get(cacheKey)
+
+  // Serve from memory if fresh
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data
+  }
+
   try {
     // Try to fetch seller by ID first
     let sellerDoc = await adminFirestore.collection("sellers").doc(slugOrId).get()
@@ -181,9 +196,20 @@ const getSellerAndProducts = async (
       ? products.filter(p => p.category?.toLowerCase() === productCategory.toLowerCase())
       : products
 
-    return { seller, products: filteredProducts }
+    const result = { seller, products: filteredProducts }
+    sellerStoreCache.set(cacheKey, { data: result, timestamp: Date.now() })
+    sellerStoreCache.set(`${slugOrId}:fallback`, { data: result, timestamp: Date.now() })
+    return result
   } catch (error) {
     console.error("Error in getSellerAndProducts:", error);
+    const msg = (error as Error)?.message || "";
+    if (msg.includes("RESOURCE_EXHAUSTED") || msg.includes("Quota exceeded")) {
+      const fallback = sellerStoreCache.get(cacheKey) || sellerStoreCache.get(`${slugOrId}:fallback`);
+      if (fallback) {
+        console.warn(`[Firestore Quota Exceeded] Serving cached fallback for seller: ${slugOrId}`);
+        return fallback.data;
+      }
+    }
     throw error;
   }
 }

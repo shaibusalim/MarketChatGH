@@ -219,10 +219,11 @@ export default function SellerDashboardPage() {
     // Initial fetch with loader
     fetchSellerData(true)
 
-    // Poll for updates every 10 seconds for real-time feel (without loader)
+    // Poll for updates only when the browser tab is actively visible to preserve Firestore read quotas
     const pollInterval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return
       fetchSellerData(false)
-    }, 10000)
+    }, 45000)
 
     return () => clearInterval(pollInterval)
   }, [fetchSellerData])
