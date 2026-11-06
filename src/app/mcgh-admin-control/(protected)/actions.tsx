@@ -259,8 +259,29 @@ export async function updateSellerProfile(formData: FormData) {
     if (location) updates.location = location
     if (phone) updates.phone = phone
     
-    const profileImageUrl = formData.get("profileImageUrl") as string
-    if (profileImageUrl) updates.profileImageUrl = profileImageUrl
+    const profileImageUrl = formData.get("profileImageUrl") as string | null
+    if (profileImageUrl !== null && profileImageUrl !== undefined) updates.profileImageUrl = profileImageUrl
+
+    const bannerUrl = formData.get("bannerUrl") as string | null
+    if (bannerUrl !== null && bannerUrl !== undefined) updates.bannerUrl = bannerUrl
+
+    const tagline = formData.get("tagline") as string | null
+    if (tagline !== null && tagline !== undefined) updates.tagline = tagline
+
+    const bio = formData.get("bio") as string | null
+    if (bio !== null && bio !== undefined) updates.bio = bio
+
+    const announcement = formData.get("announcement") as string | null
+    if (announcement !== null && announcement !== undefined) updates.announcement = announcement
+
+    const themeColor = formData.get("themeColor") as string | null
+    if (themeColor !== null && themeColor !== undefined) updates.themeColor = themeColor
+
+    const instagram = formData.get("instagram") as string | null
+    if (instagram !== null && instagram !== undefined) updates.instagram = instagram
+
+    const tiktok = formData.get("tiktok") as string | null
+    if (tiktok !== null && tiktok !== undefined) updates.tiktok = tiktok
 
     updates.updatedAt = new Date().toISOString()
 

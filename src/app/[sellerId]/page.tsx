@@ -26,6 +26,8 @@ import {
   Sparkles,
   X,
   Filter,
+  Instagram,
+  Video,
 } from "lucide-react"
 import Link from "next/link"
 import ProductCard from "@/components/ProductCard"
@@ -61,11 +63,88 @@ interface SellerInfo {
   profileImageUrl?: string
   bio?: string
   bannerUrl?: string
+  tagline?: string
+  announcement?: string
+  themeColor?: string
+  instagram?: string
+  tiktok?: string
 }
 
 interface SellerData {
   seller: SellerInfo | null
   products: Product[]
+}
+
+const THEME_STYLES: Record<string, {
+  announcementBg: string
+  primaryBtn: string
+  activeChip: string
+  badgeBg: string
+  badgeText: string
+  accentText: string
+  gradientFrom: string
+  gradientTo: string
+}> = {
+  emerald: {
+    announcementBg: "bg-emerald-600",
+    primaryBtn: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20",
+    activeChip: "bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/25",
+    badgeBg: "bg-emerald-50 dark:bg-emerald-950/60",
+    badgeText: "text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    accentText: "text-emerald-600",
+    gradientFrom: "from-emerald-500",
+    gradientTo: "to-teal-700",
+  },
+  blue: {
+    announcementBg: "bg-blue-600",
+    primaryBtn: "bg-blue-600 hover:bg-blue-700 shadow-blue-600/20",
+    activeChip: "bg-blue-600 text-white border-blue-600 shadow-blue-600/25",
+    badgeBg: "bg-blue-50 dark:bg-blue-950/60",
+    badgeText: "text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+    accentText: "text-blue-600",
+    gradientFrom: "from-blue-500",
+    gradientTo: "to-indigo-700",
+  },
+  purple: {
+    announcementBg: "bg-purple-600",
+    primaryBtn: "bg-purple-600 hover:bg-purple-700 shadow-purple-600/20",
+    activeChip: "bg-purple-600 text-white border-purple-600 shadow-purple-600/25",
+    badgeBg: "bg-purple-50 dark:bg-purple-950/60",
+    badgeText: "text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+    accentText: "text-purple-600",
+    gradientFrom: "from-purple-500",
+    gradientTo: "to-indigo-800",
+  },
+  rose: {
+    announcementBg: "bg-rose-600",
+    primaryBtn: "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20",
+    activeChip: "bg-rose-600 text-white border-rose-600 shadow-rose-600/25",
+    badgeBg: "bg-rose-50 dark:bg-rose-950/60",
+    badgeText: "text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    accentText: "text-rose-600",
+    gradientFrom: "from-rose-500",
+    gradientTo: "to-pink-700",
+  },
+  amber: {
+    announcementBg: "bg-amber-600",
+    primaryBtn: "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20",
+    activeChip: "bg-amber-600 text-white border-amber-600 shadow-amber-600/25",
+    badgeBg: "bg-amber-50 dark:bg-amber-950/60",
+    badgeText: "text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    accentText: "text-amber-600",
+    gradientFrom: "from-amber-500",
+    gradientTo: "to-orange-700",
+  },
+  slate: {
+    announcementBg: "bg-slate-900",
+    primaryBtn: "bg-slate-900 hover:bg-black shadow-slate-900/20",
+    activeChip: "bg-slate-900 text-white border-slate-900 shadow-slate-900/25",
+    badgeBg: "bg-slate-100 dark:bg-slate-800",
+    badgeText: "text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700",
+    accentText: "text-slate-900 dark:text-white",
+    gradientFrom: "from-gray-700",
+    gradientTo: "to-slate-900",
+  },
 }
 
 const CATEGORY_MAP: { name: string; icon: string; regex: RegExp }[] = [
@@ -150,6 +229,7 @@ export default function SellerPage() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [hasCopiedLink, setHasCopiedLink] = useState(false)
 
+  const activeTheme = THEME_STYLES[seller?.themeColor || "emerald"] || THEME_STYLES.emerald
   const forbiddenId = isForbiddenSellerId(sellerId)
 
   // Route & Admin guards
@@ -530,18 +610,34 @@ export default function SellerPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-24">
       {/* Top Brand Announcement Bar */}
-      <div className="bg-emerald-600 text-white py-2 px-4 text-center text-xs font-semibold flex items-center justify-center gap-2">
-        <Sparkles className="h-3.5 w-3.5" />
-        <span>Official MarketChat Storefront &bull; WhatsApp Fast Order Ready</span>
+      <div className={`${activeTheme.announcementBg} text-white py-2 px-4 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors`}>
+        <Sparkles className="h-3.5 w-3.5 shrink-0" />
+        <span className="truncate max-w-2xl">
+          {seller.announcement?.trim() || "Official MarketChat Storefront • WhatsApp Fast Order Ready"}
+        </span>
       </div>
 
       {/* Real E-Commerce Store Banner & Identity */}
-      <section className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="container mx-auto px-4 max-w-7xl py-6 sm:py-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <section className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 relative">
+        {seller.bannerUrl ? (
+          <div className="relative w-full h-36 sm:h-52 md:h-60 overflow-hidden bg-gray-900">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={seller.bannerUrl}
+              alt={`${seller.name} banner`}
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+          </div>
+        ) : (
+          <div className={`w-full h-20 sm:h-28 bg-gradient-to-r ${activeTheme.gradientFrom} ${activeTheme.gradientTo} opacity-85`} />
+        )}
+
+        <div className="container mx-auto px-4 max-w-7xl -mt-10 sm:-mt-14 relative z-10 pb-6 sm:pb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
             {/* Store Profile Info */}
-            <div className="flex items-center gap-4 sm:gap-5">
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow-md font-extrabold text-2xl sm:text-3xl shrink-0 overflow-hidden">
+            <div className="flex items-end gap-4 sm:gap-5">
+              <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br ${activeTheme.gradientFrom} ${activeTheme.gradientTo} text-white flex items-center justify-center shadow-xl font-black text-2xl sm:text-3xl shrink-0 overflow-hidden ring-4 ring-white dark:ring-gray-900`}>
                 {seller.profileImageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -554,15 +650,21 @@ export default function SellerPage() {
                 )}
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 pb-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
                     {seller.name}
                   </h1>
-                  <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  <span className={`inline-flex items-center gap-1 ${activeTheme.badgeBg} ${activeTheme.badgeText} text-[10px] font-bold px-2 py-0.5 rounded-full border`}>
                     <ShieldCheck className="h-3 w-3" /> Verified Merchant
                   </span>
                 </div>
+
+                {seller.tagline && (
+                  <p className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 italic">
+                    {seller.tagline}
+                  </p>
+                )}
 
                 <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                   <div className="flex items-center gap-1">
@@ -587,14 +689,56 @@ export default function SellerPage() {
                     </>
                   )}
                 </div>
+
+                {seller.bio && (
+                  <p className="text-xs text-gray-600 dark:text-gray-300 max-w-lg mt-1 line-clamp-2">
+                    {seller.bio}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex items-center gap-2.5 w-full md:w-auto">
+            {/* Quick Actions & Socials */}
+            <div className="flex items-center gap-2.5 w-full md:w-auto flex-wrap">
+              {seller.instagram && (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-11 px-3 sm:px-4 rounded-xl border-pink-200 dark:border-pink-900/40 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/20 font-bold text-xs"
+                >
+                  <a
+                    href={`https://instagram.com/${seller.instagram.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Instagram Profile"
+                  >
+                    <Instagram className="h-4 w-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">@{seller.instagram.replace(/^@/, "")}</span>
+                  </a>
+                </Button>
+              )}
+
+              {seller.tiktok && (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-11 px-3 sm:px-4 rounded-xl border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 font-bold text-xs"
+                >
+                  <a
+                    href={`https://tiktok.com/@${seller.tiktok.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="TikTok Profile"
+                  >
+                    <Video className="h-4 w-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">@{seller.tiktok.replace(/^@/, "")}</span>
+                  </a>
+                </Button>
+              )}
+
               <Button
                 asChild
-                className="flex-1 md:flex-initial h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm shadow-emerald-600/20"
+                className={`flex-1 md:flex-initial h-11 px-5 rounded-xl text-white font-bold shadow-sm ${activeTheme.primaryBtn}`}
               >
                 <a href={generalStoreChatUrl} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="h-4 w-4 mr-2 fill-current" />
@@ -635,7 +779,7 @@ export default function SellerPage() {
             {selectedCategory !== "All" && (
               <button
                 onClick={() => setSelectedCategory("All")}
-                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 hover:underline"
+                className="`text-xs font-bold ${activeTheme.accentText} flex items-center gap-1 hover:underline`"
               >
                 <X className="w-3.5 h-3.5" /> Show All ({enhancedProducts.length})
               </button>
@@ -655,7 +799,7 @@ export default function SellerPage() {
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold shrink-0 transition-all flex items-center gap-2 shadow-sm border ${
                     isSelected
-                      ? "bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/25 scale-[1.02]"
+                      ? `${activeTheme.activeChip} scale-[1.02]`
                       : "bg-gray-50 dark:bg-gray-800/60 text-gray-700 dark:text-gray-200 border-gray-200/80 dark:border-gray-700/80 hover:border-emerald-500 hover:bg-white dark:hover:bg-gray-800"
                   }`}
                 >

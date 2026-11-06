@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "react-hot-toast"
@@ -196,8 +197,7 @@ export function SellerAccountSettingsForm({
                         Current Password
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           placeholder="Enter current password"
                           className="rounded-xl bg-gray-50 dark:bg-gray-800 border-none h-12 focus:ring-2 focus:ring-indigo-500 font-bold"
                           {...field}
@@ -216,8 +216,7 @@ export function SellerAccountSettingsForm({
                         New Password
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           placeholder="Min 8 chars + uppercase + number + symbol"
                           className="rounded-xl bg-gray-50 dark:bg-gray-800 border-none h-12 focus:ring-2 focus:ring-indigo-500 font-bold"
                           {...field}
@@ -236,8 +235,7 @@ export function SellerAccountSettingsForm({
                         Confirm New Password
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           placeholder="Re-enter the new password"
                           className="rounded-xl bg-gray-50 dark:bg-gray-800 border-none h-12 focus:ring-2 focus:ring-indigo-500 font-bold"
                           {...field}
@@ -319,8 +317,7 @@ export function SellerAccountSettingsForm({
                         Verify with Current Password
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           placeholder="Enter your password to confirm"
                           className="rounded-xl bg-gray-50 dark:bg-gray-800 border-none h-12 focus:ring-2 focus:ring-indigo-500 font-bold"
                           {...field}

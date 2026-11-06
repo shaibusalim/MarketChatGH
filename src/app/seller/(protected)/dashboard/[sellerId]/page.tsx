@@ -57,6 +57,7 @@ import { updateProductStatus } from "@/app/mcgh-admin-control/(protected)/action
 import { SellerProductForm } from "@/components/seller/seller-product-form"
 import { SellerSettingsForm } from "@/components/seller/seller-settings-form"
 import { SellerAccountSettingsForm } from "@/components/seller/seller-account-settings-form"
+import { SellerCustomizationForm } from "@/components/seller/seller-customization-form"
 import { TwilioMediaDisplay } from "@/components/TwilioMediaDisplay"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -126,6 +127,21 @@ export default function SellerDashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false)
+  const [isCustomizationOpen, setIsCustomizationOpen] = useState(false)
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false)
+  const [hasCopiedLiveLink, setHasCopiedLiveLink] = useState(false)
+
+  const copyLiveShopLink = async () => {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/${sellerId}` : `https://marketchat.site/${sellerId}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setHasCopiedLiveLink(true)
+      toast.success("Live shop link copied!")
+      setTimeout(() => setHasCopiedLiveLink(false), 2000)
+    } catch (err) {
+      toast.error("Could not copy link")
+    }
+  }
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined)
   const [activityDateFilter, setActivityDateFilter] = useState("7")
   const [searchQuery, setSearchQuery] = useState("")
@@ -277,94 +293,212 @@ export default function SellerDashboardPage() {
   const isAdmin = Boolean((session?.user as any)?.role === "admin" || (session?.user as any)?.isAdmin === true)
 
   const sidebarItems = (
-    <>
-      <div className="p-8">
+    <div className="flex flex-col h-full">
+      <div className="p-6 border-b border-gray-100 dark:border-white/5">
         <Link href="/" className="flex items-center">
           <Image
             src="/marketchat_logo.svg"
             alt="MarketChat Logo"
-            width={240}
-            height={72}
-            className="h-16 w-auto object-contain scale-[1.4] origin-left"
+            width={190}
+            height={56}
+            className="h-10 w-auto object-contain scale-[1.3] origin-left"
             priority
           />
         </Link>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1.5 mt-4">
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-black tracking-tight">
-          <LayoutDashboard className="h-5 w-5" /> Dashboard
-        </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-2xl text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold tracking-tight">
-          <Package className="h-5 w-5" /> My Catalog
-        </Button>
+      <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
         <Button 
           variant="ghost" 
-          onClick={() => setIsSettingsOpen(true)}
-          className="w-full justify-start gap-3 h-12 rounded-2xl text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold tracking-tight"
+          onClick={() => { setActiveTab("catalog"); setIsMobileDrawerOpen(false); }}
+          className={`w-full justify-start gap-3 h-12 rounded-2xl font-black tracking-tight transition-all ${activeTab === "catalog" ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-sm" : "text-gray-500 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50"}`}
         >
-          <Settings className="h-5 w-5" /> Shop Profile
+          <LayoutDashboard className="h-5 w-5" /> Dashboard & Catalog
         </Button>
+
         <Button 
           variant="ghost" 
-          onClick={() => setIsAccountSettingsOpen(true)}
-          className="w-full justify-start gap-3 h-12 rounded-2xl text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold tracking-tight"
+          onClick={() => { setActiveTab("leads"); setIsMobileDrawerOpen(false); }}
+          className={`w-full justify-start gap-3 h-12 rounded-2xl font-black tracking-tight transition-all ${activeTab === "leads" ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-emerald-600 hover:bg-gray-50 dark:hover:bg-gray-800/50"}`}
         >
-          <UserCog className="h-5 w-5" /> User Settings
+          <MousePointerClick className="h-5 w-5" /> Activity Log
+        </Button>
+
+        <div className="pt-2 pb-1">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-3">Storefront & Customization</p>
+        </div>
+
+        <Button 
+          variant="ghost" 
+          onClick={() => { setIsCustomizationOpen(true); setIsMobileDrawerOpen(false); }}
+          className="w-full justify-between h-12 rounded-2xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10 hover:from-purple-500/20 hover:to-amber-500/20 text-purple-700 dark:text-purple-300 font-black tracking-tight border border-purple-200/50 dark:border-purple-800/30 shadow-sm"
+        >
+          <span className="flex items-center gap-3">
+            <Palette className="h-5 w-5 text-purple-600 dark:text-purple-400" /> Customize Live Shop
+          </span>
+          <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none text-[9px] font-black uppercase tracking-wider px-2 py-0.5">
+            NEW
+          </Badge>
+        </Button>
+
+        <Button asChild variant="ghost" className="w-full justify-start gap-3 h-12 rounded-2xl text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-bold tracking-tight">
+          <Link href={`/${sellerId}`} target="_blank" onClick={() => setIsMobileDrawerOpen(false)}>
+            <Store className="h-5 w-5 text-emerald-600" /> View Live Shop
+            <ExternalLink className="h-3.5 w-3.5 ml-auto text-gray-400" />
+          </Link>
+        </Button>
+
+        <div className="pt-2 pb-1">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-3">Settings & Profile</p>
+        </div>
+
+        <Button 
+          variant="ghost" 
+          onClick={() => { setIsSettingsOpen(true); setIsMobileDrawerOpen(false); }}
+          className="w-full justify-start gap-3 h-12 rounded-2xl text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 font-bold tracking-tight"
+        >
+          <Settings className="h-5 w-5" /> Shop Profile & Logo
+        </Button>
+
+        <Button 
+          variant="ghost" 
+          onClick={() => { setIsAccountSettingsOpen(true); setIsMobileDrawerOpen(false); }}
+          className="w-full justify-start gap-3 h-12 rounded-2xl text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold tracking-tight"
+        >
+          <UserCog className="h-5 w-5" /> User & Password
         </Button>
       </nav>
 
-      <div className="p-6 border-t border-gray-50 dark:border-white/5">
-        <div className="bg-gray-50 dark:bg-gray-800/40 p-4 rounded-3xl flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center text-blue-600 font-black">
-            {sellerInfo?.name?.[0] || 'S'}
+      <div className="p-5 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-gray-900/30">
+        <div className="bg-white dark:bg-gray-800/70 p-3.5 rounded-2xl flex items-center gap-3 mb-3 border border-gray-100 dark:border-white/5 shadow-sm">
+          <div className="h-10 w-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0 overflow-hidden shadow-sm">
+            {sellerInfo?.profileImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={sellerInfo.profileImageUrl} alt="Shop logo" className="h-full w-full object-cover" />
+            ) : (
+              sellerInfo?.name?.[0] || 'S'
+            )}
           </div>
-          <div className="truncate">
-            <p className="text-xs font-black truncate">{sellerInfo?.name || 'Shop'}</p>
-            <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Certified Partner</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black truncate text-gray-900 dark:text-white">{sellerInfo?.name || 'Shop'}</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[9px] font-bold text-gray-400 tracking-wider uppercase">Live Partner</span>
+            </div>
           </div>
         </div>
+
         <Button 
           variant="ghost" 
-          className="w-full justify-start gap-3 h-12 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 font-black tracking-tight"
+          className="w-full justify-start gap-3 h-11 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-xs tracking-tight"
           onClick={() => signOut({ callbackUrl: "/" })}
         >
-          <LogOut className="h-5 w-5" /> Logout
+          <LogOut className="h-4 w-4" /> Logout
         </Button>
       </div>
-    </>
+    </div>
   )
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-gray-900 dark:text-gray-100 transition-colors duration-500">
-      {/* Mobile Header */}
-      <header className="lg:hidden h-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 fixed top-0 left-0 right-0 z-40 px-6 flex items-center justify-between shadow-sm">
+      {/* Mobile App Bar */}
+      <header className="lg:hidden h-16 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 fixed top-0 left-0 right-0 z-40 px-4 flex items-center justify-between shadow-sm">
         <Link href="/" className="flex items-center">
           <Image
             src="/marketchat_logo.svg"
             alt="MarketChat Logo"
-            width={180}
-            height={54}
-            className="h-10 w-auto object-contain scale-[1.6] origin-left"
+            width={150}
+            height={45}
+            className="h-8 w-auto object-contain scale-[1.3] origin-left"
             priority
           />
         </Link>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-xl h-12 w-12 bg-gray-50 dark:bg-gray-800 border-none">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-72 bg-white dark:bg-gray-900 border-r-none border-white/5">
-            <SheetHeader className="sr-only">
-              <SheetTitle>Navigation Menu</SheetTitle>
-            </SheetHeader>
-            <div className="flex flex-col h-full">
-              {sidebarItems}
-            </div>
-          </SheetContent>
-        </Sheet>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleAddProduct}
+            size="sm"
+            className="h-9 px-3 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20"
+          >
+            <Plus className="h-4 w-4 mr-1" /> Entry
+          </Button>
+          
+          <Sheet open={isMobileDrawerOpen} onOpenChange={setIsMobileDrawerOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-80 bg-white dark:bg-gray-900 border-r-none border-white/5">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Navigation Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col h-full">
+                {sidebarItems}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </header>
+
+      {/* Mobile App Bottom Navigation Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl border-t border-gray-200/80 dark:border-gray-800/80 z-40 px-2 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom">
+        <button
+          onClick={() => setActiveTab("catalog")}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all ${
+            activeTab === "catalog"
+              ? "text-blue-600 dark:text-blue-400 font-black scale-105"
+              : "text-gray-400 dark:text-gray-500 font-semibold"
+          }`}
+        >
+          <div className={`p-1.5 rounded-xl ${activeTab === "catalog" ? "bg-blue-50 dark:bg-blue-900/40" : ""}`}>
+            <LayoutDashboard className="h-5 w-5" />
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">Catalog</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("leads")}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all ${
+            activeTab === "leads"
+              ? "text-emerald-600 dark:text-emerald-400 font-black scale-105"
+              : "text-gray-400 dark:text-gray-500 font-semibold"
+          }`}
+        >
+          <div className={`p-1.5 rounded-xl ${activeTab === "leads" ? "bg-emerald-50 dark:bg-emerald-900/40" : ""}`}>
+            <MousePointerClick className="h-5 w-5" />
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">Activity</span>
+        </button>
+
+        <button
+          onClick={handleAddProduct}
+          className="flex flex-col items-center justify-center -mt-5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white p-3 rounded-2xl shadow-xl shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all"
+          title="Add New Entry"
+        >
+          <Plus className="h-6 w-6 stroke-[3]" />
+        </button>
+
+        <button
+          onClick={() => setIsCustomizationOpen(true)}
+          className="flex flex-col items-center justify-center py-1 px-3 rounded-2xl text-purple-600 dark:text-purple-400 font-bold transition-all"
+        >
+          <div className="p-1.5 rounded-xl bg-purple-50 dark:bg-purple-900/30">
+            <Palette className="h-5 w-5" />
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">Customize</span>
+        </button>
+
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="flex flex-col items-center justify-center py-1 px-3 rounded-2xl text-gray-400 dark:text-gray-500 font-semibold"
+        >
+          <div className="p-1.5 rounded-xl">
+            <Settings className="h-5 w-5" />
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">Settings</span>
+        </button>
+      </nav>
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-72 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-white/5 fixed h-full z-30 shadow-2xl transition-all duration-500">
@@ -387,7 +521,13 @@ export default function SellerDashboardPage() {
             </p>
           </motion.div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              onClick={() => setIsCustomizationOpen(true)}
+              className="h-12 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-black italic tracking-tighter px-5 shadow-xl shadow-purple-600/20"
+            >
+              <Palette className="h-4 w-4 mr-2" /> Customize Live Shop
+            </Button>
             <Button asChild variant="outline" className="h-12 rounded-2xl border-white/50 dark:border-white/10 shadow-xl bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl font-black italic tracking-tighter">
               <Link href={`/${sellerId}`} target="_blank">
                 <ExternalLink className="h-4 w-4 mr-2" /> Live Shop
@@ -401,6 +541,105 @@ export default function SellerDashboardPage() {
             </Button>
           </div>
         </header>
+
+        {/* Storefront Hero & Live Customization Showcase Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 overflow-hidden rounded-[2.5rem] bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 shadow-2xl relative"
+        >
+          {/* Banner Graphic or Uploaded Cover */}
+          <div className="relative h-28 sm:h-36 md:h-44 w-full overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+            {sellerInfo?.bannerUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={sellerInfo.bannerUrl}
+                alt="Store Banner"
+                className="w-full h-full object-cover object-center"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 opacity-90" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-white/20">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                Live Storefront
+              </span>
+            </div>
+          </div>
+
+          <div className="px-6 md:px-10 pb-8 pt-0 relative">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-10 sm:-mt-14 mb-2">
+              <div className="flex items-end gap-4 sm:gap-6">
+                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-white dark:bg-gray-800 shadow-2xl p-1.5 border-4 border-white dark:border-gray-900 shrink-0 overflow-hidden relative">
+                  {sellerInfo?.profileImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={sellerInfo.profileImageUrl}
+                      alt={sellerInfo.name}
+                      className="w-full h-full object-cover rounded-2xl"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl">
+                      {sellerInfo?.name?.[0] || 'S'}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pb-1">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+                      {sellerInfo?.name || "Your Shop"}
+                    </h2>
+                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5">
+                      ✓ Active Merchant
+                    </Badge>
+                  </div>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1 italic">
+                    {sellerInfo?.tagline || "Customize your tagline, store banner, and theme color"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <Button
+                  onClick={() => setIsCustomizationOpen(true)}
+                  className="h-11 px-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-black text-xs tracking-tight shadow-xl shadow-purple-600/20"
+                >
+                  <Palette className="h-4 w-4 mr-2" />
+                  Customize Live Shop
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={copyLiveShopLink}
+                  className="h-11 px-4 rounded-2xl border-gray-200 dark:border-white/10 text-xs font-bold shadow-sm"
+                  title="Copy Live Shop URL"
+                >
+                  {hasCopiedLiveLink ? (
+                    <Check className="h-4 w-4 text-emerald-500 mr-1.5" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-1.5" />
+                  )}
+                  {hasCopiedLiveLink ? "Copied" : "Copy Link"}
+                </Button>
+
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-11 px-4 rounded-2xl border-gray-200 dark:border-white/10 text-xs font-bold shadow-sm"
+                >
+                  <Link href={`/${sellerId}`} target="_blank">
+                    <ExternalLink className="h-4 w-4 mr-1.5" />
+                    Visit Shop
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-12">
@@ -766,6 +1005,24 @@ export default function SellerDashboardPage() {
           }}
           sellerId={sellerInfo.id || sellerId}
           currentEmail={(session?.user as any)?.email || ""}
+        />
+      )}
+
+      {sellerInfo && (
+        <SellerCustomizationForm
+          isOpen={isCustomizationOpen}
+          onClose={() => setIsCustomizationOpen(false)}
+          onSuccess={fetchSellerData}
+          sellerId={sellerId}
+          currentData={{
+            bannerUrl: sellerInfo.bannerUrl,
+            tagline: sellerInfo.tagline,
+            bio: sellerInfo.bio,
+            announcement: sellerInfo.announcement,
+            themeColor: sellerInfo.themeColor || "emerald",
+            instagram: sellerInfo.instagram,
+            tiktok: sellerInfo.tiktok,
+          }}
         />
       )}
     </div>

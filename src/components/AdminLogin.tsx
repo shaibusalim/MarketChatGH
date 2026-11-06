@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Lock, User, Loader2, AlertCircle } from "lucide-react"
+import { Lock, User, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { signIn, useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 
 export function AdminLogin({ onClose }: { onClose: () => void }) {
   const [credentials, setCredentials] = useState({ email: "", password: "" })
+  const [showPassword, setShowPassword] = useState(false)
   const [formError, setFormError] = useState<string>("")
   const [isSigningIn, setIsSigningIn] = useState(false)
   const router = useRouter()
@@ -20,8 +21,6 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
   const { data: session, status: sessionStatus } = useSession()
   const didRedirectRef = useRef(false)
 
-  // If there's already a NextAuth ?error= in the URL (from previous redirect:true failures)
-  // surface it in the form so the user sees it (instead of "just refreshes with no error").
   useEffect(() => {
     const urlError = searchParams.get('error')
     if (urlError) {
@@ -32,17 +31,12 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
         'Configuration': 'There is a server configuration issue. Please contact support.',
       }[urlError] || `Sign-in failed: ${urlError}`
       setFormError(friendly)
-      // Clear the error from the URL so it doesn't keep showing after a retry.
       const url = new URL(window.location.href)
       url.searchParams.delete('error')
       window.history.replaceState({}, '', url.toString())
     }
-    const cbError = searchParams.get('callbackUrl')
-    void cbError
   }, [searchParams])
 
-  // If the user opens the dialog while ALREADY logged in as an admin,
-  // close the dialog + jump to the dashboard immediately (no double-login needed).
   useEffect(() => {
     if (sessionStatus === 'loading') return
     if (didRedirectRef.current) return
@@ -63,8 +57,6 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
     setIsSigningIn(true)
 
     try {
-      // Use redirect:false so signIn() PROMISE resolves with actual result object.
-      // On failure we display the error INLINE — no blank refresh, no mystery reload.
       const result = await signIn("credentials", {
         email: credentials.email,
         password: credentials.password,
@@ -82,8 +74,6 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
         return
       }
 
-      // Credentials accepted. Now re-read the SERVER session endpoint for the
-      // role + id claims. Use that to route the user to the correct dashboard.
       const sessionRes = await fetch('/api/auth/session', { cache: 'no-store' })
         .catch(() => ({ ok: false, json: async () => null } as any))
       const freshSession = sessionRes.ok ? await (sessionRes as any).json() : null
@@ -95,8 +85,6 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
         onClose()
         router.replace('/mcgh-admin-control')
       } else if (user?.id) {
-        // Not admin → probably a seller who accidentally typed into admin dialog.
-        // Send them to their seller dashboard.
         didRedirectRef.current = true
         onClose()
         router.replace(`/seller/dashboard/${String(user.id)}`)
@@ -118,36 +106,29 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
           onInteractOutside={(e) => { e.preventDefault() }}
         >
           <DialogHeader>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md">
-                <Lock className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2.5 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20">
+                <Lock className="h-5 w-5" />
               </div>
-              <div>
-                <DialogTitle className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                  Admin Panel
-                </DialogTitle>
-                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-                  Secure Access Only
-                </p>
-              </div>
+              <DialogTitle className="text-xl font-bold tracking-tight">Admin Portal</DialogTitle>
             </div>
-            <DialogDescription className="text-muted-foreground pt-2">
-              Authorized administrators only. Your activity is logged.
+            <DialogDescription className="text-xs text-muted-foreground">
+              Sign in with your master administrator credentials to access system controls.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-            {formError && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/40 text-red-700 dark:text-red-300"
-              >
-                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                <div className="text-sm font-medium leading-relaxed">{formError}</div>
-              </motion.div>
-            )}
+          {formError && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-2.5 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div className="flex-1 font-medium">{formError}</div>
+            </motion.div>
+          )}
 
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label htmlFor="admin-login-email">Admin Email</Label>
               <div className="relative">
@@ -178,14 +159,23 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
                 </div>
                 <Input
                   id="admin-login-password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={credentials.password}
                   onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                  className="pl-9 w-full h-11 rounded-xl"
+                  className="pl-9 pr-10 w-full h-11 rounded-xl"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors focus:outline-none p-1"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
@@ -208,9 +198,9 @@ export function AdminLogin({ onClose }: { onClose: () => void }) {
               Not an admin?{" "}
               <a
                 href="/seller/signin"
-                className="font-semibold text-green-600 dark:text-green-500 hover:underline"
+                className="text-primary font-medium hover:underline"
               >
-                Go to Seller Login
+                Go to Seller Sign In
               </a>
             </p>
           </form>

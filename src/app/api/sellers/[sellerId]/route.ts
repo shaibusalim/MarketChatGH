@@ -37,6 +37,11 @@ interface SellerInfo {
   profileImageUrl?: string // Added for seller profile
   bio?: string
   bannerUrl?: string
+  tagline?: string
+  announcement?: string
+  themeColor?: string
+  instagram?: string
+  tiktok?: string
 }
 
 interface SellerResponse {
@@ -122,6 +127,11 @@ const getSellerAndProducts = async (
         profileImageUrl: data?.profileImageUrl ?? undefined,
         bio: data?.bio ?? undefined,
         bannerUrl: data?.bannerUrl ?? undefined,
+        tagline: data?.tagline ?? undefined,
+        announcement: data?.announcement ?? undefined,
+        themeColor: data?.themeColor ?? "emerald",
+        instagram: data?.instagram ?? undefined,
+        tiktok: data?.tiktok ?? undefined,
       }
     }
 

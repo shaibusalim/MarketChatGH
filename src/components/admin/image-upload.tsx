@@ -1,12 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload, X, ImageIcon, Loader2 } from "lucide-react"
+import { Upload, X, ImageIcon, Loader2, Camera, Link as LinkIcon, Check } from "lucide-react"
 import Image from "next/image"
 import { toast } from "react-hot-toast"
 
@@ -15,16 +14,18 @@ interface ImageUploadProps {
   onChange: (url: string) => void
   label?: string
   placeholder?: string
+  aspectRatio?: "square" | "video" | "banner"
 }
 
 export function ImageUpload({
   value,
   onChange,
   label = "Image",
-  placeholder = "Enter image URL or upload file",
+  placeholder = "Enter image URL or select a photo",
+  aspectRatio = "square",
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadMode, setUploadMode] = useState<"url" | "upload">("url")
+  const [uploadMode, setUploadMode] = useState<"upload" | "url">("upload")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,9 +44,9 @@ export function ImageUpload({
 
       const result = await response.json()
 
-      if (result.success) {
+      if (result.success && result.url) {
         onChange(result.url)
-        toast.success("Image uploaded successfully!", { duration: 3000 })
+        toast.success("Photo uploaded successfully!", { duration: 3000 })
       } else {
         toast.error(result.message || "Upload failed", { duration: 5000 })
       }
@@ -54,7 +55,6 @@ export function ImageUpload({
       toast.error("Upload failed. Please try again.", { duration: 5000 })
     } finally {
       setIsUploading(false)
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
@@ -72,102 +72,149 @@ export function ImageUpload({
     }
   }
 
-  return (
-    <div className="space-y-4">
-      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</Label>
+  const aspectClass =
+    aspectRatio === "banner"
+      ? "aspect-[3/1] max-h-48"
+      : aspectRatio === "video"
+      ? "aspect-video"
+      : "aspect-square max-w-[200px]"
 
-      {/* Mode Toggle */}
-      <div className="flex gap-2 mb-3">
-        <Button
-          type="button"
-          variant={uploadMode === "url" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setUploadMode("url")}
-          className="text-xs"
-        >
-          URL
-        </Button>
-        <Button
-          type="button"
-          variant={uploadMode === "upload" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setUploadMode("upload")}
-          className="text-xs"
-        >
-          Upload
-        </Button>
+  return (
+    <div className="space-y-3 w-full">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          {label}
+        </Label>
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setUploadMode("upload")}
+            className={`px-2 py-1 text-[11px] font-bold rounded-md transition-all ${
+              uploadMode === "upload"
+                ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
+                : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            Upload File
+          </button>
+          <button
+            type="button"
+            onClick={() => setUploadMode("url")}
+            className={`px-2 py-1 text-[11px] font-bold rounded-md transition-all ${
+              uploadMode === "url"
+                ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
+                : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            Web URL
+          </button>
+        </div>
       </div>
 
-      {uploadMode === "url" ? (
-        /* URL Input Mode */
-        <div className="space-y-2">
-          <Input type="url" placeholder={placeholder} value={value} onChange={handleUrlChange} className="w-full" />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        disabled={isUploading}
+        className="hidden"
+      />
+
+      {uploadMode === "upload" ? (
+        <div>
+          {value ? (
+            <div className="relative group">
+              <div
+                className={`relative w-full ${aspectClass} mx-auto bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border-2 border-dashed border-gray-200 dark:border-gray-700 shadow-sm`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={value}
+                  alt="Uploaded preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 mt-2 justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="rounded-xl text-xs h-8 font-semibold"
+                >
+                  <Camera className="h-3.5 w-3.5 mr-1" />
+                  Change Photo
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={clearImage}
+                  className="rounded-xl text-xs h-8 font-semibold"
+                >
+                  <X className="h-3.5 w-3.5 mr-1" />
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => !isUploading && fileInputRef.current?.click()}
+              className="border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all bg-gray-50/50 dark:bg-gray-800/30 hover:bg-emerald-50/30 text-center group"
+            >
+              {isUploading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-8 w-8 text-emerald-600 animate-spin" />
+                  <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                    Uploading image...
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                    <Upload className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                      Tap to choose an image from device
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      JPG, PNG, GIF, WebP (Max 10MB)
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : (
-        /* File Upload Mode */
+        /* Web URL Mode */
         <div className="space-y-2">
-          <div className="flex gap-2">
+          <div className="relative">
+            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="flex-1"
+              type="url"
+              placeholder={placeholder}
+              value={value}
+              onChange={handleUrlChange}
+              className="pl-9 h-11 rounded-xl text-xs font-medium"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="px-3"
-            >
-              {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            </Button>
           </div>
-          {isUploading && <p className="text-xs text-blue-600 dark:text-blue-400">Uploading image...</p>}
-        </div>
-      )}
-
-      {/* Image Preview */}
-      {value && (
-        <div className="relative">
-          <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
-            {value.startsWith("http") || value.startsWith("/") ? (
-              <Image
-                src={value || "/placeholder.svg"}
+          {value && (
+            <div className={`relative w-full ${aspectClass} mx-auto bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={value}
                 alt="Preview"
-                fill
-                className="object-cover"
+                className="w-full h-full object-cover"
                 onError={() => {
-                  toast.error("Failed to load image preview", { duration: 3000 })
+                  toast.error("Failed to load image preview URL")
                 }}
               />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <ImageIcon className="h-12 w-12 text-gray-400" />
-                <span className="ml-2 text-sm text-gray-500">Invalid image URL</span>
-              </div>
-            )}
-          </div>
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={clearImage}
-            className="absolute top-2 right-2 h-6 w-6 p-0"
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      )}
-
-      {/* Upload Guidelines */}
-      {uploadMode === "upload" && (
-        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-          <p>• Supported formats: JPEG, PNG, GIF, WebP</p>
-          <p>• Maximum file size: 5MB</p>
-          <p>• Recommended dimensions: 800x400px for blog posts</p>
+            </div>
+          )}
         </div>
       )}
     </div>

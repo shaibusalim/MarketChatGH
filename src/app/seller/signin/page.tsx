@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label"
 import { AlertCircle, ShieldAlert } from "lucide-react"
 import { motion } from "framer-motion"
 import { toast } from "react-hot-toast"
-import { Store, Mail, Lock, Loader2 } from "lucide-react"
+import { Store, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react"
 import { signIn, useSession } from "next-auth/react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 
 export default function SellerSignInPage() {
   const [credentials, setCredentials] = useState({ email: "", password: "" })
+  const [showPassword, setShowPassword] = useState(false)
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [formError, setFormError] = useState<string>("")
   const searchParams = useSearchParams()
@@ -149,17 +150,26 @@ export default function SellerSignInPage() {
                   <Link href="#" className="text-xs text-green-600 hover:underline">Forgot password?</Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                   <Input
                     id="seller-login-password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     required
                     autoComplete="current-password"
                     value={credentials.password}
                     onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                    className="pl-10 h-12 rounded-xl"
+                    className="pl-10 pr-10 h-12 rounded-xl"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors focus:outline-none p-1"
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 

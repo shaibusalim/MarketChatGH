@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -61,12 +61,22 @@ export function SellerSettingsForm({
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      name: currentData.name,
-      location: currentData.location,
-      phone: currentData.phone,
+      name: currentData.name || "",
+      location: currentData.location || "",
+      phone: currentData.phone || "",
       profileImageUrl: currentData.profileImageUrl || "",
     },
   })
+
+  // Sync form when currentData changes
+  useEffect(() => {
+    form.reset({
+      name: currentData.name || "",
+      location: currentData.location || "",
+      phone: currentData.phone || "",
+      profileImageUrl: currentData.profileImageUrl || "",
+    })
+  }, [currentData, form])
 
   const onSubmit = async (values: SettingsFormValues) => {
     setIsSubmitting(true)
@@ -76,9 +86,7 @@ export function SellerSettingsForm({
       formData.append("name", values.name)
       formData.append("location", values.location)
       formData.append("phone", values.phone)
-      if (values.profileImageUrl) {
-        formData.append("profileImageUrl", values.profileImageUrl)
-      }
+      formData.append("profileImageUrl", values.profileImageUrl || "")
 
       const result = await updateSellerProfile(formData)
 
@@ -99,29 +107,38 @@ export function SellerSettingsForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-white/20 dark:border-gray-800/20 rounded-3xl shadow-2xl">
-        <DialogHeader>
-          <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4">
-             <Store className="h-6 w-6 text-blue-600" />
+      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-6 sm:p-8">
+        <DialogHeader className="pb-2 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 bg-blue-50 dark:bg-blue-950/50 rounded-2xl flex items-center justify-center text-blue-600">
+              <Store className="h-6 w-6" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Shop Profile & Logo
+              </DialogTitle>
+              <DialogDescription className="text-xs text-gray-500">
+                Update your public business identity and contact details.
+              </DialogDescription>
+            </div>
           </div>
-          <DialogTitle className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Shop Settings</DialogTitle>
-          <DialogDescription className="text-gray-500 font-medium">
-            Update your public business identity and contact details.
-          </DialogDescription>
         </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-3">
+            {/* Logo / Shop Profile Photo */}
             <FormField
               control={form.control}
               name="profileImageUrl"
               render={({ field }) => (
-                <FormItem className="flex flex-col items-center justify-center mb-6">
+                <FormItem className="flex flex-col items-center justify-center">
                   <FormControl>
                     <ImageUpload
                       value={field.value || ""}
                       onChange={field.onChange}
-                      label="Shop Profile Photo"
-                      placeholder="Upload logo"
+                      label="Shop Profile Logo"
+                      placeholder="Upload store logo or avatar"
+                      aspectRatio="square"
                     />
                   </FormControl>
                   <FormMessage />
@@ -134,11 +151,13 @@ export function SellerSettingsForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Business Name</FormLabel>
+                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
+                    Business Name
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="e.g. Ama's Fresh Groceries" 
-                      className="rounded-xl bg-gray-50 dark:bg-gray-800 border-none h-12 focus:ring-2 focus:ring-blue-500 font-bold"
+                      className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
                       {...field} 
                     />
                   </FormControl>
@@ -152,11 +171,13 @@ export function SellerSettingsForm({
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Business Location</FormLabel>
+                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
+                    Business Location
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="e.g. Accra Central, Makola" 
-                      className="rounded-xl bg-gray-50 dark:bg-gray-800 border-none h-12 focus:ring-2 focus:ring-blue-500 font-bold"
+                      className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
                       {...field} 
                     />
                   </FormControl>
@@ -170,11 +191,13 @@ export function SellerSettingsForm({
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Contact Number</FormLabel>
+                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
+                    Contact / WhatsApp Number
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="e.g. 024XXXXXXX" 
-                      className="rounded-xl bg-gray-50 dark:bg-gray-800 border-none h-12 focus:ring-2 focus:ring-blue-500 font-bold"
+                      className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
                       {...field} 
                     />
                   </FormControl>
@@ -183,23 +206,23 @@ export function SellerSettingsForm({
               )}
             />
 
-            <DialogFooter className="pt-4 flex flex-col sm:flex-row gap-3">
+            <DialogFooter className="pt-3 flex flex-col sm:flex-row gap-2 sm:gap-0">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="rounded-xl font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="rounded-xl font-bold text-xs h-11"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 grow h-12"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md shadow-blue-500/20 h-11 px-6 text-xs"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   "Save Changes"
                 )}
