@@ -219,13 +219,18 @@ export default function SellerDashboardPage() {
     // Initial fetch with loader
     fetchSellerData(true)
 
-    // Poll for updates only when the browser tab is actively visible to preserve Firestore read quotas
-    const pollInterval = setInterval(() => {
-      if (typeof document !== "undefined" && document.hidden) return
+    // No background polling (it burned the Firestore read quota). Instead, refresh when the seller
+    // returns to this tab, at most once per minute. Edits/actions already refresh via onSuccess.
+    let lastFetch = Date.now()
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return
+      if (Date.now() - lastFetch < 60_000) return
+      lastFetch = Date.now()
       fetchSellerData(false)
-    }, 45000)
+    }
+    document.addEventListener("visibilitychange", onVisible)
 
-    return () => clearInterval(pollInterval)
+    return () => document.removeEventListener("visibilitychange", onVisible)
   }, [fetchSellerData])
 
   // Re-fetch leads immediately whenever the date filter changes

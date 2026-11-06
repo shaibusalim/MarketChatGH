@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { generateSlug } from "@/lib/utils";
 import { z } from "zod";
+import { enforceRateLimit } from "@/lib/ratelimit";
 
 const passwordSchema = z.string().min(8, "Password must be at least 8 characters long").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/, "Password must include uppercase, lowercase, a number, and a special character");
 
@@ -10,6 +11,10 @@ const phoneSchema = z.string().regex(/^(\+233|0)[2-9]\d{8}$/, "Please enter a va
 
 export async function POST(req: Request) {
   try {
+    // Limit account creation / claim attempts: 5 per hour per IP.
+    const limited = await enforceRateLimit(req, "seller-signup", 5, "1 h");
+    if (limited) return limited;
+
     const { name, email, password, location, phone } = await req.json();
 
     const validation = z.object({

@@ -1,5 +1,6 @@
 import { adminFirestore } from "@/lib/firebase-admin";
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
@@ -14,9 +15,12 @@ export async function POST(
   const params = await props.params;
   const { commentId } = params;
 
-  if (!commentId) {
+  if (!commentId || commentId.length > 200) {
     return new NextResponse("Comment ID is required", { status: 400 });
   }
+
+  const limited = await enforceRateLimit(request, "blog-reply", 5, "10 m");
+  if (limited) return limited;
 
   try {
     const { text, author } = await request.json();
@@ -33,7 +37,7 @@ export async function POST(
       .collection("replies");
 
     await replyRef.add({
-      text,
+      text: text.trim().slice(0, 1000),
       author: "Anonymous", // Replace with actual author
       timestamp: new Date(),
     });

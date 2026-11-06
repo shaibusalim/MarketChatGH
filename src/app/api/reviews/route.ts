@@ -1,6 +1,7 @@
 import { adminFirestore } from "@/lib/firebase-admin"
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
+import { enforceRateLimit, getClientIp } from "@/lib/ratelimit"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -16,6 +17,10 @@ interface ReviewData {
 export async function POST(request: Request) {
   
   try {
+    // Anti-spam: 5 reviews / 10 min per IP overall, and max 2 per day per IP for any single seller.
+    const limited = await enforceRateLimit(request, "reviews", 5, "10 m")
+    if (limited) return limited
+
     const { sellerId, rating, comment, userId } = (await request.json()) as {
       sellerId: string
       rating: number
@@ -23,14 +28,36 @@ export async function POST(request: Request) {
       userId: string
     }
 
-    if (!sellerId || typeof rating !== "number" || rating < 1 || rating > 5 || !comment || !userId) {
+    if (
+      typeof sellerId !== "string" ||
+      !sellerId ||
+      sellerId.length > 128 ||
+      typeof rating !== "number" ||
+      !Number.isFinite(rating) ||
+      rating < 1 ||
+      rating > 5 ||
+      typeof comment !== "string" ||
+      !comment.trim() ||
+      typeof userId !== "string" ||
+      !userId ||
+      userId.length > 128
+    ) {
       return NextResponse.json({ error: "Invalid input data" }, { status: 400 })
     }
+
+    const perSellerLimited = await enforceRateLimit(
+      request,
+      "reviews-per-seller",
+      2,
+      "1 d",
+      `${getClientIp(request)}:${sellerId}`,
+    )
+    if (perSellerLimited) return perSellerLimited
 
     const reviewData: ReviewData = {
       sellerId,
       rating,
-      comment,
+      comment: comment.trim().slice(0, 1000),
       userId,
       createdAt: new Date().toISOString(),
     }

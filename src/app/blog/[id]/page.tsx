@@ -4,6 +4,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { LikeButton } from "@/components/LikeButton";
 import { CommentsSection } from "@/components/CommentsSection";
+import { sanitizeBlogHtml } from "@/lib/sanitize";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Ensure data is always fresh
@@ -118,7 +119,7 @@ export default async function BlogPostPage({
           </p>
           <div
             className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed mb-8"
-            dangerouslySetInnerHTML={{ __html: blogPost.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(blogPost.content) }}
           />
 
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6">

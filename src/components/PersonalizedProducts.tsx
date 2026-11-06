@@ -26,10 +26,8 @@ export function PersonalizedProducts() {
       });
     };
 
+    // Fetch once on mount. (A 30s polling loop used to re-query Firestore for every visitor.)
     fetchProducts();
-    const interval = setInterval(fetchProducts, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

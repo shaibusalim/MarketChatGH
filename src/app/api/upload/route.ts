@@ -1,10 +1,31 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/auth.config"
 import { adminStorage } from "@/lib/firebase-admin"
+import { enforceRateLimit } from "@/lib/ratelimit"
+
+const EXTENSION_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Only signed-in sellers / admins may upload.
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ success: false, message: "Please sign in to upload files." }, { status: 401 })
+    }
+
+    // 20 uploads / 10 minutes per IP.
+    const limited = await enforceRateLimit(request, "upload", 20, "10 m")
+    if (limited) return limited
+
     const data = await request.formData()
     const file: File | null = data.get("file") as unknown as File
 
@@ -12,28 +33,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "No file uploaded" }, { status: 400 })
     }
 
-    // Validate file type
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/svg+xml",
-    ]
-    if (!allowedTypes.includes(file.type)) {
+    // Validate file type (SVG intentionally not allowed: it can carry scripts)
+    const ext = EXTENSION_BY_TYPE[file.type]
+    if (!ext) {
       return NextResponse.json({
         success: false,
-        message: "Invalid file type. Please upload JPEG, PNG, GIF, WebP, or SVG images only.",
+        message: "Invalid file type. Please upload JPEG, PNG, GIF or WebP images only.",
       }, { status: 400 })
     }
 
-    // Validate file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024 // 10MB in bytes
+    // Validate file size (4MB: stays under the serverless request body limit)
+    const maxSize = 4 * 1024 * 1024
     if (file.size > maxSize) {
       return NextResponse.json({
         success: false,
-        message: "File too large. Please upload images smaller than 10MB.",
+        message: "File too large. Please upload images smaller than 4MB.",
       }, { status: 400 })
     }
 
@@ -44,7 +58,6 @@ export async function POST(request: NextRequest) {
     try {
       const bucket = adminStorage.bucket()
       if (bucket) {
-        const ext = file.name.split(".").pop() || "jpg"
         const filename = `uploads/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${ext}`
         const storageFile = bucket.file(filename)
 
@@ -74,8 +87,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Fallback to saving to public/uploads directory
     const timestamp = Date.now()
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
-    const filename = `${timestamp}_${originalName}`
+    const filename = `${timestamp}_${Math.random().toString(36).substring(2, 9)}.${ext}`
 
     const uploadDir = join(process.cwd(), "public", "uploads")
     const filePath = join(uploadDir, filename)

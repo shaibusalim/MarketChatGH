@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// DENY ALL direct client access. Uploads go through /api/upload (server-side, authenticated).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

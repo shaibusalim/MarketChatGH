@@ -1,5 +1,6 @@
 import { adminFirestore } from "@/lib/firebase-admin";
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/ratelimit";
 import { FieldValue } from "@google-cloud/firestore";
 
 export const runtime = "nodejs";
@@ -15,9 +16,12 @@ export async function POST(
   const params = await props.params;
   const { commentId } = params;
 
-  if (!commentId) {
+  if (!commentId || commentId.length > 200) {
     return new NextResponse("Comment ID is required", { status: 400 });
   }
+
+  const limited = await enforceRateLimit(request, "blog-comment-like", 20, "1 m");
+  if (limited) return limited;
 
   try {
     const commentRef = adminFirestore

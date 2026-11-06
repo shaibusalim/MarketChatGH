@@ -1,19 +1,55 @@
 import { NextRequest } from "next/server";
+import twilio from "twilio";
 import { TwilioMessagingResponse } from "@/lib/twilio";
 import { adminFirestore, adminStorage } from "@/lib/firebase-admin";
 import admin from "firebase-admin";
 import { answerComplexQuery } from "@/ai/flows/answer-complex-queries";
 import { parseProductCaption } from "@/ai/flows/parse-product-from-whatsapp";
+import { enforceRateLimit } from "@/lib/ratelimit";
+
+/**
+ * Verifies the X-Twilio-Signature header so only genuine Twilio webhooks are accepted.
+ * The URL must match the webhook URL configured in the Twilio console. Set
+ * TWILIO_WEBHOOK_URL if your public URL differs from the forwarded host (e.g. custom domain).
+ * Escape hatch for debugging only: TWILIO_SKIP_SIGNATURE=true.
+ */
+function isValidTwilioRequest(req: NextRequest, params: URLSearchParams): boolean {
+  if (process.env.TWILIO_SKIP_SIGNATURE === "true") return true;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const signature = req.headers.get("x-twilio-signature");
+  if (!authToken || !signature) return false;
+
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || req.nextUrl.host;
+  const proto = req.headers.get("x-forwarded-proto") || "https";
+  const url = process.env.TWILIO_WEBHOOK_URL || `${proto}://${host}${req.nextUrl.pathname}`;
+
+  const paramObject: Record<string, string> = {};
+  params.forEach((value, key) => {
+    paramObject[key] = value;
+  });
+  return twilio.validateRequest(authToken, signature, url, paramObject);
+}
 
 export async function POST(req: NextRequest) {
-  console.log("[WhatsApp] Webhook received POST request at", new Date().toISOString());
   const twiml = new TwilioMessagingResponse();
 
   try {
     const rawBody = await req.text();
-    console.log("[WhatsApp] Raw request body:", rawBody);
-    
     const params = new URLSearchParams(rawBody);
+
+    if (!isValidTwilioRequest(req, params)) {
+      console.warn("[WhatsApp] Rejected request with invalid Twilio signature");
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    // Safety net against floods (per sender number).
+    const sender = params.get("From") || "unknown";
+    const limited = await enforceRateLimit(req, "whatsapp", 30, "1 m", sender);
+    if (limited) {
+      twiml.message("⏳ You're sending messages too quickly. Please wait a moment and try again.");
+      return new Response(twiml.toString(), { headers: { "Content-Type": "text/xml" } });
+    }
+
     const body = params.get("Body")?.trim() || "";
     const from = params.get("From") || "";
     const To = params.get("To") || "";
@@ -21,7 +57,7 @@ export async function POST(req: NextRequest) {
     const numMedia = parseInt(params.get("NumMedia") || "0", 10);
     const mediaUrl = params.get("MediaUrl0") || "";
 
-    console.log("[WhatsApp] Processing request from:", from, "to:", To);
+    console.log("[WhatsApp] Message", messageSid, "numMedia:", numMedia);
     
     // Normalize phone number to match various possible formats in DB
     const cleanFrom = from.replace("whatsapp:+", "");
@@ -116,7 +152,15 @@ export async function POST(req: NextRequest) {
         const accountSid = process.env.TWILIO_ACCOUNT_SID;
         const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-        if (accountSid && authToken) {
+        // Only send Twilio credentials to Twilio's own API host (prevents credential leakage / SSRF).
+        let isTwilioHost = false;
+        try {
+          isTwilioHost = new URL(mediaUrl).hostname.endsWith(".twilio.com");
+        } catch {
+          isTwilioHost = false;
+        }
+
+        if (accountSid && authToken && isTwilioHost) {
           const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
 
           const response = await fetch(mediaUrl, {
@@ -128,7 +172,7 @@ export async function POST(req: NextRequest) {
           if (response.ok) {
             const buffer = await response.arrayBuffer();
             const contentType = response.headers.get('content-type') || 'image/jpeg';
-            const ext = contentType.split('/')[1] || 'jpg';
+            const ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' } as Record<string, string>)[contentType.split(';')[0].trim()] || 'jpg';
             const filename = `products/${actualSellerId}/${messageSid}_${Date.now()}.${ext}`;
             const bucket = adminStorage.bucket();
             const file = bucket.file(filename);

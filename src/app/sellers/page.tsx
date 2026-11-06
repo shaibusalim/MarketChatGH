@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 
-export const revalidate = 0
+// Public directory: cached at the edge and refreshed at most every 2 minutes (was uncached = a Firestore read storm).
+export const revalidate = 120
+
+const MAX_SELLERS = 48
 
 interface Product {
   id: string
@@ -26,10 +29,12 @@ interface Seller {
 
 async function getSellersWithProducts(): Promise<Seller[]> {
   try {
-    const sellersSnapshot = await adminFirestore.collection("sellers").get()
-    const sellers: Seller[] = []
+    // Bounded read + parallel product lookups (was: unbounded read with sequential N+1 queries).
+    const sellersSnapshot = await adminFirestore.collection("sellers").limit(MAX_SELLERS).get()
+    // Never list sellers that an admin has not approved.
+    const visibleDocs = sellersSnapshot.docs.filter((d) => d.data().isApproved !== false)
 
-    for (const sellerDoc of sellersSnapshot.docs) {
+    const sellers: Seller[] = await Promise.all(visibleDocs.map(async (sellerDoc): Promise<Seller> => {
       const sellerData = sellerDoc.data()
       const productsSnapshot = await adminFirestore
         .collection("products")
@@ -60,15 +65,15 @@ async function getSellersWithProducts(): Promise<Seller[]> {
           : `${sellerData.name ?? "This seller"} offers quality products in our marketplace.`
       }
 
-      sellers.push({
+      return {
         id: sellerDoc.id,
         name: sellerData.name ?? "Unnamed Seller",
         location: sellerData.location ?? "Ghana",
         active: sellerData.active ?? true,
         products,
         summary,
-      })
-    }
+      }
+    }))
     return sellers
   } catch (error) {
     console.error("Error fetching sellers with products:", error)

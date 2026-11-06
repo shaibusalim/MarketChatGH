@@ -207,9 +207,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ sellers, total: sellers.length }, { status: 200 })
     }
 
-    const q = searchParams.get("q") || ""
-    const page = Number.parseInt(searchParams.get("page") || "1", 10) || 1
-    const pageSize = Number.parseInt(searchParams.get("pageSize") || "10", 10) || 10
+    const q = (searchParams.get("q") || "").slice(0, 80)
+    // Clamp user-controlled paging values (prevents ?pageSize=100000 from reading the whole database).
+    const page = Math.max(1, Math.min(Number.parseInt(searchParams.get("page") || "1", 10) || 1, 1000))
+    const pageSize = Math.max(1, Math.min(Number.parseInt(searchParams.get("pageSize") || "10", 10) || 10, 50))
     const status = searchParams.get("status") || "all"
 
    

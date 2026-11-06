@@ -3,17 +3,26 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { adminFirestore } from '@/lib/firebase-admin';
 import bcrypt from 'bcrypt';
-import { ratelimit } from '@/lib/ratelimit';
+import { ratelimit, enforceRateLimit, getClientIp } from '@/lib/ratelimit';
 import { NextRequest } from 'next/server';
 
 async function auth(req: NextRequest, res: any) {
   if (req.method === 'POST') {
     try {
-      const forwarded = req.headers.get('x-forwarded-for');
-      const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1';
+      const ip = getClientIp(req);
       const { success } = await ratelimit.limit(ip);
       if (!success) {
         return new Response('Too many requests', { status: 429 });
+      }
+
+      // Per-account throttle (credential stuffing across many IPs): 10 attempts / 15 min per email.
+      if (req.nextUrl.pathname.endsWith('/callback/credentials')) {
+        const form = new URLSearchParams(await req.clone().text());
+        const attemptedEmail = (form.get('email') || '').toLowerCase().trim();
+        if (attemptedEmail) {
+          const limited = await enforceRateLimit(req, 'login-account', 10, '15 m', attemptedEmail);
+          if (limited) return new Response('Too many login attempts. Try again later.', { status: 429 });
+        }
       }
     } catch (error) {
       console.error('[Auth] Rate limit service error (failing open):', error);
@@ -32,8 +41,7 @@ async function auth(req: NextRequest, res: any) {
         },
         async authorize(credentials) {
           try {
-            console.log('[Auth] Authorizing:', credentials?.email);
-            if (!credentials?.email || !credentials?.password) {
+                        if (!credentials?.email || !credentials?.password) {
               throw new Error('Email and password are required');
             }
 
@@ -74,23 +82,19 @@ async function auth(req: NextRequest, res: any) {
               
               // Check if seller has a password (they might have been onboarded by admin without a password)
               if (!seller.password) {
-                 console.log('[Auth] Seller has no password:', email);
-                 throw new Error('Please sign up or reset your password');
+                                  throw new Error('Please sign up or reset your password');
               }
 
               const isValid = await bcrypt.compare(credentials.password, seller.password);
               if (!isValid) {
-                console.log('[Auth] Invalid password for seller:', email);
-                throw new Error('Invalid credentials');
+                                throw new Error('Invalid credentials');
               }
 
               if (!seller.isApproved) {
-                console.log('[Auth] Seller not approved:', email);
-                throw new Error('Your account is pending approval');
+                                throw new Error('Your account is pending approval');
               }
 
-              console.log('[Auth] Authorized seller:', sellerDoc.id);
-              return {
+                            return {
                 id: sellerDoc.id,
                 email: seller.email,
                 isAdmin: false,
@@ -99,8 +103,7 @@ async function auth(req: NextRequest, res: any) {
               };
             }
 
-            console.log('[Auth] No user found for email:', email);
-            throw new Error('Invalid credentials');
+                        throw new Error('Invalid credentials');
           } catch (error) {
             console.error('[Auth] Authentication error:', error);
             return null;

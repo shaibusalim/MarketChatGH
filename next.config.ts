@@ -1,7 +1,42 @@
 import type { NextConfig } from 'next';
 
+const securityHeaders = [
+  // Prevent the site being embedded in iframes (clickjacking)
+  { key: 'X-Frame-Options', value: 'DENY' },
+  // Stop browsers MIME-sniffing responses into executable types
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // Don't leak full URLs (seller dashboards, admin paths) to third parties
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // Force HTTPS for 2 years
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  // Disable powerful browser features the app doesn't use
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+  { key: 'X-DNS-Prefetch-Control', value: 'on' },
+];
+
 const nextConfig: NextConfig = {
   /* config options here */
+  poweredByHeader: false,
+  async headers() {
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      // Admin area & seller dashboards must never be indexed or cached by shared caches
+      {
+        source: '/mcgh-admin-control/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          { key: 'Cache-Control', value: 'private, no-store' },
+        ],
+      },
+      {
+        source: '/seller/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          { key: 'Cache-Control', value: 'private, no-store' },
+        ],
+      },
+    ];
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
