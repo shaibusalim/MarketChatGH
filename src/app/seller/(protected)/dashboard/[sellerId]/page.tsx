@@ -31,7 +31,13 @@ import {
   AlertTriangle,
   MessageCircle,
   Store,
-  UserCog
+  UserCog,
+  Palette,
+  Sparkles,
+  Copy,
+  Check,
+  Share2,
+  ChevronRight
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -94,6 +100,13 @@ interface SellerData {
   active: boolean
   isApproved: boolean
   profileImageUrl?: string
+  bannerUrl?: string
+  tagline?: string
+  bio?: string
+  announcement?: string
+  themeColor?: string
+  instagram?: string
+  tiktok?: string
 }
 
 import { useParams, useRouter } from "next/navigation"
