@@ -1,11 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { put } from "@vercel/blob"
-import { writeFile, mkdir } from "fs/promises"
-import { join } from "path"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/auth.config"
-import { adminStorage } from "@/lib/firebase-admin"
 import { enforceRateLimit } from "@/lib/ratelimit"
+
+export const runtime = "nodejs"
 
 const EXTENSION_BY_TYPE: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -34,7 +33,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "No file uploaded" }, { status: 400 })
     }
 
-    // Validate file type (SVG intentionally not allowed: it can carry scripts)
+    // Validate file type
     const ext = EXTENSION_BY_TYPE[file.type]
     if (!ext) {
       return NextResponse.json({
@@ -52,81 +51,40 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Check if BLOB_READ_WRITE_TOKEN is connected
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+    if (!blobToken) {
+      console.error("[Upload API] BLOB_READ_WRITE_TOKEN is missing on Vercel.")
+      return NextResponse.json({
+        success: false,
+        message: "Vercel Blob is not connected to this deployment. Please connect your Blob store in the Vercel Dashboard and redeploy.",
+      }, { status: 500 })
+    }
+
     const filename = `uploads/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${ext}`
 
-    // 1. Primary: Vercel Blob Storage (Permanent, fast global Edge CDN)
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        const blob = await put(filename, file, {
-          access: "public",
-          contentType: file.type,
-        })
+    // Upload directly to Vercel Blob
+    const blob = await put(filename, file, {
+      access: "public",
+      contentType: file.type,
+      token: blobToken,
+    })
 
-        if (blob?.url) {
-          return NextResponse.json({
-            success: true,
-            message: "File uploaded successfully to Vercel Blob",
-            url: blob.url,
-          })
-        }
-      } catch (blobErr) {
-        console.warn("[Upload API] Vercel Blob upload failed, trying fallback:", blobErr)
-      }
-    }
-
-    // 2. Fallback: Firebase Cloud Storage
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    try {
-      const bucket = adminStorage.bucket()
-      if (bucket) {
-        const storageFile = bucket.file(filename)
-        await storageFile.save(buffer, {
-          metadata: {
-            contentType: file.type,
-          },
-        })
-
-        const [signedUrl] = await storageFile.getSignedUrl({
-          action: "read",
-          expires: "03-01-2500",
-        })
-
-        if (signedUrl) {
-          return NextResponse.json({
-            success: true,
-            message: "File uploaded successfully to cloud storage",
-            url: signedUrl,
-          })
-        }
-      }
-    } catch (storageErr) {
-      console.warn("[Upload API] Firebase Storage fallback failed, saving locally:", storageErr)
-    }
-
-    // 3. Fallback for local offline development only (public/uploads)
-    const uploadDir = join(process.cwd(), "public", "uploads")
-    const localFilename = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${ext}`
-    const filePath = join(uploadDir, localFilename)
-
-    try {
-      await writeFile(filePath, buffer)
-    } catch {
-      await mkdir(uploadDir, { recursive: true })
-      await writeFile(filePath, buffer)
+    if (!blob?.url) {
+      throw new Error("Vercel Blob did not return a valid download URL.")
     }
 
     return NextResponse.json({
       success: true,
       message: "File uploaded successfully",
-      url: `/uploads/${localFilename}`,
+      url: blob.url,
     })
   } catch (error) {
     console.error("[Upload API] Error:", error)
+    const errorMsg = (error as Error)?.message || "Upload failed. Please try again."
     return NextResponse.json({
       success: false,
-      message: "Upload failed. Please try again.",
+      message: errorMsg,
     }, { status: 500 })
   }
 }
