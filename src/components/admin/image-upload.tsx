@@ -42,13 +42,18 @@ export function ImageUpload({
         body: formData,
       })
 
-      const result = await response.json()
+      let result: any = {}
+      try {
+        result = await response.json()
+      } catch {
+        result = { success: false, message: `Server returned HTTP ${response.status} ${response.statusText}` }
+      }
 
       if (result.success && result.url) {
         onChange(result.url)
         toast.success("Photo uploaded successfully!", { duration: 3000 })
       } else {
-        toast.error(result.message || "Upload failed", { duration: 5000 })
+        toast.error(result.message || `Upload error (${response.status})`, { duration: 7000 })
       }
     } catch (error) {
       console.error("Upload error:", error)

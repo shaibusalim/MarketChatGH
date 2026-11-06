@@ -17,14 +17,24 @@ const EXTENSION_BY_TYPE: Record<string, string> = {
 export async function POST(request: NextRequest) {
   try {
     // Only signed-in sellers / admins may upload.
-    const session = await getServerSession(authOptions)
+    let session = null
+    try {
+      session = await getServerSession(authOptions)
+    } catch (sessionErr) {
+      console.error("[Upload API] Session check error:", sessionErr)
+    }
+
     if (!session?.user) {
       return NextResponse.json({ success: false, message: "Please sign in to upload files." }, { status: 401 })
     }
 
     // 20 uploads / 10 minutes per IP.
-    const limited = await enforceRateLimit(request, "upload", 20, "10 m")
-    if (limited) return limited
+    try {
+      const limited = await enforceRateLimit(request, "upload", 20, "10 m")
+      if (limited) return limited
+    } catch (rlErr) {
+      console.warn("[Upload API] Rate limit check skipped:", rlErr)
+    }
 
     const data = await request.formData()
     const file: File | null = data.get("file") as unknown as File
@@ -38,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (!ext) {
       return NextResponse.json({
         success: false,
-        message: "Invalid file type. Please upload JPEG, PNG, GIF or WebP images only.",
+        message: `Invalid file type (${file.type}). Please upload JPEG, PNG, GIF or WebP images only.`,
       }, { status: 400 })
     }
 
@@ -54,24 +64,28 @@ export async function POST(request: NextRequest) {
     // Check if BLOB_READ_WRITE_TOKEN is connected
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN
     if (!blobToken) {
-      console.error("[Upload API] BLOB_READ_WRITE_TOKEN is missing on Vercel.")
+      console.error("[Upload API] BLOB_READ_WRITE_TOKEN is missing from process.env")
       return NextResponse.json({
         success: false,
-        message: "Vercel Blob is not connected to this deployment. Please connect your Blob store in the Vercel Dashboard and redeploy.",
+        message: "Vercel Blob token is missing. Please ensure your Blob store is linked to this project in the Vercel Dashboard (Storage -> Connect Project) and trigger a redeploy.",
       }, { status: 500 })
     }
 
-    const filename = `uploads/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${ext}`
+    const sanitizedBase = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_")
+    const pathname = `uploads/${Date.now()}_${sanitizedBase || "img"}.${ext}`
 
     // Upload directly to Vercel Blob
-    const blob = await put(filename, file, {
+    const blob = await put(pathname, file, {
       access: "public",
       contentType: file.type,
       token: blobToken,
     })
 
     if (!blob?.url) {
-      throw new Error("Vercel Blob did not return a valid download URL.")
+      return NextResponse.json({
+        success: false,
+        message: "Blob upload completed but did not return a valid URL.",
+      }, { status: 500 })
     }
 
     return NextResponse.json({
@@ -80,11 +94,11 @@ export async function POST(request: NextRequest) {
       url: blob.url,
     })
   } catch (error) {
-    console.error("[Upload API] Error:", error)
-    const errorMsg = (error as Error)?.message || "Upload failed. Please try again."
+    console.error("[Upload API Error]:", error)
+    const errorDetails = (error as Error)?.message || String(error)
     return NextResponse.json({
       success: false,
-      message: errorMsg,
+      message: `Upload failed: ${errorDetails}`,
     }, { status: 500 })
   }
 }
