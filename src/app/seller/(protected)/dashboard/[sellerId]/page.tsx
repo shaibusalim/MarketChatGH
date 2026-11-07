@@ -101,6 +101,8 @@ interface SellerData {
   isApproved: boolean
   profileImageUrl?: string
   bannerUrl?: string
+  bannerPosition?: string
+  storeNameColor?: string
   tagline?: string
   bio?: string
   announcement?: string
@@ -574,7 +576,8 @@ export default function SellerDashboardPage() {
               <img
                 src={sellerInfo.bannerUrl}
                 alt="Store Banner"
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: `center ${sellerInfo.bannerPosition || "50%"}` }}
               />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 opacity-90" />
@@ -1035,6 +1038,8 @@ export default function SellerDashboardPage() {
           sellerId={sellerId}
           currentData={{
             bannerUrl: sellerInfo.bannerUrl,
+            bannerPosition: sellerInfo.bannerPosition || "50%",
+            storeNameColor: sellerInfo.storeNameColor || "auto",
             tagline: sellerInfo.tagline,
             bio: sellerInfo.bio,
             announcement: sellerInfo.announcement,

@@ -28,6 +28,8 @@ export interface Seller {
   products: Product[]
   bio?: string
   bannerUrl?: string
+  bannerPosition?: string
+  storeNameColor?: string
   tagline?: string
   announcement?: string
   themeColor?: string

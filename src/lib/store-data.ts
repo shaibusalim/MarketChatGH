@@ -34,6 +34,8 @@ export interface StoreSeller {
   profileImageUrl?: string
   bio?: string
   bannerUrl?: string
+  bannerPosition?: string
+  storeNameColor?: string
   tagline?: string
   announcement?: string
   themeColor?: string
@@ -122,6 +124,8 @@ export async function fetchSellerAndProducts(
       profileImageUrl: data?.profileImageUrl ?? undefined,
       bio: data?.bio ?? undefined,
       bannerUrl: data?.bannerUrl ?? undefined,
+      bannerPosition: data?.bannerPosition ?? "50%",
+      storeNameColor: data?.storeNameColor ?? "auto",
       tagline: data?.tagline ?? undefined,
       announcement: data?.announcement ?? undefined,
       themeColor: data?.themeColor ?? "emerald",

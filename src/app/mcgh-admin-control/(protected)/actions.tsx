@@ -265,6 +265,12 @@ export async function updateSellerProfile(formData: FormData) {
     const bannerUrl = formData.get("bannerUrl") as string | null
     if (bannerUrl !== null && bannerUrl !== undefined) updates.bannerUrl = bannerUrl
 
+    const bannerPosition = formData.get("bannerPosition") as string | null
+    if (bannerPosition !== null && bannerPosition !== undefined) updates.bannerPosition = bannerPosition
+
+    const storeNameColor = formData.get("storeNameColor") as string | null
+    if (storeNameColor !== null && storeNameColor !== undefined) updates.storeNameColor = storeNameColor
+
     const tagline = formData.get("tagline") as string | null
     if (tagline !== null && tagline !== undefined) updates.tagline = tagline
 

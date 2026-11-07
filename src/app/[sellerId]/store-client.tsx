@@ -63,6 +63,8 @@ interface SellerInfo {
   profileImageUrl?: string
   bio?: string
   bannerUrl?: string
+  bannerPosition?: string
+  storeNameColor?: string
   tagline?: string
   announcement?: string
   themeColor?: string
@@ -623,147 +625,158 @@ export default function StorefrontClient({ initialData }: { initialData?: Seller
       </div>
 
       {/* Real E-Commerce Store Banner & Identity */}
-      <section className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 relative">
+      <section className="bg-gray-50/50 dark:bg-gray-950/50 border-b border-gray-200 dark:border-gray-800 relative">
         {seller.bannerUrl ? (
-          <div className="relative w-full h-36 sm:h-52 md:h-60 overflow-hidden bg-gray-900">
+          <div className="relative w-full h-40 sm:h-56 md:h-64 overflow-hidden bg-gray-900">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={seller.bannerUrl}
               alt={`${seller.name} banner`}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover transition-[object-position] duration-200"
+              style={{ objectPosition: `center ${seller.bannerPosition || "50%"}` }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
           </div>
         ) : (
-          <div className={`w-full h-20 sm:h-28 bg-gradient-to-r ${activeTheme.gradientFrom} ${activeTheme.gradientTo} opacity-85`} />
+          <div className={`w-full h-24 sm:h-32 bg-gradient-to-r ${activeTheme.gradientFrom} ${activeTheme.gradientTo} opacity-85`} />
         )}
 
-        <div className="container mx-auto px-4 max-w-7xl -mt-10 sm:-mt-14 relative z-10 pb-6 sm:pb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
-            {/* Store Profile Info */}
-            <div className="flex items-end gap-4 sm:gap-5">
-              <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br ${activeTheme.gradientFrom} ${activeTheme.gradientTo} text-white flex items-center justify-center shadow-xl font-black text-2xl sm:text-3xl shrink-0 overflow-hidden ring-4 ring-white dark:ring-gray-900`}>
-                {seller.profileImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={seller.profileImageUrl}
-                    alt={seller.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span>{seller.name?.charAt(0).toUpperCase() || "S"}</span>
-                )}
-              </div>
-
-              <div className="space-y-1 pb-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-                    {seller.name}
-                  </h1>
-                  <span className={`inline-flex items-center gap-1 ${activeTheme.badgeBg} ${activeTheme.badgeText} text-[10px] font-bold px-2 py-0.5 rounded-full border`}>
-                    <ShieldCheck className="h-3 w-3" /> Verified Merchant
-                  </span>
-                </div>
-
-                {seller.tagline && (
-                  <p className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 italic">
-                    {seller.tagline}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-gray-400" />
-                    <span>{seller.location}</span>
-                  </div>
-                  <span>&bull;</span>
-                  <div className="flex items-center gap-1">
-                    <Package className="h-3.5 w-3.5 text-gray-400" />
-                    <span>{products.length} Products</span>
-                  </div>
-                  {seller.rating && seller.rating > 0 && (
-                    <>
-                      <span>&bull;</span>
-                      <div className="flex items-center gap-1 text-amber-500 font-semibold">
-                        <Star className="h-3.5 w-3.5 fill-current" />
-                        <span>{seller.rating.toFixed(1)}</span>
-                        {seller.reviewCount ? (
-                          <span className="text-gray-400 font-normal">({seller.reviewCount})</span>
-                        ) : null}
-                      </div>
-                    </>
+        <div className="container mx-auto px-3 sm:px-4 max-w-7xl -mt-8 sm:-mt-12 md:-mt-14 relative z-10 pb-6 sm:pb-8">
+          <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-3xl sm:rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-2xl border border-gray-100 dark:border-white/10">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              {/* Store Profile Info */}
+              <div className="flex items-start sm:items-center gap-4 sm:gap-6">
+                <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br ${activeTheme.gradientFrom} ${activeTheme.gradientTo} text-white flex items-center justify-center shadow-xl font-black text-2xl sm:text-3xl shrink-0 overflow-hidden ring-4 ring-white dark:ring-gray-800`}>
+                  {seller.profileImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={seller.profileImageUrl}
+                      alt={seller.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{seller.name?.charAt(0).toUpperCase() || "S"}</span>
                   )}
                 </div>
 
-                {seller.bio && (
-                  <p className="text-xs text-gray-600 dark:text-gray-300 max-w-lg mt-1 line-clamp-2">
-                    {seller.bio}
-                  </p>
-                )}
+                <div className="space-y-1.5 pb-0.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className={`text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight ${
+                      seller.storeNameColor === "white"
+                        ? "text-gray-900 dark:text-white"
+                        : seller.storeNameColor === "dark"
+                        ? "text-gray-900 dark:text-gray-100"
+                        : seller.storeNameColor === "theme"
+                        ? activeTheme.accentText
+                        : "text-gray-900 dark:text-white"
+                    }`}>
+                      {seller.name}
+                    </h1>
+                    <span className={`inline-flex items-center gap-1 ${activeTheme.badgeBg} ${activeTheme.badgeText} text-[10px] font-bold px-2 py-0.5 rounded-full border`}>
+                      <ShieldCheck className="h-3 w-3" /> Verified Merchant
+                    </span>
+                  </div>
+
+                  {seller.tagline && (
+                    <p className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 italic">
+                      {seller.tagline}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                      <span>{seller.location}</span>
+                    </div>
+                    <span>&bull;</span>
+                    <div className="flex items-center gap-1">
+                      <Package className="h-3.5 w-3.5 text-gray-400" />
+                      <span>{products.length} Products</span>
+                    </div>
+                    {seller.rating && seller.rating > 0 && (
+                      <>
+                        <span>&bull;</span>
+                        <div className="flex items-center gap-1 text-amber-500 font-semibold">
+                          <Star className="h-3.5 w-3.5 fill-current" />
+                          <span>{seller.rating.toFixed(1)}</span>
+                          {seller.reviewCount ? (
+                            <span className="text-gray-400 font-normal">({seller.reviewCount})</span>
+                          ) : null}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {seller.bio && (
+                    <p className="text-xs text-gray-600 dark:text-gray-300 max-w-lg mt-1 line-clamp-2">
+                      {seller.bio}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Quick Actions & Socials */}
-            <div className="flex items-center gap-2.5 w-full md:w-auto flex-wrap">
-              {seller.instagram && (
-                <Button
-                  asChild
-                  variant="outline"
-                  className="h-11 px-3 sm:px-4 rounded-xl border-pink-200 dark:border-pink-900/40 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/20 font-bold text-xs"
-                >
-                  <a
-                    href={`https://instagram.com/${seller.instagram.replace(/^@/, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Instagram Profile"
+              {/* Quick Actions & Socials */}
+              <div className="flex items-center gap-2.5 w-full md:w-auto flex-wrap">
+                {seller.instagram && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="h-11 px-3 sm:px-4 rounded-xl border-pink-200 dark:border-pink-900/40 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/20 font-bold text-xs"
                   >
-                    <Instagram className="h-4 w-4 sm:mr-1.5" />
-                    <span className="hidden sm:inline">@{seller.instagram.replace(/^@/, "")}</span>
-                  </a>
-                </Button>
-              )}
-
-              {seller.tiktok && (
-                <Button
-                  asChild
-                  variant="outline"
-                  className="h-11 px-3 sm:px-4 rounded-xl border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 font-bold text-xs"
-                >
-                  <a
-                    href={`https://tiktok.com/@${seller.tiktok.replace(/^@/, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="TikTok Profile"
-                  >
-                    <Video className="h-4 w-4 sm:mr-1.5" />
-                    <span className="hidden sm:inline">@{seller.tiktok.replace(/^@/, "")}</span>
-                  </a>
-                </Button>
-              )}
-
-              <Button
-                asChild
-                className={`flex-1 md:flex-initial h-11 px-5 rounded-xl text-white font-bold shadow-sm ${activeTheme.primaryBtn}`}
-              >
-                <a href={generalStoreChatUrl} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="h-4 w-4 mr-2 fill-current" />
-                  Chat on WhatsApp
-                </a>
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={handleShareStore}
-                className="h-11 px-4 rounded-xl border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
-                title="Share store"
-              >
-                {hasCopiedLink ? (
-                  <Check className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Share2 className="h-4 w-4" />
+                    <a
+                      href={`https://instagram.com/${seller.instagram.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Instagram Profile"
+                    >
+                      <Instagram className="h-4 w-4 sm:mr-1.5" />
+                      <span className="hidden sm:inline">@{seller.instagram.replace(/^@/, "")}</span>
+                    </a>
+                  </Button>
                 )}
-                <span className="ml-1.5 hidden sm:inline text-xs font-semibold">Share</span>
-              </Button>
+
+                {seller.tiktok && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="h-11 px-3 sm:px-4 rounded-xl border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 font-bold text-xs"
+                  >
+                    <a
+                      href={`https://tiktok.com/@${seller.tiktok.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="TikTok Profile"
+                    >
+                      <Video className="h-4 w-4 sm:mr-1.5" />
+                      <span className="hidden sm:inline">@{seller.tiktok.replace(/^@/, "")}</span>
+                    </a>
+                  </Button>
+                )}
+
+                <Button
+                  asChild
+                  className={`flex-1 md:flex-initial h-11 px-5 rounded-xl text-white font-bold shadow-sm ${activeTheme.primaryBtn}`}
+                >
+                  <a href={generalStoreChatUrl} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="h-4 w-4 mr-2 fill-current" />
+                    Chat on WhatsApp
+                  </a>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleShareStore}
+                  className="h-11 px-4 rounded-xl border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  title="Share store"
+                >
+                  {hasCopiedLink ? (
+                    <Check className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Share2 className="h-4 w-4" />
+                  )}
+                  <span className="ml-1.5 hidden sm:inline text-xs font-semibold">Share</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
