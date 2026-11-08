@@ -107,14 +107,14 @@ export function SellerSettingsForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-6 sm:p-8">
-        <DialogHeader className="pb-2 border-b border-gray-100 dark:border-gray-800">
+      <DialogContent className="w-[94vw] max-w-[500px] max-h-[90dvh] flex flex-col bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-0 overflow-hidden border border-gray-100 dark:border-gray-800">
+        <DialogHeader className="p-5 sm:p-6 pb-3 border-b border-gray-100 dark:border-gray-800 shrink-0 text-left">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 bg-blue-50 dark:bg-blue-950/50 rounded-2xl flex items-center justify-center text-blue-600">
-              <Store className="h-6 w-6" />
+            <div className="h-11 w-11 sm:h-12 sm:w-12 bg-blue-50 dark:bg-blue-950/50 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
+              <Store className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+              <DialogTitle className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                 Shop Profile & Logo
               </DialogTitle>
               <DialogDescription className="text-xs text-gray-500">
@@ -125,104 +125,111 @@ export function SellerSettingsForm({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-3">
-            {/* Logo / Shop Profile Photo */}
-            <FormField
-              control={form.control}
-              name="profileImageUrl"
-              render={({ field }) => (
-                <FormItem className="flex flex-col items-center justify-center">
-                  <FormControl>
-                    <ImageUpload
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      label="Shop Profile Logo"
-                      placeholder="Upload store logo or avatar"
-                      aspectRatio="square"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            {/* Scrollable Form Body */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 overscroll-contain">
+              {/* Logo / Shop Profile Photo */}
+              <FormField
+                control={form.control}
+                name="profileImageUrl"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col items-center justify-center">
+                    <FormControl>
+                      <ImageUpload
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        label="Shop Profile Logo"
+                        placeholder="Upload store logo or avatar"
+                        aspectRatio="square"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
-                    Business Name
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g. Ama's Fresh Groceries" 
-                      className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
+                      Business Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g. Ama's Fresh Groceries" 
+                        className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
-                    Business Location
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g. Accra Central, Makola" 
-                      className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
+                      Business Location
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g. Accra Central, Makola" 
+                        className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
-                    Contact / WhatsApp Number
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g. 024XXXXXXX" 
-                      className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
+                      Contact / WhatsApp Number
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g. 024XXXXXXX" 
+                        className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none h-11 font-bold text-xs sm:text-sm"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-            <DialogFooter className="pt-3 flex flex-col sm:flex-row gap-2 sm:gap-0">
+            {/* Sticky Action Footer */}
+            <DialogFooter className="p-4 sm:p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur-md shrink-0 flex flex-row items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="rounded-xl font-bold text-xs h-11"
+                className="flex-1 sm:flex-initial rounded-xl font-bold text-xs h-11"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md shadow-blue-500/20 h-11 px-6 text-xs"
+                className="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md shadow-blue-500/20 h-11 px-6 text-xs"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Saving...</span>
+                  </span>
                 ) : (
                   "Save Changes"
                 )}

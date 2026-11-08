@@ -149,7 +149,7 @@ export function SellerAccountSettingsForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[560px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-white/20 dark:border-gray-800/20 rounded-3xl shadow-2xl">
+      <DialogContent className="w-[94vw] max-w-[560px] max-h-[90dvh] overflow-y-auto bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20 dark:border-gray-800/20 rounded-3xl shadow-2xl p-5 sm:p-7">
         <DialogHeader>
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">

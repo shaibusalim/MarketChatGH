@@ -171,14 +171,14 @@ export function SellerProductForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto rounded-3xl p-6">
-        <DialogHeader className="pb-2 border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl text-emerald-600">
+      <DialogContent className="w-[94vw] max-w-[560px] max-h-[90dvh] flex flex-col rounded-3xl p-0 overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="p-5 sm:p-6 pb-3 border-b border-gray-100 dark:border-gray-800 shrink-0 text-left">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl text-emerald-600 shrink-0">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold">
+              <DialogTitle className="text-lg sm:text-xl font-bold">
                 {product ? "Edit Product Details" : "Add New Product"}
               </DialogTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -189,7 +189,8 @@ export function SellerProductForm({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-3">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 overscroll-contain">
             {/* Image Upload */}
             <FormField
               control={form.control}
@@ -390,23 +391,31 @@ export function SellerProductForm({
               )}
             />
 
-            <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            </div>
+
+            <DialogFooter className="p-4 sm:p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur-md shrink-0 flex flex-row items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="rounded-xl h-11"
+                className="flex-1 sm:flex-initial rounded-xl h-11 font-bold text-xs"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-11 px-6 shadow-md shadow-emerald-600/20"
+                className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-11 px-6 shadow-md shadow-emerald-600/20 font-bold text-xs"
                 disabled={isSubmitting}
               >
-                {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {product ? "Save Changes" : "Publish Product"}
+                {isSubmitting ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Saving...</span>
+                  </span>
+                ) : (
+                  product ? "Save Changes" : "Publish Product"
+                )}
               </Button>
             </DialogFooter>
           </form>
