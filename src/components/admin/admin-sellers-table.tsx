@@ -192,9 +192,19 @@ export function AdminSellersTable({
                         <Badge className={`${seller.active ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"} border-none text-[10px] font-bold`}>
                           {seller.active ? "ACTIVE" : "INACTIVE"}
                         </Badge>
-                        <Badge className={`${seller.isApproved ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"} border-none text-[10px] font-bold`}>
-                          {seller.isApproved ? "VERIFIED" : "PENDING"}
-                        </Badge>
+                        {seller.isApproved ? (
+                          <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none text-[10px] font-bold">
+                            VERIFIED
+                          </Badge>
+                        ) : seller.approvalStatus === "rejected" || seller.isRejected ? (
+                          <Badge className="bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none text-[10px] font-bold">
+                            REJECTED
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-none text-[10px] font-bold">
+                            PENDING
+                          </Badge>
+                        )}
                         <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest ml-1">{seller.location}</span>
                       </div>
                     </div>
@@ -220,7 +230,7 @@ export function AdminSellersTable({
                        )}
                        <ToggleSellerButton sellerId={seller.id} active={seller.active} onSuccess={onDataRefresh} />
                        <Button asChild variant="outline" className="rounded-xl border-gray-200 dark:border-gray-800 text-xs font-bold hover:bg-white transition-all shadow-sm">
-                         <Link href={`/admin/sellers/${seller.id}`}>Manage</Link>
+                         <Link href={`/mcgh-admin-control/sellers/${seller.id}`}>Manage</Link>
                        </Button>
                     </div>
                   </div>

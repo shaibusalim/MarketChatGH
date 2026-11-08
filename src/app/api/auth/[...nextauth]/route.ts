@@ -91,7 +91,10 @@ async function auth(req: NextRequest, res: any) {
               }
 
               if (!seller.isApproved) {
-                                throw new Error('Your account is pending approval');
+                if (seller.approvalStatus === 'rejected' || seller.isRejected) {
+                  throw new Error('Your seller application was not approved. Please contact support.');
+                }
+                throw new Error('Your account is pending approval');
               }
 
                             return {

@@ -200,10 +200,25 @@ export async function approveSeller(formData: FormData) {
   }
 
   try {
-    await adminFirestore.collection("sellers").doc(sellerId).update({
-      isApproved: approved,
-      updatedAt: new Date().toISOString(),
-    })
+    if (approved) {
+      await adminFirestore.collection("sellers").doc(sellerId).update({
+        isApproved: true,
+        approvalStatus: "approved",
+        isRejected: false,
+        active: true,
+        approvedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    } else {
+      await adminFirestore.collection("sellers").doc(sellerId).update({
+        isApproved: false,
+        approvalStatus: "rejected",
+        isRejected: true,
+        active: false,
+        rejectedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    }
 
     revalidatePath("/mcgh-admin-control")
     return { success: true, message: `Seller ${approved ? "approved" : "rejected"} successfully!` }
@@ -353,7 +368,10 @@ export async function adminUpdateSeller(formData: FormData) {
       updates.active = activeRaw === "true"
     }
     if (isApprovedRaw !== undefined) {
-      updates.isApproved = isApprovedRaw === "true"
+      const isApprovedBool = isApprovedRaw === "true"
+      updates.isApproved = isApprovedBool
+      updates.approvalStatus = isApprovedBool ? "approved" : "rejected"
+      updates.isRejected = !isApprovedBool
     }
 
     const profileImageUrl = formData.get("profileImageUrl") as string | undefined

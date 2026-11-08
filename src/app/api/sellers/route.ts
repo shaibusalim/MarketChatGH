@@ -30,6 +30,8 @@ interface Seller {
   location: string
   active: boolean
   isApproved: boolean
+  approvalStatus?: string
+  isRejected?: boolean
   products: Product[]
 }
 
@@ -42,6 +44,67 @@ async function fetchPaginatedSellers(
 ): Promise<{ sellers: Seller[]; total: number }> {
 
   try {
+    // Specialized handling for pending sellers: excludes any rejected sellers
+    if (status === "pending") {
+      const snapshot = await adminFirestore.collection("sellers").where("isApproved", "==", false).get()
+      
+      let pendingDocs = snapshot.docs.filter((doc) => {
+        const d = doc.data()
+        return d.approvalStatus !== "rejected" && d.isRejected !== true
+      })
+
+      if (searchQuery) {
+        const qLower = searchQuery.toLowerCase()
+        pendingDocs = pendingDocs.filter((doc) => {
+          const name = (doc.data().name || "").toLowerCase()
+          return name.includes(qLower)
+        })
+      }
+
+      const total = pendingDocs.length
+      const offset = (page - 1) * pageSize
+      const pagedDocs = pendingDocs.slice(offset, offset + pageSize)
+
+      const sellers: Seller[] = []
+      for (const sellerDoc of pagedDocs) {
+        const sellerId = sellerDoc.id
+        const data = sellerDoc.data()
+
+        const productsSnapshot = await adminFirestore.collection("products").where("sellerId", "==", sellerId).get()
+        const products = productsSnapshot.docs.map((productDoc) => {
+          const productData = productDoc.data()
+          const imageUrl = productData.imageUrl ?? "/img1.jpg"
+          return {
+            id: productDoc.id,
+            imageUrl,
+            price: productData.price ?? "N/A",
+            description: productData.description ?? "No description",
+            sellerId: productData.sellerId ?? "",
+            createdAt: productData.createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
+            status: productData.status ?? "unknown",
+            stockStatus: productData.stockStatus ?? "unknown",
+            isAvailable: productData.isAvailable ?? false,
+          } as Product
+        })
+
+        sellers.push({
+          id: sellerId,
+          name: data.name ?? "Unnamed Seller",
+          email: data.email ?? "No Email",
+          phone: data.phone ?? "No Phone",
+          slug: data.slug,
+          location: data.location ?? "Unknown",
+          active: data.active ?? true,
+          isApproved: false,
+          approvalStatus: "pending",
+          isRejected: false,
+          products,
+        })
+      }
+
+      return { sellers, total }
+    }
+
     let baseSellersQuery: FirebaseFirestore.Query = adminFirestore.collection("sellers")
 
     // Apply search filter if query is provided
@@ -50,9 +113,7 @@ async function fetchPaginatedSellers(
     }
 
     // Filter by approval status if provided
-    if (status === "pending") {
-      baseSellersQuery = baseSellersQuery.where("isApproved", "==", false);
-    } else if (status === "approved") {
+    if (status === "approved") {
       baseSellersQuery = baseSellersQuery.where("isApproved", "==", true);
     }
 
@@ -62,8 +123,6 @@ async function fetchPaginatedSellers(
     
 
     // Apply ordering for consistent pagination
-    // IMPORTANT: If we have a where filter and an orderBy, Firestore requires an index.
-    // To avoid index requirements for simple status filtering, we can check if status is all.
     let paginatedSellersQuery: FirebaseFirestore.Query = baseSellersQuery;
     
     if (searchQuery) {
@@ -71,9 +130,6 @@ async function fetchPaginatedSellers(
     } else if (status === "all") {
        paginatedSellersQuery = paginatedSellersQuery.orderBy("name")
     }
-    // If it's just status filtering (pending/approved), we skip orderBy("name") 
-    // unless the user has created the composite index (isApproved, name).
-    // For now, we'll prioritize functionality over specific name ordering for pending sellers.
 
     // Calculate offset for pagination
     const offset = (page - 1) * pageSize
@@ -90,7 +146,7 @@ async function fetchPaginatedSellers(
       
 
       // Fetch ALL products for each seller (no limit applied here)
-      const productsSnapshot = await adminFirestore.collection("products").where("sellerId", "==", sellerId).get() // Removed .limit(3)
+      const productsSnapshot = await adminFirestore.collection("products").where("sellerId", "==", sellerId).get()
       
 
       const products = productsSnapshot.docs.map((productDoc) => {
@@ -125,6 +181,8 @@ async function fetchPaginatedSellers(
         location: data.location ?? "Unknown",
         active: data.active ?? true,
         isApproved: data.isApproved ?? false,
+        approvalStatus: data.approvalStatus ?? (data.isApproved ? "approved" : data.isRejected ? "rejected" : "pending"),
+        isRejected: data.isRejected ?? (data.approvalStatus === "rejected"),
         products,
       })
     }
@@ -180,6 +238,8 @@ async function fetchAllSellers(): Promise<{ sellers: Seller[] }> {
         location: data.location ?? "Unknown",
         active: data.active ?? true,
         isApproved: data.isApproved ?? false,
+        approvalStatus: data.approvalStatus ?? (data.isApproved ? "approved" : data.isRejected ? "rejected" : "pending"),
+        isRejected: data.isRejected ?? (data.approvalStatus === "rejected"),
         products,
       })
     }

@@ -25,6 +25,8 @@ export interface Seller {
   location: string
   active: boolean
   isApproved?: boolean
+  approvalStatus?: string
+  isRejected?: boolean
   products: Product[]
   bio?: string
   bannerUrl?: string

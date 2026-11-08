@@ -16,6 +16,8 @@ interface Seller {
   location: string
   phone: string
   isApproved: boolean
+  approvalStatus?: string
+  isRejected?: boolean
 }
 
 export function AdminPendingSellers({ onDataRefresh }: { onDataRefresh: () => void }) {
@@ -50,6 +52,9 @@ export function AdminPendingSellers({ onDataRefresh }: { onDataRefresh: () => vo
   }, [fetchPendingSellers])
 
   const handleAction = async (sellerId: string, approved: boolean) => {
+    // Optimistically update the list so rejected/approved seller disappears immediately
+    setPendingSellers((prev) => prev.filter((s) => s.id !== sellerId))
+
     const formData = new FormData()
     formData.append("sellerId", sellerId)
     formData.append("approved", String(approved))
@@ -57,10 +62,11 @@ export function AdminPendingSellers({ onDataRefresh }: { onDataRefresh: () => vo
     const result = await approveSeller(formData)
     if (result.success) {
       toast.success(result.message)
-      fetchPendingSellers()
+      await fetchPendingSellers()
       onDataRefresh()
     } else {
       toast.error(result.message)
+      await fetchPendingSellers()
     }
   }
 

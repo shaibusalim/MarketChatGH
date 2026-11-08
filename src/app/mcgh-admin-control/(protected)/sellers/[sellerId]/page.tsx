@@ -47,6 +47,8 @@ interface SellerInfo {
   phone?: string
   active: boolean
   isApproved?: boolean
+  approvalStatus?: string
+  isRejected?: boolean
   profileImageUrl?: string
 }
 
@@ -196,7 +198,7 @@ export default function AdminSellerDetailsPage() {
     }
     setIsDeleting(true)
     try {
-      const response = await fetch(`/api/mcgh-admin-control/delete-seller`, {
+      const response = await fetch(`/api/admin/delete-seller`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sellerId }),
@@ -345,9 +347,19 @@ export default function AdminSellerDetailsPage() {
                     <Badge className={`${seller.active ? "bg-emerald-400/20 text-emerald-100" : "bg-red-400/20 text-red-100"} border-none`}>
                       {seller.active ? "ACTIVE" : "INACTIVE"}
                     </Badge>
-                    <Badge className={`${seller.isApproved ? "bg-blue-400/20 text-blue-100" : "bg-orange-400/20 text-orange-100"} border-none`}>
-                      {seller.isApproved ? "VERIFIED" : "PENDING"}
-                    </Badge>
+                    {seller.isApproved ? (
+                      <Badge className="bg-blue-400/20 text-blue-100 border-none">
+                        VERIFIED
+                      </Badge>
+                    ) : seller.approvalStatus === "rejected" || seller.isRejected ? (
+                      <Badge className="bg-red-400/20 text-red-100 border-none">
+                        REJECTED
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-orange-400/20 text-orange-100 border-none">
+                        PENDING
+                      </Badge>
+                    )}
                     <span className="text-xs font-bold text-white/80 font-mono">#{seller.id}</span>
                   </div>
                 </div>

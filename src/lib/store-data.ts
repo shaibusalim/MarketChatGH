@@ -31,6 +31,8 @@ export interface StoreSeller {
   rating?: number
   reviewCount?: number
   isApproved?: boolean
+  approvalStatus?: string
+  isRejected?: boolean
   profileImageUrl?: string
   bio?: string
   bannerUrl?: string
@@ -121,6 +123,8 @@ export async function fetchSellerAndProducts(
       rating: data?.rating ?? 0,
       reviewCount: data?.reviewCount ?? 0,
       isApproved: data?.isApproved ?? true,
+      approvalStatus: data?.approvalStatus ?? (data?.isApproved ? "approved" : data?.isRejected ? "rejected" : "pending"),
+      isRejected: data?.isRejected ?? false,
       profileImageUrl: data?.profileImageUrl ?? undefined,
       bio: data?.bio ?? undefined,
       bannerUrl: data?.bannerUrl ?? undefined,
